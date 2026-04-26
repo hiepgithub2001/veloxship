@@ -18,6 +18,7 @@ dependencies = [
     "pydantic-settings>=2.0",
     "python-jose[cryptography]>=3.3",
     "passlib[bcrypt]>=1.7",
+    "bcrypt==3.2.2",
     "python-multipart>=0.0.6",
     "weasyprint>=61",
     "qrcode>=7.4",
