@@ -118,3 +118,28 @@ async def get_by_tracking_number(db: AsyncSession, tracking_number: str) -> Bill
         )
     )
     return result.scalar_one_or_none()
+
+
+async def list_bills(db: AsyncSession, page: int = 1, page_size: int = 10) -> tuple[list[Bill], int]:
+    """List bills with pagination."""
+    from sqlalchemy import func
+    
+    # Get total count
+    count_result = await db.execute(select(func.count(Bill.id)))
+    total = count_result.scalar_one()
+
+    # Get items
+    offset = (page - 1) * page_size
+    result = await db.execute(
+        select(Bill)
+        .order_by(Bill.created_at.desc())
+        .offset(offset)
+        .limit(page_size)
+        .options(
+            selectinload(Bill.content_lines),
+            selectinload(Bill.status_events),
+        )
+    )
+    items = list(result.scalars().all())
+    
+    return items, total

@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import auth, bills, service_tiers
 from app.core.exceptions import register_exception_handlers
+import app.models  # noqa: F401
 
 structlog.configure(
     processors=[

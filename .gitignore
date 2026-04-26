@@ -133,3 +133,5 @@ htmlcov/
 *.tmp
 *.bak
 *.swp
+
+.playwright-mcp

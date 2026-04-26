@@ -112,10 +112,10 @@ export function BillCreatePage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
           <Card style={{ flex: 1 }}>
-            <SenderBlock control={{ register: control.register }} errors={errors} />
+            <SenderBlock control={control} errors={errors} />
           </Card>
           <Card style={{ flex: 1 }}>
-            <ReceiverBlock control={{ register: control.register }} errors={errors} />
+            <ReceiverBlock control={control} errors={errors} />
           </Card>
         </div>
 

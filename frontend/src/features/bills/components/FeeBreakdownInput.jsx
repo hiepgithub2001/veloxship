@@ -1,7 +1,7 @@
 /**
  * Fee breakdown input with auto-computed total.
  */
-import { InputNumber, Radio, Typography } from 'antd';
+import { InputNumber, Radio, Typography, Space, Input } from 'antd';
 import { t } from '../../../i18n/vi';
 import { formatVND } from '../../../lib/format';
 
@@ -39,17 +39,19 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
       {feeFields.map(({ key, label }) => (
         <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 12 }}>
           <Text style={{ width: 160 }}>{label}:</Text>
-          <InputNumber
-            min={0}
-            step={1000}
-            value={watch(`fee.${key}`)}
-            onChange={(val) => handleFeeChange(key, val)}
-            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-            parser={(value) => value.replace(/\./g, '')}
-            style={{ width: 200 }}
-            addonAfter="₫"
-            id={`fee-${key}`}
-          />
+          <Space.Compact style={{ width: 200 }}>
+            <InputNumber
+              min={0}
+              step={1000}
+              value={watch(`fee.${key}`)}
+              onChange={(val) => handleFeeChange(key, val)}
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              parser={(value) => value.replace(/\./g, '')}
+              style={{ width: '100%' }}
+              id={`fee-${key}`}
+            />
+            <Input style={{ width: '40px', textAlign: 'center', pointerEvents: 'none' }} defaultValue="₫" tabIndex={-1} readOnly />
+          </Space.Compact>
         </div>
       ))}
 

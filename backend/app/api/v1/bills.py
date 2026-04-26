@@ -9,7 +9,7 @@ from app.crud import audit as audit_crud
 from app.crud import bill as bill_crud
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.bill import BillCreate, BillRead
+from app.schemas.bill import BillCreate, BillRead, BillPage
 from app.services import bill_service
 
 router = APIRouter(prefix="/bills", tags=["bills"])
@@ -24,6 +24,23 @@ async def create_bill(
     """Create a new delivery bill."""
     bill = await bill_service.create_bill(db, body, current_user.id)
     return BillRead.from_model(bill)
+
+
+@router.get("", response_model=BillPage)
+async def list_bills(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List bills with pagination."""
+    items, total = await bill_crud.list_bills(db, page=page, page_size=page_size)
+    return BillPage(
+        items=[BillRead.from_model(item) for item in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+    )
 
 
 @router.get("/{bill_id}", response_model=BillRead)

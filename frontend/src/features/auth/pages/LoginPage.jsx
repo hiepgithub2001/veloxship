@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button, Card, Form, Input, message, Typography } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { useAuth } from '../../auth/AuthContext';
-import { t } from '../../i18n/vi';
-import logo from '../../assets/logo.png';
+import { useAuth } from '../../../auth/AuthContext';
+import { t } from '../../../i18n/vi';
+import logo from '../../../assets/logo.png';
 
 const { Title, Text } = Typography;
 

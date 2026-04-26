@@ -65,3 +65,9 @@ def register_exception_handlers(app):
                 "details": {"errors": details},
             },
         )
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
+        import traceback
+        tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        return JSONResponse(status_code=500, content={"detail": str(exc), "traceback": tb})
