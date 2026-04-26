@@ -40,10 +40,18 @@ def upgrade() -> None:
             server_default=sa.func.now(),
         ),
     )
+    # Create immutable wrapper for unaccent
+    op.execute("""
+        CREATE OR REPLACE FUNCTION f_unaccent(text)
+        RETURNS text AS $$
+        SELECT public.unaccent('public.unaccent', $1)
+        $$ LANGUAGE sql IMMUTABLE STRICT;
+    """)
+
     # GIN trigram index for search
     op.execute(
         "CREATE INDEX idx_customers_search_name ON customers "
-        "USING GIN (unaccent(lower(display_name)) gin_trgm_ops)"
+        "USING GIN (f_unaccent(lower(display_name)) gin_trgm_ops)"
     )
     op.create_index("idx_customers_phone", "customers", ["phone"])
 

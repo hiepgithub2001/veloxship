@@ -111,19 +111,19 @@ def upgrade() -> None:
     # GIN trigram indexes for diacritic-insensitive search
     op.execute(
         "CREATE INDEX idx_bills_search_sender_name ON bills "
-        "USING GIN (unaccent(lower(sender_name)) gin_trgm_ops)"
+        "USING GIN (f_unaccent(lower(sender_name)) gin_trgm_ops)"
     )
     op.execute(
         "CREATE INDEX idx_bills_search_receiver_name ON bills "
-        "USING GIN (unaccent(lower(receiver_name)) gin_trgm_ops)"
+        "USING GIN (f_unaccent(lower(receiver_name)) gin_trgm_ops)"
     )
     op.execute(
         "CREATE INDEX idx_bills_search_sender_address ON bills "
-        "USING GIN (unaccent(lower(sender_address)) gin_trgm_ops)"
+        "USING GIN (f_unaccent(lower(sender_address)) gin_trgm_ops)"
     )
     op.execute(
         "CREATE INDEX idx_bills_search_receiver_address ON bills "
-        "USING GIN (unaccent(lower(receiver_address)) gin_trgm_ops)"
+        "USING GIN (f_unaccent(lower(receiver_address)) gin_trgm_ops)"
     )
 
     # --- bill_content_lines ---
