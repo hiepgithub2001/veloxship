@@ -12,9 +12,12 @@ import {
   UserOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
 import { t } from '../../i18n/vi';
+import { UpdatePrompt } from '../../pwa/UpdatePrompt';
+import { useIsMobile } from '../ResponsiveShell';
 import logo from '../../assets/logo.png';
 
 const { Sider, Header, Content } = Layout;
@@ -44,7 +47,15 @@ export function AppShell() {
     },
   ];
 
+  const isMobile = useIsMobile();
+
   const userMenuItems = [
+    {
+      key: 'about',
+      icon: <InfoCircleOutlined />,
+      label: 'Giới thiệu / Phiên bản',
+    },
+    { type: 'divider' },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
@@ -61,6 +72,8 @@ export function AppShell() {
     if (key === 'logout') {
       logout();
       navigate('/dang-nhap');
+    } else if (key === 'about') {
+      navigate('/gioi-thieu');
     }
   };
 
@@ -73,11 +86,19 @@ export function AppShell() {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider
         collapsible
-        collapsed={collapsed}
+        collapsed={isMobile ? true : collapsed}
         onCollapse={setCollapsed}
         trigger={null}
         width={240}
-        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
+        collapsedWidth={isMobile ? 0 : 80}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 10,
+          ...(isMobile && collapsed ? { display: 'none' } : {}),
+        }}
       >
         <div
           style={{
@@ -110,7 +131,7 @@ export function AppShell() {
         />
       </Sider>
 
-      <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: 'margin-left 0.2s' }}>
+      <Layout style={{ marginLeft: isMobile ? 0 : (collapsed ? 80 : 240), transition: 'margin-left 0.2s' }}>
         <Header
           style={{
             background: '#fff',
@@ -141,10 +162,13 @@ export function AppShell() {
           </Dropdown>
         </Header>
 
-        <Content style={{ margin: 24 }}>
+        <Content style={{ margin: isMobile ? 8 : 24 }}>
           <Outlet />
         </Content>
       </Layout>
+
+      {/* PWA: Update prompt — bottom-right, suppressed during wizard */}
+      <UpdatePrompt />
     </Layout>
   );
 }

@@ -18,6 +18,14 @@ export function AuthProvider({ children }) {
     setAccessToken(null);
     setCurrentUser(null);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
+    // PWA: clear any user-prefixed caches on logout (FR-017, FR-020)
+    if ('caches' in window) {
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys.filter((k) => k.startsWith('user-')).map((k) => caches.delete(k)),
+        ),
+      );
+    }
   }, []);
 
   const doRefresh = useCallback(async () => {

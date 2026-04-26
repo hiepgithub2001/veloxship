@@ -14,30 +14,36 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.0",
-    "@tanstack/react-query": "^5.32.0",
-    "axios": "^1.6.8",
-    "antd": "^5.16.0",
-    "dayjs": "^1.11.10",
-    "react-hook-form": "^7.51.0",
-    "zod": "^3.22.4",
     "@hookform/resolvers": "^3.3.4",
+    "@tanstack/react-query": "^5.32.0",
+    "antd": "^5.16.0",
+    "axios": "^1.6.8",
+    "dayjs": "^1.11.10",
     "jsbarcode": "^3.11.6",
     "qrcode.react": "^3.1.0",
-    "react-to-print": "^2.15.1"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.51.0",
+    "react-router-dom": "^6.23.0",
+    "react-to-print": "^2.15.1",
+    "vite-plugin-pwa": "^0.19.8",
+    "workbox-window": "^7.4.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "vite": "^5.2.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "vitest": "^1.5.0",
-    "@testing-library/react": "^14.2.2",
-    "msw": "^2.2.13",
     "@playwright/test": "^1.43.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^14.2.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vite-pwa/assets-generator": "^0.2.6",
+    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "^3.2.5"
+    "jsdom": "^29.0.2",
+    "msw": "^2.2.13",
+    "prettier": "^3.2.5",
+    "vite": "^5.2.0",
+    "vitest": "^1.5.0"
   }
 }
