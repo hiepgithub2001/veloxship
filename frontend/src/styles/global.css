@@ -1,0 +1,33 @@
+/* Global styles for the VeloxShip app */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Vietnamese-friendly print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Phiếu Gửi — {{ bill.tracking_number }}</title>
+  <link rel="stylesheet" href="print.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Be Vietnam Pro', sans-serif; font-size: 11px; color: #1a1a1a; padding: 12mm; }
+
+    .bill { width: 190mm; border: 2px solid #C41E3A; padding: 4mm; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #C41E3A; padding-bottom: 4mm; margin-bottom: 3mm; }
+    .header-left { display: flex; align-items: center; gap: 3mm; }
+    .header-left img { height: 14mm; }
+    .header-left .company { font-weight: 700; font-size: 14px; color: #C41E3A; }
+    .header-center { text-align: center; flex: 1; }
+    .header-center h1 { font-size: 18px; color: #C41E3A; font-weight: 700; margin-bottom: 2mm; }
+    .header-center .tracking { font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+    .header-right { text-align: right; }
+    .header-right .barcode svg { height: 14mm; }
+    .header-right .qr img { width: 20mm; height: 20mm; margin-top: 1mm; }
+
+    /* Party blocks */
+    .parties { display: flex; gap: 4mm; margin-bottom: 3mm; }
+    .party { flex: 1; border: 1px solid #ddd; padding: 2mm 3mm; border-radius: 2px; }
+    .party-title { font-weight: 700; color: #C41E3A; font-size: 12px; margin-bottom: 1mm; border-bottom: 1px solid #eee; padding-bottom: 1mm; }
+    .party-row { display: flex; margin-bottom: 0.5mm; }
+    .party-label { font-weight: 600; width: 22mm; flex-shrink: 0; }
+    .party-value { flex: 1; }
+
+    /* Content table */
+    .content-section { margin-bottom: 3mm; }
+    .content-section h3 { font-size: 12px; color: #C41E3A; margin-bottom: 1mm; }
+    table.content { width: 100%; border-collapse: collapse; }
+    table.content th, table.content td { border: 1px solid #ccc; padding: 1.5mm 2mm; text-align: left; }
+    table.content th { background: #f5f5f5; font-weight: 600; font-size: 10px; }
+    table.content td { font-size: 10px; }
+    table.content .num { text-align: right; }
+
+    /* Service + Fees */
+    .service-fees { display: flex; gap: 4mm; margin-bottom: 3mm; }
+    .service-block, .fee-block { flex: 1; border: 1px solid #ddd; padding: 2mm 3mm; border-radius: 2px; }
+    .block-title { font-weight: 700; color: #C41E3A; font-size: 12px; margin-bottom: 1mm; border-bottom: 1px solid #eee; padding-bottom: 1mm; }
+    .checkbox-row { display: flex; align-items: center; gap: 1mm; margin-bottom: 0.5mm; }
+    .checkbox { width: 3mm; height: 3mm; border: 1px solid #333; display: inline-block; }
+    .checkbox.checked { background: #C41E3A; }
+    .fee-row { display: flex; justify-content: space-between; margin-bottom: 0.5mm; }
+    .fee-total { font-weight: 700; font-size: 12px; border-top: 1px solid #ccc; padding-top: 1mm; margin-top: 1mm; }
+
+    /* Payer */
+    .payer-section { margin-bottom: 3mm; }
+    .payer-options { display: flex; gap: 8mm; }
+
+    /* Signatures */
+    .signatures { display: flex; justify-content: space-between; margin-top: 4mm; padding-top: 3mm; border-top: 1px solid #ccc; }
+    .sig-block { text-align: center; width: 30%; }
+    .sig-title { font-weight: 600; margin-bottom: 1mm; }
+    .sig-date { font-size: 9px; color: #666; margin-bottom: 8mm; }
+    .sig-line { border-bottom: 1px dotted #999; width: 80%; margin: 0 auto; }
+
+    /* Footer */
+    .footer { margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #C41E3A; font-size: 9px; color: #666; text-align: center; }
+    .footer strong { color: #C41E3A; }
+
+    /* Customer code */
+    .customer-code { font-size: 10px; color: #666; }
+  </style>
+</head>
+<body>
+<div class="bill">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <img src="logo.png" alt="{{ carrier_name }}">
+      <div class="company">{{ carrier_name }}</div>
+    </div>
+    <div class="header-center">
+      <h1>PHIẾU GỬI</h1>
+      <div class="tracking">{{ bill.tracking_number }}</div>
+      {% if bill.customer_code %}
+      <div class="customer-code">Mã KH: {{ bill.customer_code }}</div>
+      {% endif %}
+    </div>
+    <div class="header-right">
+      <div class="barcode">{{ barcode_svg | safe }}</div>
+      <div class="qr"><img src="data:image/png;base64,{{ qr_base64 }}" alt="QR"></div>
+    </div>
+  </div>
+
+  <!-- Sender / Receiver -->
+  <div class="parties">
+    <div class="party">
+      <div class="party-title">NGƯỜI GỬI</div>
+      <div class="party-row"><span class="party-label">Họ tên:</span><span class="party-value">{{ bill.sender_name }}</span></div>
+      <div class="party-row"><span class="party-label">Địa chỉ:</span><span class="party-value">{{ bill.sender_address }}</span></div>
+      <div class="party-row"><span class="party-label">Quận/Huyện:</span><span class="party-value">{{ bill.sender_district }}</span></div>
+      <div class="party-row"><span class="party-label">Tỉnh/TP:</span><span class="party-value">{{ bill.sender_province }}</span></div>
+      <div class="party-row"><span class="party-label">Điện thoại:</span><span class="party-value">{{ bill.sender_phone }}</span></div>
+    </div>
+    <div class="party">
+      <div class="party-title">NGƯỜI NHẬN</div>
+      <div class="party-row"><span class="party-label">Họ tên:</span><span class="party-value">{{ bill.receiver_name }}</span></div>
+      <div class="party-row"><span class="party-label">Địa chỉ:</span><span class="party-value">{{ bill.receiver_address }}</span></div>
+      <div class="party-row"><span class="party-label">Quận/Huyện:</span><span class="party-value">{{ bill.receiver_district }}</span></div>
+      <div class="party-row"><span class="party-label">Tỉnh/TP:</span><span class="party-value">{{ bill.receiver_province }}</span></div>
+      <div class="party-row"><span class="party-label">Điện thoại:</span><span class="party-value">{{ bill.receiver_phone }}</span></div>
+    </div>
+  </div>
+
+  <!-- Content lines -->
+  <div class="content-section">
+    <h3>NỘI DUNG GÓI HÀNG</h3>
+    <table class="content">
+      <thead>
+        <tr>
+          <th style="width:8%">STT</th>
+          <th>Mô tả</th>
+          <th style="width:12%" class="num">Số lượng</th>
+          <th style="width:14%" class="num">Trọng lượng</th>
+          <th style="width:16%">Kích thước</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in content_lines %}
+        <tr>
+          <td>{{ line.line_no }}</td>
+          <td>{{ line.description }}</td>
+          <td class="num">{{ line.quantity }}</td>
+          <td class="num">{{ line.weight }}</td>
+          <td>{{ line.dimensions }}</td>
+        </tr>
+        {% endfor %}
+        <tr style="font-weight:600; background:#f9f9f9;">
+          <td colspan="2">Tổng cộng</td>
+          <td class="num">{{ total_quantity }}</td>
+          <td class="num">{{ total_weight }}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Service + Fees -->
+  <div class="service-fees">
+    <div class="service-block">
+      <div class="block-title">LOẠI HÀNG</div>
+      <div class="checkbox-row">
+        <span class="checkbox {% if is_document %}checked{% endif %}"></span>
+        <span>Tài liệu</span>
+      </div>
+      <div class="checkbox-row">
+        <span class="checkbox {% if not is_document %}checked{% endif %}"></span>
+        <span>Hàng hóa</span>
+      </div>
+      <div class="block-title" style="margin-top:2mm;">DỊCH VỤ</div>
+      <div style="font-weight:600;">{{ bill.service_tier_code }}</div>
+    </div>
+    <div class="fee-block">
+      <div class="block-title">CƯỚC PHÍ</div>
+      <div class="fee-row"><span>Cước chính</span><span>{{ fee_main }} ₫</span></div>
+      <div class="fee-row"><span>Phụ phí xăng dầu</span><span>{{ fee_fuel }} ₫</span></div>
+      <div class="fee-row"><span>Phụ phí khác</span><span>{{ fee_other }} ₫</span></div>
+      <div class="fee-row"><span>VAT</span><span>{{ fee_vat }} ₫</span></div>
+      <div class="fee-row fee-total"><span>Tổng cộng</span><span>{{ fee_total }} ₫</span></div>
+    </div>
+  </div>
+
+  <!-- Payer -->
+  <div class="payer-section">
+    <div class="payer-options">
+      <div class="checkbox-row">
+        <span class="checkbox {% if is_sender_payer %}checked{% endif %}"></span>
+        <span>Người gửi thanh toán</span>
+      </div>
+      <div class="checkbox-row">
+        <span class="checkbox {% if not is_sender_payer %}checked{% endif %}"></span>
+        <span>Người nhận thanh toán</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signatures -->
+  <div class="signatures">
+    <div class="sig-block">
+      <div class="sig-title">Người gửi ký tên</div>
+      <div class="sig-date">…ngày {{ date_day }} tháng {{ date_month }} năm {{ date_year }}</div>
+      <div class="sig-line"></div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-title">Nhân viên vận chuyển</div>
+      <div class="sig-date">…ngày {{ date_day }} tháng {{ date_month }} năm {{ date_year }}</div>
+      <div class="sig-line"></div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-title">Người nhận ký tên</div>
+      <div class="sig-date">…ngày {{ date_day }} tháng {{ date_month }} năm {{ date_year }}</div>
+      <div class="sig-line"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <strong>{{ carrier_name }}</strong> | Hotline: {{ carrier_hotline }} | Website: {{ carrier_website }} | Email: {{ carrier_email }}<br>
+    Quý khách vui lòng kiểm tra hàng hóa trước khi ký nhận. Mọi khiếu nại sau khi ký nhận sẽ không được giải quyết.
+  </div>
+</div>
+</body>
+</html>
