@@ -74,7 +74,7 @@ export function ReceiverBlock({ control, errors, prefix = 'receiver' }) {
           name={`${prefix}.phone`}
           control={control}
           render={({ field }) => (
-            <Input {...field} placeholder={t('bills.receiverPhone')} id={`${prefix}-phone`} />
+            <Input {...field} placeholder={t('bills.receiverPhone')} inputMode="tel" id={`${prefix}-phone`} />
           )}
         />
       </Form.Item>
