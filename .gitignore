@@ -121,6 +121,14 @@ env/
 .pytest_cache/
 .coverage
 
+# Build output
+build/
+*.egg-info/
+
+# Coverage
+coverage/
+htmlcov/
+
 # Temporary files
 *.tmp
 *.bak

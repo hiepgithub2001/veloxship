@@ -1,0 +1,39 @@
+/* Print-only stylesheet for the delivery bill */
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+@media print {
+  body {
+    padding: 0;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .bill {
+    width: 100%;
+    border-width: 2px;
+    page-break-inside: avoid;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Screen-only helpers */
+@media screen {
+  body {
+    background: #eee;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .bill {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+}
