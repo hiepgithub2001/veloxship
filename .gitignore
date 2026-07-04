@@ -135,3 +135,6 @@ htmlcov/
 *.swp
 
 .playwright-mcp
+
+# Wiki
+docs_wiki/
