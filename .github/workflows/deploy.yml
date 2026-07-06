@@ -28,7 +28,7 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: veloxship/veloxship-backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/veloxship-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -38,7 +38,7 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
-          tags: veloxship/veloxship-frontend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/veloxship-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -61,6 +61,7 @@ jobs:
             # Log in to Docker Hub on VPS (uncomment if the repository is private)
             # echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
             
+            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             docker compose pull
             docker compose up -d
             docker image prune -f

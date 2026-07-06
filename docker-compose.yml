@@ -17,7 +17,7 @@ services:
       retries: 10
 
   backend:
-    image: veloxship/veloxship-backend:latest
+    image: ${DOCKER_USERNAME}/veloxship-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -36,7 +36,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
-    image: veloxship/veloxship-frontend:latest
+    image: ${DOCKER_USERNAME}/veloxship-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
