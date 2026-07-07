@@ -55,6 +55,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
           script: |
+            if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
+              echo "ERROR: DEPLOY_PATH secret is not set or is empty in GitHub Secrets!"
+              exit 1
+            fi
             cd ${{ secrets.DEPLOY_PATH }}
             git pull origin main
             
