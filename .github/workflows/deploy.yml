@@ -54,7 +54,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || '22' }}
+          script_stop: true
           script: |
+            set -e
             if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
               echo "ERROR: DEPLOY_PATH secret is not set or is empty in GitHub Secrets!"
               exit 1
