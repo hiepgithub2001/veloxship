@@ -33,11 +33,11 @@ description: "Roadmap implementation tasks for the Express Delivery Management S
 
 ### 5. QUẢN LÝ VẬN ĐƠN
 - [ ] Quản lý lấy hàng
-- [ ] Tạo vận đơn
+- [x] Tạo vận đơn
 - [ ] Tạo vận đơn excel
 - [ ] Đóng gói
 - [ ] Mở gói
-- [ ] Danh sách vận đơn
+- [x] Danh sách vận đơn
 - [ ] Hủy giao hàng thành công
 - [ ] Tiếp tục giao hàng
 - [ ] Điều chỉnh COD
