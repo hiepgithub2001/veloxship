@@ -4,6 +4,21 @@ description: "Roadmap implementation tasks for the Express Delivery Management S
 
 # Bảng Theo Dõi Nhiệm Vụ Lộ Trình — Roadmap Tasks
 
+> **Chú thích trạng thái**: `[x]` = Hoàn thành · `[~]` = Đang làm/một phần · `[ ]` = Chưa bắt đầu.
+> Yêu cầu nghiệp vụ chi tiết & trạng thái triển khai v1: xem [`docs/business-requirements.md`](./business-requirements.md).
+
+## Tiến độ v1 — Quản lý Phiếu Gửi (feature `001-logistics-bill-app`)
+
+Phạm vi v1 được thu hẹp vào khâu **lập & quản lý phiếu gửi** (ánh xạ vào mục **V. QUẢN LÝ VẬN ĐƠN** bên dưới). Trạng thái đối chiếu mã nguồn ngày 2026-07-12:
+
+- ✅ **US1 — Tạo phiếu gửi** (tạo, sinh mã vận đơn/barcode/QR, in & xuất PDF) — *Hoàn thành (MVP)*.
+- ✅ **Danh sách phiếu** (phân trang) + **In lại / Xuất PDF** — *Hoàn thành*.
+- 🚧 **US2 còn lại** — tra cứu không phân biệt dấu + cập nhật trạng thái vòng đời — *Đang làm*.
+- ⬜ **US3 — Hồ sơ khách hàng** (tự điền người gửi, snapshot) — *Chưa bắt đầu (mới có model + migration)*.
+- ⬜ **Kiểm thử SC-004/005/006, CHECK cước, drift OpenAPI** — *Chưa bắt đầu*.
+
+---
+
 ## I. HỆ THỐNG QUẢN LÝ
 
 ### 1. QUẢN LÝ NHÂN VIÊN
