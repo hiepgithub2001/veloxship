@@ -1,12 +1,34 @@
 # Database Schema Design (Hoàng Nam Express)
 **Dự án**: Hệ thống Quản lý Chuyển phát nhanh Hoàng Nam (Hoàng Nam Express) — Giai đoạn 1  
-**Phiên bản**: 1.0  
-**Ngày**: 2026-07-21  
+**Phiên bản**: 1.1  
+**Ngày**: 2026-07-23  
 **Tác giả**: Solution Architect Antigravity AI  
 **Hệ quản trị CSDL**: PostgreSQL 16 (với các extensions `unaccent`, `pg_trgm`, `citext`)  
 **Công nghệ tích hợp**: Async SQLAlchemy 2.x ORM  
 
 Tài liệu này đặc tả chi tiết thiết kế Cơ sở dữ liệu quan hệ (Entity-Relationship Diagram - ERD) và Từ điển dữ liệu (Data Dictionary) mở rộng từ thiết kế lõi của VeloxShip để đáp ứng toàn bộ các yêu cầu nghiệp vụ của dự án Hoàng Nam - Giai đoạn 1.
+
+---
+
+## 0. Nhật ký cập nhật (Changelog v1.1)
+
+Cập nhật theo `docs/note_db.md`:
+
+1. **Đổi tên `Hub` → `Depot` (Kho hàng)** trên toàn bộ thực thể, bảng và cột (`hub_id` → `depot_id`, `current_hub_id` → `latest_depot_id`, `hub_ledgers` → `depot_ledgers`, index, ERD…).
+2. Bỏ 2 bảng `departments`, `positions` và 2 cột `department_id`, `position_id` của `users`; thay bằng cột **`metadata` (JSONB)** lưu chức vụ / phòng ban / thông tin nhân sự linh hoạt.
+3. Thêm cột **`role`** vào `users` để phân loại nhân sự (shipper, depot_manager, cashier, accountant…).
+4. Giữ cột `hub_id` (đổi tên thành **`depot_id`**) trên `users` — cần cho vai trò `depot_manager`.
+5. Bỏ toàn bộ snapshot người gửi/người nhận trên `bills`; thay bằng **`sender_id`** và **`receiver_id`** tham chiếu bảng `customers`.
+6. Đổi tên thực thể `Trip` → `Linehaul`: bảng `trips` → **`linehauls`**, `trip_bags` → **`linehaul_bags`**, cột `latest_trip_id` → **`latest_linehaul_id`**.
+7. `bills.current_hub_id` → **`latest_depot_id`**.
+8. Thêm **`bills.latest_linehaul_id`**; **bỏ bảng `trip_bills`**.
+9. *(Làm sau)* Thiết kế lại phân hệ thanh toán vận đơn (COD, chuyển khoản, công nợ).
+10. Bỏ bảng `hub_service_areas` (dư thừa).
+11. Bỏ 2 bảng `price_sheets`, `price_rules`.
+12. `vehicles.current_hub_id` → **`latest_depot_id`**.
+13. Thêm **`vehicles.latest_linehaul_id`**.
+14. Bổ sung mục **State Machine vòng đời vận đơn** (§5).
+15. `bill_status_logs`: bỏ cột `location`, thêm **`latest_linehaul_id`** và **`latest_depot_id`**.
 
 ---
 
@@ -18,53 +40,45 @@ erDiagram
     Province ||--o{ District : "contains"
     District ||--o{ Ward : "contains"
     
-    %% --- Hub & Organization ---
-    Ward ||--o{ Hub : "located_at"
-    Hub ||--o{ HubServiceArea : "manages"
-    Ward ||--|| HubServiceArea : "assigned_to"
+    %% --- Depot & Organization ---
+    Ward ||--o{ Depot : "located_at"
     
     %% --- Staff & Authorization ---
-    Department ||--o{ User : "belongs_to"
-    Position ||--o{ User : "has"
-    Hub ||--o{ User : "employs"
+    Depot ||--o{ User : "employs"
     User ||--o{ UserPermissionGroup : "assigned_to"
     PermissionGroup ||--o{ UserPermissionGroup : "contains"
     PermissionGroup ||--o{ PermissionAction : "defines"
     
-    %% --- Fleet & Trip ---
-    Hub ||--o{ Vehicle : "belongs_to"
+    %% --- Fleet & Linehaul ---
+    Depot ||--o{ Vehicle : "belongs_to"
     User ||--o{ Vehicle : "drives"
-    Vehicle ||--o{ Trip : "used_in"
-    User ||--o{ Trip : "conducts"
-    Hub ||--o{ Trip : "starts_at"
-    Hub ||--o{ Trip : "ends_at"
+    Vehicle ||--o{ Linehaul : "used_in"
+    User ||--o{ Linehaul : "conducts"
+    Depot ||--o{ Linehaul : "starts_at"
+    Depot ||--o{ Linehaul : "ends_at"
     
-    %% --- Customer & Price ---
+    %% --- Customer ---
     Ward ||--o{ Customer : "located_at"
-    Customer ||--o{ PriceSheet : "has_custom"
-    PriceSheet ||--o{ PriceRule : "defines"
     
     %% --- Waybill (Bill) & Lifecycle ---
     Customer ||--o{ Bill : "sends"
+    Customer ||--o{ Bill : "receives"
     User ||--o{ Bill : "creates_or_updates"
     User ||--o{ Bill : "assigned_shipper"
-    Hub ||--o{ Bill : "originates_from"
-    Hub ||--o{ Bill : "destined_for"
-    Hub ||--o{ Bill : "currently_at"
+    Depot ||--o{ Bill : "originates_from"
+    Depot ||--o{ Bill : "destined_for"
+    Depot ||--o{ Bill : "currently_at"
+    Linehaul ||--o{ Bill : "last_moved_on"
     Bill ||--|{ BillContentLine : "contains"
     Bill ||--o{ BillStatusLog : "records"
-    
-    %% --- Transit Outbound ---
-    Trip ||--o{ TripBill : "loads"
-    Bill ||--|| TripBill : "loaded_on"
     
     %% --- COD & Finance ---
     User ||--o{ CodHandover : "submitted_by"
     User ||--o{ CodHandover : "approved_by"
     CodHandover ||--o{ CodHandoverItem : "groups"
     Bill ||--|| CodHandoverItem : "reconciled_in"
-    Hub ||--o{ HubLedger : "records"
-    User ||--o{ HubLedger : "authorized_by"
+    Depot ||--o{ DepotLedger : "records"
+    User ||--o{ DepotLedger : "authorized_by"
 
     %% --- Attribute Definitions ---
     Province {
@@ -81,7 +95,7 @@ erDiagram
         text name
         text district_code FK
     }
-    Hub {
+    Depot {
         bigint id PK
         citext code UK
         text name
@@ -96,33 +110,36 @@ erDiagram
         text full_name
         text phone UK
         text password_hash
-        bigint department_id FK
-        bigint position_id FK
-        bigint hub_id FK
+        text role
+        jsonb metadata
+        bigint depot_id FK
         boolean is_active
     }
     Bill {
         bigint id PK
         text tracking_number UK
-        bigint customer_id FK
-        text sender_name
-        text sender_phone
-        text sender_address_detail
-        text sender_ward_code
-        text receiver_name
-        text receiver_phone
-        text receiver_address_detail
-        text receiver_ward_code
+        bigint sender_id FK
+        bigint receiver_id FK
+        text cargo_type
+        text service_tier_code FK
         numeric chargeable_weight_kg
         numeric cod_amount
         numeric fee_total
         text status
-        bigint current_hub_id FK
+        bigint origin_depot_id FK
+        bigint destination_depot_id FK
+        bigint latest_depot_id FK
+        bigint latest_linehaul_id FK
         bigint shipper_id FK
     }
-    TripBill {
-        bigint trip_id PK
-        bigint bill_id PK
+    Linehaul {
+        bigint id PK
+        text code UK
+        bigint vehicle_id FK
+        bigint driver_id FK
+        bigint origin_depot_id FK
+        bigint destination_depot_id FK
+        text status
     }
     CodHandover {
         bigint id PK
@@ -133,9 +150,9 @@ erDiagram
         numeric actual_received_amount
         text status
     }
-    HubLedger {
+    DepotLedger {
         bigint id PK
-        bigint hub_id FK
+        bigint depot_id FK
         text transaction_type
         numeric amount
         bigint reference_id
@@ -191,49 +208,25 @@ erDiagram
 
 ---
 
-### 3.2 Phân hệ Bưu cục & Nhân viên (Hubs & Staff)
+### 3.2 Phân hệ Kho hàng & Nhân viên (Depots & Staff)
 
-#### Bảng `hubs` — Bưu cục / Chi nhánh
-*   Đại diện cho các bưu cục giao nhận, kho trung chuyển hoặc kho tổng.
+#### Bảng `depots` — Kho hàng / Bưu cục
+*   Đại diện cho các kho chứa hàng, kho trung chuyển hoặc kho tổng phục vụ giao nhận vận chuyển.
 
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT` | PK, GENERATED | — | Định danh bưu cục |
-| `code` | `CITEXT` | UNIQUE, NOT NULL | — | Mã bưu cục (ví dụ: 'BCHCM01') |
-| `name` | `TEXT` | NOT NULL | — | Tên bưu cục |
-| `phone` | `TEXT` | NOT NULL | — | Số điện thoại bưu cục |
+| `id` | `BIGINT` | PK, GENERATED | — | Định danh kho hàng |
+| `code` | `CITEXT` | UNIQUE, NOT NULL | — | Mã kho (ví dụ: 'KHHCM01') |
+| `name` | `TEXT` | NOT NULL | — | Tên kho hàng |
+| `phone` | `TEXT` | NOT NULL | — | Số điện thoại kho |
 | `address_detail`| `TEXT` | NOT NULL | — | Số nhà, tên đường |
 | `ward_code` | `TEXT` | FK → `wards.code` | — | Liên kết địa giới Phường/Xã |
 | `is_active` | `BOOLEAN` | NOT NULL | `true` | Trạng thái hoạt động |
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
 | `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
 
-#### Bảng `hub_service_areas` — Tuyến phục vụ của bưu cục
-*   Quy định bưu cục nào chịu trách nhiệm lấy và phát hàng cho Phường/Xã nào.
-
-| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
-| :--- | :--- | :--- | :--- | :--- |
-| `hub_id` | `BIGINT` | PK, FK → `hubs.id` (CASCADE) | — | Định danh bưu cục |
-| `ward_code` | `TEXT` | PK, FK → `wards.code` (CASCADE)| — | Mã phường/xã phụ trách |
-
-*   *Ràng buộc*: `ward_code` là duy nhất ở mức logic. (Một xã chỉ gán cho tối đa 1 bưu cục lấy/phát để tránh chồng chéo tuyến).
-
-#### Bảng `departments` — Phòng ban nhân sự
-| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT` | PK, GENERATED | — | Định danh phòng ban |
-| `name` | `TEXT` | UNIQUE, NOT NULL | — | Tên phòng ban (ví dụ: 'Vận hành') |
-| `description`| `TEXT` | NULL | — | Mô tả ngắn |
-
-#### Bảng `positions` — Chức vụ nhân viên
-| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT` | PK, GENERATED | — | Định danh chức vụ |
-| `name` | `TEXT` | UNIQUE, NOT NULL | — | Tên chức vụ (ví dụ: 'Thủ kho') |
-| `description`| `TEXT` | NULL | — | Mô tả ngắn |
-
 #### Bảng `users` — Tài khoản Nhân viên (Cập nhật)
-*   Mở rộng bảng `users` cũ để quản lý chi tiết vị trí làm việc tại bưu cục.
+*   Mở rộng bảng `users` để quản lý vai trò, kho làm việc trực tiếp và thông tin nhân sự linh hoạt qua `metadata`.
 
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
@@ -242,22 +235,29 @@ erDiagram
 | `full_name` | `TEXT` | NOT NULL | — | Họ và tên |
 | `phone` | `TEXT` | UNIQUE, NOT NULL | — | Số điện thoại nhân viên |
 | `password_hash`| `TEXT` | NOT NULL | — | Mật khẩu băm (bcrypt) |
-| `department_id`| `BIGINT` | FK → `departments.id` | — | Phòng ban trực thuộc |
-| `position_id` | `BIGINT` | FK → `positions.id` | — | Chức vụ trực thuộc |
-| `hub_id` | `BIGINT` | FK → `hubs.id` | — | Bưu cục làm việc trực tiếp |
+| `role` | `TEXT` | CHECK IN ('shipper', 'depot_manager', 'cashier', 'accountant', 'operator', 'admin') | — | Phân loại vai trò nhân sự |
+| `metadata` | `JSONB` | NULL | — | Thông tin nhân sự linh hoạt: chức vụ, phòng ban, ghi chú… |
+| `depot_id` | `BIGINT` | FK → `depots.id` (NULL) | `NULL` | Kho làm việc trực tiếp (bắt buộc với `depot_manager`) |
 | `is_active` | `BOOLEAN` | NOT NULL | `true` | Trạng thái hoạt động |
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
 | `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
+
+*   *Ghi chú*: `role` là danh mục mở, có thể bổ sung giá trị mới. Thông tin tổ chức chi tiết (phòng ban, chức vụ cụ thể) lưu trong `metadata` thay vì bảng riêng — ví dụ:
+    ```json
+    { "department": "Vận hành", "position": "Thủ kho", "employee_code": "NV0123" }
+    ```
 
 ---
 
 ### 3.3 Phân hệ Phân Quyền Hệ Thống (Authorization)
 
+*   `role` (§3.2) dùng phân loại vai trò tổng quát; các bảng dưới đây cấp quyền chi tiết theo hành động khi cần.
+
 #### Bảng `permission_groups` — Nhóm quyền / Vai trò
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `BIGINT` | PK, GENERATED | — | Định danh nhóm quyền |
-| `name` | `TEXT` | UNIQUE, NOT NULL | — | Tên nhóm quyền (ví dụ: 'Kế toán bưu cục') |
+| `name` | `TEXT` | UNIQUE, NOT NULL | — | Tên nhóm quyền (ví dụ: 'Kế toán kho') |
 | `description`| `TEXT` | NULL | — | Mô tả |
 
 #### Bảng `user_permission_groups` — Bảng gán nhóm quyền cho nhân viên
@@ -274,40 +274,9 @@ erDiagram
 
 ---
 
-### 3.4 Bảng Giá Cước Khách Hàng (Pricing & Tariffs)
+### 3.4 Đội Xe & Chuyến Xe Trung Chuyển (Fleet & Linehauls)
 
-#### Bảng `price_sheets` — Bảng giá cước áp dụng
-*   Lưu thông tin bảng giá áp dụng cho khách hàng hoặc nhóm khách hàng cụ thể.
-
-| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT` | PK, GENERATED | — | Định danh bảng giá |
-| `name` | `TEXT` | NOT NULL | — | Tên bảng giá (ví dụ: 'Bảng giá Shop VIP VIP') |
-| `customer_id` | `BIGINT` | FK → `customers.id` (NULL) | `NULL` | Gán riêng cho 1 khách hàng |
-| `customer_group`| `TEXT` | CHECK IN ('retail', 'shop', 'enterprise') | `NULL` | Hoặc gán cho cả nhóm khách hàng |
-| `is_active` | `BOOLEAN` | NOT NULL | `true` | Trạng thái hiệu lực |
-| `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
-| `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
-
-*   *Ràng buộc*: `CHECK (customer_id IS NOT NULL OR customer_group IS NOT NULL)`.
-
-#### Bảng `price_rules` — Chi tiết quy tắc tính cước của bảng giá
-| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | `BIGINT` | PK, GENERATED | — | Định danh quy tắc |
-| `price_sheet_id`| `BIGINT` | FK → `price_sheets.id` (CASCADE) | — | Liên kết bảng giá |
-| `service_tier_code`| `TEXT`| FK → `service_tiers.code` | — | Gói dịch vụ vận chuyển |
-| `route_type` | `TEXT` | CHECK IN ('intra_province', 'intra_region', 'inter_region') | — | Tuyến đường: Nội tỉnh / Nội vùng / Liên vùng |
-| `max_weight_kg`| `NUMERIC(12,3)`| NOT NULL, CHECK ≥ 0 | — | Mốc cân nặng tối đa tính cước nền |
-| `base_fee` | `NUMERIC(14,2)`| NOT NULL, CHECK ≥ 0 | 0.00 | Cước phí nền (VNĐ) |
-| `step_weight_kg`| `NUMERIC(12,3)`| NOT NULL, CHECK > 0 | — | Bước cân cộng thêm tiếp theo |
-| `step_fee` | `NUMERIC(14,2)`| NOT NULL, CHECK ≥ 0 | 0.00 | Đơn giá cước cộng thêm trên mỗi bước |
-
----
-
-### 3.5 Đội Xe & Chuyến Xe Trung Chuyển (Fleet & Trips)
-
-#### Bảng `vehicles` — Đội xe bưu cục
+#### Bảng `vehicles` — Đội xe kho hàng
 *   Quản lý thông tin xe tải trung chuyển hoặc xe máy bưu tá giao hàng.
 
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
@@ -317,14 +286,15 @@ erDiagram
 | `vehicle_type` | `TEXT` | CHECK IN ('motorcycle', 'truck') | — | Loại xe tải/xe máy |
 | `max_weight_kg`| `NUMERIC(12,3)`| NOT NULL | — | Khối lượng tải tối đa |
 | `max_volume_m3`| `NUMERIC(8,2)` | NOT NULL | — | Thể tích thùng xe tối đa |
-| `current_hub_id`| `BIGINT`| FK → `hubs.id` | — | Bưu cục quản lý xe hiện tại |
-| `driver_id` | `BIGINT` | FK → `users.id` | `NULL` | Tài xế phụ trách mặc định |
+| `latest_depot_id`| `BIGINT`| FK → `depots.id` (NULL) | — | Kho quản lý xe gần nhất |
+| `latest_linehaul_id`| `BIGINT`| FK → `linehauls.id` (NULL) | `NULL` | Chuyến linehaul gần nhất xe tham gia |
+| `driver_id` | `BIGINT` | FK → `users.id` (NULL) | `NULL` | Tài xế phụ trách mặc định |
 | `status` | `TEXT` | CHECK IN ('active', 'inactive', 'maintenance') | 'active' | Trạng thái hoạt động của xe |
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
 | `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
 
-#### Bảng `trips` — Chuyến xe trung chuyển
-*   Lịch trình xe tải chuyển bao tải trung chuyển giữa các bưu cục chi nhánh/kho tổng.
+#### Bảng `linehauls` — Chuyến xe trung chuyển (tuyến depot→depot)
+*   Lịch trình xe tải chuyển hàng trung chuyển giữa các kho chi nhánh/kho tổng; quản lý thông tin giao vận theo tuyến từ kho này đến kho kia.
 
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
@@ -332,17 +302,19 @@ erDiagram
 | `code` | `TEXT` | UNIQUE, NOT NULL | — | Mã chuyến xe duy nhất |
 | `vehicle_id` | `BIGINT` | FK → `vehicles.id` | — | Xe tải sử dụng |
 | `driver_id` | `BIGINT` | FK → `users.id` | — | Tài xế điều khiển |
-| `origin_hub_id`| `BIGINT`| FK → `hubs.id` | — | Bưu cục xuất phát |
-| `destination_hub_id`| `BIGINT`| FK → `hubs.id`| — | Bưu cục đích đến |
+| `origin_depot_id`| `BIGINT`| FK → `depots.id` | — | Kho xuất phát |
+| `destination_depot_id`| `BIGINT`| FK → `depots.id`| — | Kho đích đến |
 | `status` | `TEXT` | CHECK IN ('scheduled', 'loading', 'in_transit', 'arrived', 'completed') | 'scheduled' | Trạng thái hành trình của chuyến xe |
 | `start_odometer`| `INTEGER`| NULL | — | Số công-tơ-mét khi xuất bến |
 | `end_odometer` | `INTEGER`| NULL | — | Số công-tơ-mét khi đến bến |
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
 | `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
 
+*   *Ghi chú*: Vận đơn không còn bảng nối `trip_bills`; mỗi vận đơn lưu trực tiếp `latest_linehaul_id` trỏ tới chuyến (linehaul) gần nhất chở nó (xem §3.6).
+
 ---
 
-### 3.6 Đối Tác Vận Chuyển Ngoài (3PL Partners)
+### 3.5 Đối Tác Vận Chuyển Ngoài (3PL Partners)
 
 #### Bảng `partners` — Đối tác 3PL liên kết
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
@@ -369,27 +341,17 @@ erDiagram
 
 ---
 
-### 3.7 Vận Đơn & Kho Trung Chuyển (Bills & Warehousing)
+### 3.6 Vận Đơn & Kho Trung Chuyển (Bills & Warehousing)
 
 #### Bảng `bills` — Vận đơn / Phiếu gửi (Cập nhật)
-*   Mở rộng từ bảng `bills` của VeloxShip để hỗ trợ dòng tiền COD, bưu cục quản lý tĩnh, gán bưu tá và đối tác ngoại.
+*   Thông tin người gửi/người nhận tham chiếu trực tiếp tới bảng `customers` qua `sender_id` / `receiver_id` (không còn snapshot).
 
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `BIGINT` | PK, GENERATED | — | Định danh vận đơn |
 | `tracking_number`| `TEXT` | UNIQUE, NOT NULL | — | Mã vận đơn duy nhất |
-| `customer_id` | `BIGINT` | FK → `customers.id` (NULL) | `NULL` | Khách hàng gửi (nếu có tài khoản) |
-| `customer_code`| `CITEXT` | NULL | — | Mã khách hàng snapshot |
-| **Sender Snapshot** | | | | |
-| `sender_name` | `TEXT` | NOT NULL | — | Họ tên người gửi |
-| `sender_phone` | `TEXT` | NOT NULL | — | SĐT người gửi |
-| `sender_address_detail`| `TEXT` | NOT NULL | — | Địa chỉ chi tiết người gửi |
-| `sender_ward_code`| `TEXT` | FK → `wards.code` | — | Phường/Xã người gửi |
-| **Receiver Snapshot** | | | | |
-| `receiver_name`| `TEXT` | NOT NULL | — | Họ tên người nhận |
-| `receiver_phone`| `TEXT` | NOT NULL | — | SĐT người nhận |
-| `receiver_address_detail`| `TEXT`| NOT NULL | — | Địa chỉ chi tiết người nhận |
-| `receiver_ward_code`| `TEXT` | FK → `wards.code` | — | Phường/Xã người nhận |
+| `sender_id` | `BIGINT` | FK → `customers.id`, NOT NULL | — | Khách hàng gửi (tham chiếu) |
+| `receiver_id` | `BIGINT` | FK → `customers.id`, NOT NULL | — | Khách hàng nhận (tham chiếu) |
 | **Cargo Details** | | | | |
 | `cargo_type` | `TEXT` | CHECK IN ('document', 'goods')| — | Phân loại Tài liệu / Hàng hóa |
 | `service_tier_code`| `TEXT`| FK → `service_tiers.code` | — | Gói dịch vụ chính sử dụng |
@@ -405,14 +367,15 @@ erDiagram
 | `fee_total` | `NUMERIC(14,2)`| NOT NULL, CHECK ≥ 0 | — | Tổng cước thực tế của đơn hàng |
 | `payer` | `TEXT` | CHECK IN ('sender', 'receiver')| — | Bên chịu trách nhiệm thanh toán cước |
 | **Routing & Staff** | | | | |
-| `origin_hub_id`| `BIGINT` | FK → `hubs.id` | — | Bưu cục tiếp nhận đơn đầu |
-| `destination_hub_id`| `BIGINT`| FK → `hubs.id` | — | Bưu cục phát hàng chặng cuối |
-| `current_hub_id`| `BIGINT` | FK → `hubs.id` (NULL) | — | Bưu cục đơn đang nằm hiện tại |
+| `origin_depot_id`| `BIGINT` | FK → `depots.id` | — | Kho tiếp nhận đơn đầu |
+| `destination_depot_id`| `BIGINT`| FK → `depots.id` | — | Kho phát hàng chặng cuối |
+| `latest_depot_id`| `BIGINT` | FK → `depots.id` (NULL) | — | Kho đơn đang nằm gần nhất |
+| `latest_linehaul_id`| `BIGINT` | FK → `linehauls.id` (NULL) | `NULL` | Chuyến xe gần nhất chở đơn |
 | `shipper_id` | `BIGINT` | FK → `users.id` (NULL) | `NULL` | Bưu tá được gán đi lấy/đi giao |
 | `partner_id` | `BIGINT` | FK → `partners.id` (NULL) | `NULL` | Đối tác 3PL trung chuyển (nếu có) |
 | `partner_bill_code`| `TEXT` | NULL | — | Mã vận đơn của đối tác 3PL ngoài |
 | **Lifecycle** | | | | |
-| `status` | `TEXT` | CHECK IN ('da_tao', 'da_lay_hang', 'dang_van_chuyen', 'da_giao', 'hoan_tra', 'huy') | 'da_tao' | Trạng thái hành trình đơn hàng |
+| `status` | `TEXT` | CHECK IN ('created', 'picked_up', 'in_transit', 'delivered', 'returned', 'cancelled') | 'created' | Trạng thái hành trình đơn hàng |
 | `delivered_at` | `TIMESTAMPTZ`| NULL | — | Thời gian phát thành công |
 | `delivered_to_name`| `TEXT` | NULL | — | Họ tên người ký nhận đơn hàng |
 | `cancellation_reason`| `TEXT` | NULL | — | Lý do hủy đơn hàng |
@@ -424,8 +387,9 @@ erDiagram
 
 *   *Ràng buộc cước phí*: `CHECK (fee_total = fee_main + fee_insurance + fee_other + fee_vat)`.
 *   *Ràng buộc trạng thái*: 
-    *   `CHECK (status <> 'huy' OR cancellation_reason IS NOT NULL)` (Khi hủy bắt buộc nhập lý do).
-    *   `CHECK (status <> 'da_giao' OR (delivered_at IS NOT NULL AND delivered_to_name IS NOT NULL))` (Khi phát thành công bắt buộc cập nhật thời gian phát và tên người nhận ký).
+    *   `CHECK (status <> 'cancelled' OR cancellation_reason IS NOT NULL)` (Khi hủy bắt buộc nhập lý do).
+    *   `CHECK (status <> 'delivered' OR (delivered_at IS NOT NULL AND delivered_to_name IS NOT NULL))` (Khi phát thành công bắt buộc cập nhật thời gian phát và tên người nhận ký).
+*   *Ghi chú tham chiếu khách hàng*: Do bỏ snapshot, **mọi người gửi và người nhận đều phải tồn tại là bản ghi trong `customers`** (khách vãng lai cũng cần tạo hồ sơ). Mã KH ("Mã KH") và thông tin tên/địa chỉ khi in phiếu lấy từ `customers` qua JOIN. Đánh đổi: vận đơn **không còn bất biến lịch sử** — sửa hồ sơ khách hàng sẽ ảnh hưởng dữ liệu hiển thị của các vận đơn cũ (khác với ràng buộc snapshot FR-020 của bản lõi VeloxShip).
 
 #### Bảng `bill_content_lines` — Chi tiết hàng hóa trong vận đơn
 *   Lưu thông tin chi tiết từng mặt hàng/dòng nội dung trong gói hàng của vận đơn.
@@ -454,26 +418,21 @@ erDiagram
 | `from_status` | `TEXT` | NULL | — | Trạng thái trước khi đổi |
 | `to_status` | `TEXT` | NOT NULL | — | Trạng thái mới cập nhật |
 | `note` | `TEXT` | NULL | — | Ghi chú lý do thay đổi / Lý do rollback |
-| `location` | `TEXT` | NOT NULL | — | Tên bưu cục hoặc tọa độ quét cập nhật |
+| `latest_linehaul_id`| `BIGINT` | FK → `linehauls.id` (NULL) | — | Chuyến xe gắn với mốc cập nhật (nếu có) |
+| `latest_depot_id`| `BIGINT`| FK → `depots.id` (NULL) | — | Kho gắn với mốc cập nhật (nếu có) |
 | `changed_by` | `BIGINT` | FK → `users.id` | — | Nhân viên thực hiện cập nhật |
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian ghi nhận mốc |
 
-#### Bảng `trip_bills` — Vận đơn bốc xếp lên chuyến xe tải
-*   Ghi nhận các vận đơn lẻ được xếp trực tiếp lên chuyến xe trung chuyển (dùng cho Giai đoạn 1 thay thế cho bao hàng).
-
-| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
-| :--- | :--- | :--- | :--- | :--- |
-| `trip_id` | `BIGINT` | PK, FK → `trips.id` (CASCADE) | — | Chuyến xe tải trung chuyển |
-| `bill_id` | `BIGINT` | PK, UNIQUE, FK → `bills.id` (CASCADE) | — | Vận đơn bốc lên chuyến xe |
-
-*   *Ràng buộc*: `bill_id` là UNIQUE để đảm bảo một vận đơn lẻ chỉ được xếp lên duy nhất 1 chuyến xe tải trung chuyển tại một thời điểm.
+*   *Ghi chú*: Vị trí mốc quét được biểu diễn bằng `latest_depot_id` (đơn đang ở kho) hoặc `latest_linehaul_id` (đơn đang trên chuyến xe) thay cho cột `location` dạng text tự do trước đây.
 
 ---
 
-### 3.8 Phân hệ Quản Lý Tiền Mặt COD (COD Handover & Ledgers)
+### 3.7 Phân hệ Quản Lý Tiền Mặt COD (COD Handover & Ledgers)
+
+> ⚠️ **Chờ thiết kế lại (note #9)**: Toàn bộ phân hệ thanh toán vận đơn (COD, chuyển khoản, công nợ) sẽ được thiết kế lại thành mô hình giao dịch (transaction) thống nhất ở phiên bản sau. Các bảng dưới đây giữ tạm cho luồng COD tiền mặt Giai đoạn 1.
 
 #### Bảng `cod_handovers` — Bảng kê bàn giao tiền mặt COD của bưu tá
-*   Lưu thông tin bảng kê bàn giao tiền mặt nộp quỹ bưu cục của bưu tá cuối ca.
+*   Lưu thông tin bảng kê bàn giao tiền mặt nộp quỹ kho của bưu tá cuối ca.
 
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
@@ -496,13 +455,13 @@ erDiagram
 
 *   *Ràng buộc*: `bill_id` là UNIQUE để loại bỏ hoàn toàn việc bưu tá gán trùng 1 vận đơn đã giao vào 2 bảng kê nộp tiền khác nhau.
 
-#### Bảng `hub_ledgers` — Sổ quỹ dòng tiền mặt bưu cục
-*   Ghi nhận toàn bộ dòng tiền mặt biến động thực tế chạy qua két sắt của bưu cục.
+#### Bảng `depot_ledgers` — Sổ quỹ dòng tiền mặt kho hàng
+*   Ghi nhận toàn bộ dòng tiền mặt biến động thực tế chạy qua két sắt của kho.
 
 | Tên Column         | Kiểu dữ liệu    | Ràng buộc                                                                             | Giá trị mặc định | Giải nghĩa                                 |
 | :----------------- | :-------------- | :------------------------------------------------------------------------------------ | :--------------- | :----------------------------------------- |
 | `id`               | `BIGINT`        | PK, GENERATED                                                                         | —                | Định danh giao dịch quỹ                    |
-| `hub_id`           | `BIGINT`        | FK → `hubs.id`                                                                        | —                | Bưu cục ghi nhận biến động quỹ             |
+| `depot_id`         | `BIGINT`        | FK → `depots.id`                                                                      | —                | Kho ghi nhận biến động quỹ                 |
 | `transaction_type` | `TEXT`          | CHECK IN ('cod_collection', 'cod_payout', 'shipper_remittance', 'deposit', 'expense') | —                | Phân loại thu chi quỹ                      |
 | `amount`           | `NUMERIC(14,2)` | NOT NULL                                                                              | —                | Giá trị giao dịch (Dương: Thu, Âm: Chi)    |
 | `reference_id`     | `BIGINT`        | NULL                                                                                  | —                | ID bảng kê COD hoặc ID phiếu chi liên quan |
@@ -514,34 +473,64 @@ erDiagram
 ## 4. Thiết kế Index hiệu năng hệ thống (Indexes)
 
 Để đảm bảo hiệu năng tìm kiếm dưới 1 giây cho cơ sở dữ liệu trên 100.000 vận đơn:
-1.  **Index tìm kiếm tiếng Việt không dấu**:
+1.  **Tìm kiếm theo tên/SĐT người gửi–người nhận**: Do vận đơn tham chiếu `sender_id`/`receiver_id`, việc tìm kiếm không dấu theo tên/số điện thoại được thực hiện trên bảng `customers` (index `unaccent` + `pg_trgm` trên `customers.display_name`, `customers.phone` — xem tài liệu lõi VeloxShip), rồi JOIN về `bills`.
     ```sql
-    -- Tạo extension unaccent và pg_trgm nếu chưa có
     CREATE EXTENSION IF NOT EXISTS unaccent;
     CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
-    -- Index trên cột thông tin người gửi/người nhận phục vụ tìm kiếm không dấu
-    CREATE INDEX idx_bills_search_sender_name 
-    ON bills USING gin (unaccent(lower(sender_name)) gin_trgm_ops);
-
-    CREATE INDEX idx_bills_search_receiver_name 
-    ON bills USING gin (unaccent(lower(receiver_name)) gin_trgm_ops);
     ```
 2.  **Index lọc trạng thái hành trình bưu gửi**:
     ```sql
-    -- Index phức hợp tăng tốc độ load trang danh sách quản lý bưu cục
     CREATE INDEX idx_bills_status_created_at 
     ON bills (status, created_at DESC);
     ```
 3.  **Index các khóa ngoại thường xuyên JOIN**:
     ```sql
-    CREATE INDEX idx_bills_current_hub ON bills (current_hub_id);
+    CREATE INDEX idx_bills_sender ON bills (sender_id);
+    CREATE INDEX idx_bills_receiver ON bills (receiver_id);
+    CREATE INDEX idx_bills_latest_depot ON bills (latest_depot_id);
+    CREATE INDEX idx_bills_latest_linehaul ON bills (latest_linehaul_id);
     CREATE INDEX idx_bills_shipper ON bills (shipper_id);
-    CREATE INDEX idx_bills_sender_phone ON bills (sender_phone);
-    CREATE INDEX idx_bills_receiver_phone ON bills (receiver_phone);
     ```
 4.  **Index duy nhất chống nhập trùng**:
-    *   Tự động được tạo bởi các thuộc tính `UNIQUE` đối với: `bills.tracking_number`, `trip_bills.bill_id`, `cod_handovers.code`, `vehicles.license_plate`, `users.phone`.
+    *   Tự động được tạo bởi các thuộc tính `UNIQUE` đối với: `bills.tracking_number`, `cod_handovers.code`, `cod_handover_items.bill_id`, `vehicles.license_plate`, `users.phone`, `depots.code`.
+
+---
+
+## 5. Vòng đời vận đơn (Bill State Machine)
+
+Sơ đồ dưới minh họa vòng đời trạng thái của một vận đơn (`bills.status`), khớp với ràng buộc `CHECK` và logic xử lý ở tầng service.
+
+```mermaid
+stateDiagram-v2
+    [*] --> created : Tạo phiếu gửi
+    created --> picked_up : Bưu tá lấy hàng
+    created --> cancelled : Hủy trước khi lấy hàng
+    picked_up --> in_transit : Nhập kho / lên chuyến
+    picked_up --> returned : Không lấy được / trả lại
+    picked_up --> cancelled : Hủy trước khi trung chuyển
+    in_transit --> delivered : Phát thành công
+    in_transit --> returned : Phát không thành công
+    delivered --> [*]
+    returned --> [*]
+    cancelled --> [*]
+```
+
+**Bảng chuyển trạng thái hợp lệ** (kiểm soát trong `bill_service`):
+
+| Từ trạng thái | Được phép chuyển sang | Ý nghĩa |
+| :--- | :--- | :--- |
+| `created` | `picked_up`, `cancelled` | Đã tạo phiếu gửi |
+| `picked_up` | `in_transit`, `returned`, `cancelled` | Đã lấy hàng |
+| `in_transit` | `delivered`, `returned` | Đang vận chuyển |
+| `delivered` | *(kết thúc)* | Đã giao thành công |
+| `returned` | *(kết thúc)* | Hoàn trả |
+| `cancelled` | *(kết thúc)* | Đã hủy |
+
+**Ràng buộc chuyển trạng thái**:
+*   Chuyển sang `delivered` bắt buộc có `delivered_at` (server tự set `now()` nếu thiếu) và `delivered_to_name`.
+*   Chuyển sang `cancelled` bắt buộc có `cancellation_reason` khác rỗng.
+*   Không cho `cancelled` khi đơn đã ở trạng thái `in_transit` trở đi.
+*   Mỗi lần chuyển trạng thái ghi 1 dòng vào `bill_status_logs` (kèm `latest_depot_id`/`latest_linehaul_id` vị trí mốc quét).
 
 ---
 ---
@@ -555,8 +544,8 @@ erDiagram
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `BIGINT` | PK, GENERATED | — | Định danh bao hàng |
 | `code` | `TEXT` | UNIQUE, NOT NULL | — | Mã bao hàng tải (ví dụ: 'BAG123456') |
-| `origin_hub_id`| `BIGINT`| FK → `hubs.id` | — | Kho/Bưu cục thực hiện đóng bao |
-| `destination_hub_id`| `BIGINT`| FK → `hubs.id`| — | Kho/Bưu cục đích nhận bao |
+| `origin_depot_id`| `BIGINT`| FK → `depots.id` | — | Kho thực hiện đóng bao |
+| `destination_depot_id`| `BIGINT`| FK → `depots.id`| — | Kho đích nhận bao |
 | `status` | `TEXT` | CHECK IN ('open', 'sealed', 'in_transit', 'received', 'unpacked') | 'open' | Trạng thái niêm phong bao hàng |
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo bao |
 | `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Lần cuối cập nhật bao |
@@ -569,10 +558,10 @@ erDiagram
 
 *   *Ràng buộc*: `bill_id` là UNIQUE để đảm bảo một vận đơn lẻ chỉ được xếp vào duy nhất 1 bao hàng trung chuyển chưa mở tại một thời điểm.
 
-#### Bảng `trip_bags` — Bao hàng bốc xếp lên chuyến xe tải
+#### Bảng `linehaul_bags` — Bao hàng bốc xếp lên chuyến xe tải
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
 | :--- | :--- | :--- | :--- | :--- |
-| `trip_id` | `BIGINT` | PK, FK → `trips.id` (CASCADE) | — | Chuyến xe tải trung chuyển |
+| `linehaul_id` | `BIGINT` | PK, FK → `linehauls.id` (CASCADE) | — | Chuyến xe tải trung chuyển |
 | `bag_id` | `BIGINT` | PK, UNIQUE, FK → `bags.id` (CASCADE) | — | Bao trung chuyển |
 
 *   *Ràng buộc*: `bag_id` là UNIQUE để đảm bảo một bao hàng trung chuyển chỉ được xếp lên duy nhất 1 chuyến xe tải đang vận hành.
