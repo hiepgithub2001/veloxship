@@ -24,7 +24,7 @@ Cập nhật theo `docs/note_db.md`:
 8. Thêm **`bills.latest_linehaul_id`**; **bỏ bảng `trip_bills`**.
 9. *(Làm sau)* Thiết kế lại phân hệ thanh toán vận đơn (COD, chuyển khoản, công nợ).
 10. Bỏ bảng `hub_service_areas` (dư thừa).
-11. Bỏ 2 bảng `price_sheets`, `price_rules`.
+11. Bỏ 2 bảng `price_sheets`, `price_rules`. Cước phí được tính bằng **handler** dựa trên cặp `<customer_type, metadata>` của khách hàng (xem §3.5) thay vì bảng giá tĩnh.
 12. `vehicles.current_hub_id` → **`latest_depot_id`**.
 13. Thêm **`vehicles.latest_linehaul_id`**.
 14. Bổ sung mục **State Machine vòng đời vận đơn** (§5).
@@ -113,6 +113,15 @@ erDiagram
         text role
         jsonb metadata
         bigint depot_id FK
+        boolean is_active
+    }
+    Customer {
+        bigint id PK
+        citext code UK
+        text name
+        text phone
+        text customer_type
+        jsonb metadata
         boolean is_active
     }
     Bill {
@@ -310,11 +319,48 @@ erDiagram
 | `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
 | `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
 
-*   *Ghi chú*: Vận đơn không còn bảng nối `trip_bills`; mỗi vận đơn lưu trực tiếp `latest_linehaul_id` trỏ tới chuyến (linehaul) gần nhất chở nó (xem §3.6).
+*   *Ghi chú*: Vận đơn không còn bảng nối `trip_bills`; mỗi vận đơn lưu trực tiếp `latest_linehaul_id` trỏ tới chuyến (linehaul) gần nhất chở nó (xem §3.7).
 
 ---
 
-### 3.5 Đối Tác Vận Chuyển Ngoài (3PL Partners)
+### 3.5 Khách hàng (Customers)
+
+*   Bảng master khách hàng (dùng cho cả người gửi và người nhận). Giữ **tối giản** ở giai đoạn này trước khi chốt use case; thông tin mở rộng lưu linh hoạt trong `metadata`. Cột `customer_type` quyết định **handler tính cước** áp dụng cho đơn hàng của khách.
+
+#### Bảng `customers` — Khách hàng
+
+| Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `BIGINT` | PK, GENERATED | — | Định danh khách hàng |
+| `code` | `CITEXT` | UNIQUE, NULL | — | Mã khách hàng (in "Mã KH" trên phiếu); NULL nếu khách vãng lai chưa cấp mã |
+| `name` | `TEXT` | NOT NULL | — | Tên khách hàng (cá nhân hoặc doanh nghiệp) |
+| `phone` | `TEXT` | NULL | — | Số điện thoại liên hệ chính |
+| `customer_type` | `TEXT` | NOT NULL, CHECK IN ('retail', 'shop', 'enterprise') | 'retail' | Loại khách hàng — **quyết định handler tính cước** |
+| `metadata` | `JSONB` | NULL | — | Dữ liệu mở rộng phục vụ tính cước & hồ sơ (địa chỉ, mã số thuế, chiết khấu, tham số hợp đồng…) |
+| `is_active` | `BOOLEAN` | NOT NULL | `true` | Trạng thái hoạt động |
+| `created_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian tạo |
+| `updated_at` | `TIMESTAMPTZ`| NOT NULL | `now()` | Thời gian chỉnh sửa |
+
+*   **Chiến lược tính cước (Pricing strategy)**: Hệ thống **không dùng bảng giá tĩnh** (`price_sheets`/`price_rules` đã bỏ). Thay vào đó, xây dựng các **handler tính cước** nhận đầu vào là cặp `<customer_type, metadata>`; `customer_type` quyết định handler nào được chọn, còn `metadata` cung cấp tham số đầu vào cho công thức tính:
+    *   `retail` → `RetailPriceHandler` — giá cước niêm yết công khai.
+    *   `shop` → `ShopPriceHandler` — áp dụng chiết khấu/tham số nhóm shop lấy từ `metadata`.
+    *   `enterprise` → `ContractPriceHandler` — áp dụng giá hợp đồng riêng theo tham số trong `metadata`.
+*   **`metadata`** là đầu vào linh hoạt cho handler tính cước, ví dụ:
+    ```json
+    {
+      "address_detail": "12 Lê Lợi",
+      "ward_code": "26734",
+      "tax_code": "0301234567",
+      "default_discount_rate": 0.05,
+      "base_rate_table": "STD_2026",
+      "cod_fee_rate": 0.01
+    }
+    ```
+*   *Ghi chú*: Danh mục `customer_type` là mở — bổ sung loại mới chỉ cần thêm một handler tương ứng, không cần thay đổi schema. Các cột chi tiết (địa chỉ, phường/xã…) sẽ được tách ra khỏi `metadata` thành cột riêng khi use case được chốt.
+
+---
+
+### 3.6 Đối Tác Vận Chuyển Ngoài (3PL Partners)
 
 #### Bảng `partners` — Đối tác 3PL liên kết
 | Tên Column | Kiểu dữ liệu | Ràng buộc | Giá trị mặc định | Giải nghĩa |
@@ -341,7 +387,7 @@ erDiagram
 
 ---
 
-### 3.6 Vận Đơn & Kho Trung Chuyển (Bills & Warehousing)
+### 3.7 Vận Đơn & Kho Trung Chuyển (Bills & Warehousing)
 
 #### Bảng `bills` — Vận đơn / Phiếu gửi (Cập nhật)
 *   Thông tin người gửi/người nhận tham chiếu trực tiếp tới bảng `customers` qua `sender_id` / `receiver_id` (không còn snapshot).
@@ -427,7 +473,7 @@ erDiagram
 
 ---
 
-### 3.7 Phân hệ Quản Lý Tiền Mặt COD (COD Handover & Ledgers)
+### 3.8 Phân hệ Quản Lý Tiền Mặt COD (COD Handover & Ledgers)
 
 > ⚠️ **Chờ thiết kế lại (note #9)**: Toàn bộ phân hệ thanh toán vận đơn (COD, chuyển khoản, công nợ) sẽ được thiết kế lại thành mô hình giao dịch (transaction) thống nhất ở phiên bản sau. Các bảng dưới đây giữ tạm cho luồng COD tiền mặt Giai đoạn 1.
 
