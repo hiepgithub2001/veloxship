@@ -1,0 +1,37 @@
+Mã UC,Phân hệ (Module),Chức năng hệ thống,Chi tiết Use Case (Mô tả nghiệp vụ),Nền tảng (Platform),Ghi chú,Quân
+UC-WEB-01,QUẢN LÝ NHÂN VIÊN,Quản lý phòng ban,"Xem danh sách, thêm, sửa, xóa phòng ban trên hệ thống",WEB QUẢN LÝ,gộp với tính năng ~uc-web-03,
+UC-WEB-02,QUẢN LÝ NHÂN VIÊN,Quản lý chức vụ,"Xem danh sách, thêm, sửa, xóa chức vụ nhân sự",WEB QUẢN LÝ,gộp với tính năng ~uc-web-03,
+UC-WEB-03,QUẢN LÝ NHÂN VIÊN,Quản lý nhân viên,"Xem danh sách, thêm mới, cập nhật thông tin, phân vai trò tài khoản nhân viên",WEB QUẢN LÝ,"Bao gom thong tin Phong Ban, Chuc vu, Phan quyen.",ok
+UC-WEB-04,QUẢN LÝ CÀI ĐẶT,Quản lý tỉnh thành,Quản lý danh mục Tỉnh/Thành phố trên toàn quốc,WEB QUẢN LÝ,,
+UC-WEB-05,QUẢN LÝ CÀI ĐẶT,Quản lý quận huyện,Quản lý danh mục Quận/Huyện liên kết với Tỉnh/Thành,WEB QUẢN LÝ,,
+UC-WEB-06,QUẢN LÝ CÀI ĐẶT,Quản lý phường xã,Quản lý danh mục Phường/Xã/Thị trấn trực thuộc Quận/Huyện,WEB QUẢN LÝ,,
+UC-WEB-07,QUẢN LÝ CÀI ĐẶT,Quản lý Trung tâm/ Chi nhánh/ Bưu cục,"Xem danh sách, thêm, sửa, thiết lập bưu cục giao nhận",WEB QUẢN LÝ,,
+UC-WEB-08,QUẢN LÝ CÀI ĐẶT,Quản lý khu vực/ tuyến giao nhận,"Cấu hình khu vực hoạt động, tuyến đường vận chuyển của bưu cục",WEB QUẢN LÝ,gộp với tính năng ~uc-web-07,ok
+UC-WEB-09,QUẢN LÝ CÀI ĐẶT,Quản lý đội xe,"Đăng ký thông tin xe, phân loại xe tải/xe máy",WEB QUẢN LÝ,,
+UC-WEB-10,QUẢN LÝ CÀI ĐẶT,Quản lý phân quyền,Tạo các nhóm quyền và gán chức năng chi tiết cho từng chức vụ/vai trò,WEB QUẢN LÝ,,
+UC-WEB-11,QUẢN LÝ CÀI ĐẶT,Quản lý dịch vụ/ dịch vụ gia tăng,"Cấu hình dịch vụ vận chuyển chính (tiêu chuẩn, hỏa tốc) & dịch vụ gia tăng (bảo hiểm, giao tận tay)",WEB QUẢN LÝ,gộp với tính năng ~uc-web-12,ok
+UC-WEB-12,QUẢN LÝ CÀI ĐẶT,Quản lý loại hàng hóa,"Phân loại nhóm hàng hóa (hàng cồng kềnh, dễ vỡ, tài liệu, chất lỏng) phục vụ tính phí",WEB QUẢN LÝ,"Bao gom (hoa tov, bao hiem, ...)",
+UC-WEB-13,QUẢN LÝ KHÁCH HÀNG,Quản lý thông tin khách hàng,"Quản lý danh sách khách hàng gửi, phân loại nhóm khách hàng",WEB QUẢN LÝ,Hỏi lại khách hàng,
+UC-WEB-14,QUẢN LÝ KHÁCH HÀNG,Quản lý bảng giá,Thiết lập bảng giá cước chi tiết áp dụng cho từng khách hàng hoặc nhóm khách hàng,WEB QUẢN LÝ,Hỏi lại khách hàng,
+UC-WEB-15,QUẢN LÝ KHÁCH HÀNG,Quản lý công nợ,"Kiểm soát công nợ khách hàng gửi theo định kỳ, lập bảng đối soát, ghi nhận thanh toán",WEB QUẢN LÝ,,
+UC-WEB-16,QUẢN LÝ ĐỐI TÁC,Quản lý thông tin đối tác,Quản lý thông tin các đối tác liên kết vận chuyển bên thứ ba (3PL),WEB QUẢN LÝ,"<service, infor, cost>",
+UC-WEB-17,QUẢN LÝ ĐỐI TÁC,Quản lý bảng giá mua,Quản lý bảng giá cước mua dịch vụ từ các đối tác 3PL,WEB QUẢN LÝ,gộp với tính năng ~uc-web-16,ok
+UC-WEB-18,QUẢN LÝ VẬN ĐƠN,Quản lý lấy hàng,"Tiếp nhận yêu cầu gửi hàng từ khách hàng, điều phối bưu tá đi lấy hàng",WEB QUẢN LÝ,,
+UC-WEB-19,QUẢN LÝ VẬN ĐƠN,Tạo vận đơn,"Nhập thủ công thông tin người gửi, người nhận, hàng hóa, cước phí để tạo 1 vận đơn mới",WEB QUẢN LÝ,,
+UC-WEB-23,QUẢN LÝ VẬN ĐƠN,Danh sách vận đơn,"Bộ lọc tra cứu trạng thái, hành trình chi tiết của mọi vận đơn trong hệ thống",WEB QUẢN LÝ,,
+UC-WEB-24,QUẢN LÝ VẬN ĐƠN,Hủy giao hàng thành công,Xử lý nghiệp vụ hủy trạng thái giao hàng thành công khi có khiếu nại hoặc lỗi cập nhật,WEB QUẢN LÝ,,
+UC-WEB-26,QUẢN LÝ VẬN ĐƠN,Điều chỉnh COD,Cập nhật/điều chỉnh số tiền thu hộ (COD) trước khi xuất kho đi giao,WEB QUẢN LÝ,,
+UC-WEB-27,QUẢN LÝ VẬN ĐƠN,Lịch sử điều chỉnh đơn hàng,Truy vết (Audit Log) toàn bộ lịch sử chỉnh sửa thông tin vận đơn,WEB QUẢN LÝ,,
+UC-WEB-28,QUẢN LÝ KHO,Nhập kho,Quét mã vạch nhập kho bưu cục khi nhận hàng từ bưu tá hoặc bưu cục khác chuyển đến,WEB QUẢN LÝ,,
+UC-WEB-29,QUẢN LÝ KHO,Kiểm điểm kho,"Đối soát, kiểm kê số lượng hàng thực tế tồn trong kho bưu cục",WEB QUẢN LÝ,"Số lương, danh sách hàng hoá, tổng cân nặng (hỏi lại khách)",
+UC-WEB-30,QUẢN LÝ KHO,Xuất kho trung chuyển,Quét mã vạch xuất bao hàng trung chuyển đi bưu cục tiếp theo hoặc kho tổng,WEB QUẢN LÝ,Hỏi lại khách hiện tại có triển khai luôn hay k ,Xuất bảng kê bao chi tiết hàng hóa các bill đến bưu cục/kho/chi nhánh.
+UC-WEB-31,QUẢN LÝ KHO,Xuất hàng đối tác,Quét xuất kho bàn giao hàng cho đối tác vận chuyển bên thứ ba (3PL),WEB QUẢN LÝ,Hỏi lại khách hiện tại có triển khai luôn hay k ,xuất bảng kế chuyển các billl qua đối tác
+UC-WEB-32,QUẢN LÝ KHO,Xuất kho giao hàng,Quét bàn giao danh sách đơn hàng cho bưu tá đi phát,WEB QUẢN LÝ,Hỏi lại khách hiện tại có triển khai luôn hay k ,"xuất bk cho các tài xê, nhân viên phát hàng"
+UC-WEB-33,QUẢN LÝ KHO,Xuất kho trả hàng,Thực hiện xuất kho trả hàng hoàn về cho người gửi,WEB QUẢN LÝ,Hỏi lại khách hiện tại có triển khai luôn hay k ,chưa cần dùng đến mục này
+UC-WEB-34,QUẢN LÝ KHO,Lịch sử xuất/nhập kho,Theo dõi chi tiết lịch sử và thời gian thực hiện xuất/nhập kho của từng đơn,WEB QUẢN LÝ,,
+UC-WEB-35,QUẢN LÝ CHUYỂN XE,Quản lý đội xe,"Theo dõi tình trạng hoạt động, lịch trình sử dụng của đội xe tải vận chuyển",WEB QUẢN LÝ,,
+UC-WEB-36,QUẢN LÝ CHUYỂN XE,Quản lý chuyến xe,"Tạo chuyến xe, gán tài xế, bốc xếp bao hàng lên xe và xuất phát hành trình liên tỉnh/nội thành",WEB QUẢN LÝ,,
+UC-WEB-37,QUẢN LÝ THU TIỀN (COD),Quản lý thu hộ,Theo dõi đối soát tổng dòng tiền thu hộ COD từ các đơn phát thành công,WEB QUẢN LÝ,,
+UC-WEB-38,QUẢN LÝ THU TIỀN (COD),Thu tiền nhân viên,"Bưu tá nộp tiền COD mặt thu được trong ngày về bưu cục, lập bảng kê thu tiền",WEB QUẢN LÝ,,
+UC-WEB-39,QUẢN LÝ THU TIỀN (COD),Xác nhận thu tiền,Thủ quỹ bưu cục xác nhận đã nhận đủ tiền thực tế từ bưu tá dựa trên bảng kê,WEB QUẢN LÝ,,
+UC-WEB-40,BÁO CÁO THỐNG KÊ,Báo cáo thống kê,"Tạo báo cáo doanh thu, sản lượng, công nợ, hiệu suất shipper (Tối đa 20 báo cáo)",WEB QUẢN LÝ,,
