@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend db-migrate db-seed install setup stop help
+.PHONY: dev backend frontend db-revision db-migrate db-seed install setup stop help
 
 # Default target
 help: ## Show this help
@@ -21,6 +21,10 @@ install-frontend: ## Install frontend dependencies
 	cd frontend && npm install
 
 # ─── Database ───────────────────────────────────────
+
+db-revision: ## Create next migration: make db-revision m="add cod ledger"
+	@test -n "$(m)" || { echo 'Usage: make db-revision m="short reason"'; exit 1; }
+	cd backend && . venv/bin/activate && alembic revision --autogenerate -m "$(m)"
 
 db-migrate: ## Run database migrations
 	cd backend && . venv/bin/activate && alembic upgrade head
