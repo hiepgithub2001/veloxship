@@ -6,7 +6,6 @@ from .bill_content_line import BillContentLine
 from .bill_status_event import BillStatusEvent, BillStatusLog
 from .customer import Customer
 from .depot import Depot
-from .district import District
 from .finance import CodHandover, CodHandoverItem, DepotLedger
 from .linehaul import Linehaul
 from .partner import Partner, PartnerTariff
@@ -28,7 +27,6 @@ __all__ = [
     "Customer",
     "Depot",
     "DepotLedger",
-    "District",
     "Linehaul",
     "Partner",
     "PartnerTariff",

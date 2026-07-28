@@ -20,8 +20,8 @@ class Province(Base):
         nullable=False, server_default=func.now(),
     )
 
-    districts: Mapped[list["District"]] = relationship(
-        "District", back_populates="province", cascade="all, delete-orphan",
+    wards: Mapped[list["Ward"]] = relationship(
+        "Ward", back_populates="province", cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

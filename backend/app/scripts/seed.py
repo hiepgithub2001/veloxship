@@ -36,6 +36,10 @@ async def seed() -> None:
 
         await db.commit()
 
+    # Seed administrative divisions (provinces & wards)
+    from app.scripts.seed_divisions import seed_divisions
+    await seed_divisions()
+
 
 if __name__ == "__main__":
     asyncio.run(seed())

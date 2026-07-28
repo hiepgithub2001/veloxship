@@ -16,14 +16,14 @@ class Ward(Base):
     code: Mapped[str] = mapped_column(String, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     name_en: Mapped[str | None] = mapped_column(Text, nullable=True)
-    district_code: Mapped[str] = mapped_column(
-        String, ForeignKey("districts.code"), nullable=False,
+    province_code: Mapped[str] = mapped_column(
+        String, ForeignKey("provinces.code"), nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now(),
     )
 
-    district: Mapped["District"] = relationship("District", back_populates="wards")
+    province: Mapped["Province"] = relationship("Province", back_populates="wards")
 
     def __repr__(self) -> str:
         return f"<Ward code={self.code} name={self.name}>"
