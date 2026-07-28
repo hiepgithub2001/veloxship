@@ -37,8 +37,23 @@ dev = [
     "testcontainers[postgres]>=4.0",
     "ruff>=0.3",
     "black>=24.0",
+    "mypy>=1.9",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+# Ratchet — layers below are held to full annotation coverage. They already
+# pass, so this only guards against regression. Add more as they are cleaned
+# up; see docs/conventions.md §11.
+[[tool.mypy.overrides]]
+module = ["app.crud.*", "app.models.*", "app.db.*"]
+disallow_untyped_defs = true
