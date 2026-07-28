@@ -18,7 +18,7 @@ sửa tài liệu thay vì lặng lẽ làm khác.
 3. **Tiền là `Decimal`, không bao giờ là `float`.**
 4. **Lỗi trả về người dùng luôn có `error_code` + thông điệp tiếng Việt.**
 5. **Không sửa migration đã được apply lên môi trường chung.**
-6. **Code mới phải có annotation đầy đủ và không làm tăng số lỗi `mypy app`.**
+6. **Mọi hàm Python có type hint đầy đủ cho tham số và giá trị trả về.**
 
 ---
 
@@ -252,6 +252,60 @@ nằm trong DB. *(Chuỗi cũ kiểu `da_tao` đã được migrate sang tiếng
 - Service file: `<entity>_service.py`.
 - Ruff quản lý import order và format — chạy `ruff check --fix` trước khi commit.
 
+### 4.7 Type hint
+
+**Mọi hàm Python phải có type hint đầy đủ cho tham số và giá trị trả về.**
+
+```python
+# ✅
+async def get_bill(db: AsyncSession, bill_id: int) -> Bill | None: ...
+
+# ❌ thiếu kiểu tham số và kiểu trả về
+async def get_bill(db, bill_id): ...
+```
+
+**Dùng cú pháp hiện đại của Python 3.11** — ruff (rule `UP`) sẽ cảnh báo nếu dùng
+kiểu cũ:
+
+| Dùng | Không dùng |
+|---|---|
+| `str \| None` | `Optional[str]` |
+| `list[Bill]` | `List[Bill]` |
+| `dict[str, Any]` | `Dict[str, Any]` |
+| `tuple[list[Bill], int]` | `Tuple[List[Bill], int]` |
+
+**Quy tắc cụ thể:**
+
+- Hàm không trả về giá trị vẫn phải ghi `-> None`.
+- Hàm `async` ghi kiểu của **giá trị đã await**, không bọc `Coroutine`:
+  `async def f() -> Bill:` chứ không phải `-> Coroutine[..., Bill]`.
+- Cột model dùng `Mapped[...]` + `mapped_column(...)`, đã áp dụng nhất quán
+  trong `app/models/`.
+- Tiền dùng `Decimal`, không dùng `float` (xem mục 5.2).
+- Hạn chế `Any`. Buộc phải dùng thì kèm comment giải thích lý do.
+- **Không dùng `from module import *`** — làm hỏng khả năng phân giải tên của cả
+  người đọc lẫn IDE. *(`alembic/env.py:16` đang vi phạm.)*
+
+**Forward reference:** khi khai báo quan hệ tới model khác, tên trong chuỗi phải
+thực sự import được. Import trong khối `if TYPE_CHECKING:` để tránh vòng lặp
+import lúc chạy:
+
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.depot import Depot
+
+class Bill(Base):
+    origin_depot: Mapped["Depot | None"] = relationship("Depot", ...)
+```
+
+*Hiện trạng cần sửa dần:* `services/bill_service.py:16` khai báo `-> "Bill"`
+nhưng `Bill` không hề được import trong file — chuỗi này không phân giải được.
+Các chỗ còn thiếu type hint: endpoint trong `api/v1/bills.py` (thiếu kiểu trả
+về), `schemas/bill.py:50` (`validate_total`), `core/exceptions.py:42`
+(`register_exception_handlers`), `alembic/env.py` (`do_run_migrations`).
+
 ---
 
 ## 5. Pydantic schemas
@@ -445,97 +499,6 @@ fix(alembic): restore missing check constraints on bills
 
 ---
 
-## 11. Type safety
-
-### 11.1 Quyết định: mypy chế độ mặc định + ratchet, không phải `--strict` toàn bộ
-
-Backend chạy **mypy chế độ mặc định**, không bật `--strict` cho toàn app.
-Con số thực đo trên codebase này:
-
-| Chế độ | Số lỗi | Kết luận |
-|---|---|---|
-| Mặc định | **38** | ✅ chọn cách này |
-| `--strict` | 79 | phần chênh chủ yếu là nhiễu, giá trị thấp với app CRUD |
-
-Lý do không chọn `--strict`: 41 lỗi tăng thêm hầu hết là yêu cầu annotate những
-chỗ không mang ý nghĩa nghiệp vụ (helper trong test, `**kwargs` nội bộ). Chi phí
-cao, lợi ích thấp.
-
-### 11.2 Vì sao đáng làm — bằng chứng cụ thể
-
-mypy chế độ mặc định **tự phát hiện đúng bug đang làm hỏng `main`**:
-
-```
-app/crud/bill.py:104: error: "type[Bill]" has no attribute "status_events"  [attr-defined]
-app/crud/bill.py:117: error: "type[Bill]" has no attribute "status_events"  [attr-defined]
-app/crud/bill.py:140: error: "type[Bill]" has no attribute "status_events"  [attr-defined]
-```
-
-Đây chính là hệ quả của việc đổi model mà không đổi `crud` (mục 3). Một cổng
-kiểm tra kiểu trong CI đã chặn được PR đó.
-
-### 11.3 Cách chạy
-
-```bash
-cd backend && . venv/bin/activate && mypy app
-```
-
-Cấu hình nằm trong `backend/pyproject.toml` mục `[tool.mypy]`:
-chế độ mặc định + plugin `pydantic.mypy`.
-
-### 11.4 Cơ chế ratchet
-
-Các package đã annotate đầy đủ được siết `disallow_untyped_defs = true`:
-
-```toml
-[[tool.mypy.overrides]]
-module = ["app.crud.*", "app.models.*", "app.db.*"]
-disallow_untyped_defs = true
-```
-
-Ba package này **đã pass sẵn** — bật lên không phát sinh lỗi mới, chỉ để chống
-tụt hậu. **Khi dọn xong một package, thêm nó vào danh sách này.** Thứ tự đề xuất
-tiếp theo: `app.services.*` → `app.schemas.*` → `app.api.*`.
-
-### 11.5 Luật cho code mới
-
-- Hàm mới **phải** có annotation đầy đủ cho tham số và giá trị trả về.
-- Không dùng `Any` nếu chưa thử tìm kiểu cụ thể; buộc phải dùng thì kèm comment lý do.
-- `# type: ignore` phải ghi rõ mã lỗi và lý do: `# type: ignore[attr-defined]  # SQLAlchemy ...`
-- Tiền là `Decimal` (mục 5.2) — đây cũng là một luật về kiểu.
-- Không thêm lỗi mới vào baseline 38. PR làm tăng con số này phải giải thích.
-
-### 11.6 Phân loại 38 lỗi hiện có
-
-| Nhóm | Số lượng | Cách xử lý |
-|---|---|---|
-| Forward ref trong `models/` (`Mapped["Province"]`) | ~26 | thêm khối `if TYPE_CHECKING:` vào từng file model |
-| Bug thật | ~5 | `crud/bill.py:104,117,140` (`status_events`), `crud/bill.py:94` (trả `Bill \| None` cho `-> Bill`), `print_service.py:80` (gán float vào int) |
-| `main.py` bị che tên | 6 | `import app.models` ở dòng 11 gán tên `app` cho package, dòng 25 gán lại thành `FastAPI` — sửa thành `from app import models as _models` |
-
-Ước tính 2–3 giờ để về 0. **Không phải điều kiện chặn merge ngay**, nhưng là
-việc cần làm sớm vì nhóm "bug thật" đang gây lỗi runtime.
-
-### 11.7 Frontend — zod là ranh giới kiểu, chưa dùng TypeScript
-
-Stack frontend cố định là **React JS** (theo `CLAUDE.md`), nên **không** đưa
-TypeScript vào dưới danh nghĩa "strict type". Thay vào đó:
-
-- Mọi dữ liệu từ API vào app phải qua **zod schema** — đây là ranh giới kiểu ở
-  runtime, và là nửa có giá trị hơn so với kiểu tĩnh.
-- Hàm dùng chung trong `src/lib/` nên có **JSDoc** mô tả kiểu.
-- Chuyển sang TypeScript là một quyết định riêng, cần bàn tách bạch, không gộp
-  vào quy ước này.
-
-### 11.8 ⚠️ Điều kiện tiên quyết: CI chưa có cổng kiểm tra
-
-`.github/workflows/deploy.yml` hiện chỉ build và deploy — **không chạy lint,
-test hay type check**. Cho tới khi có job CI thực thi, mục 11 chỉ mang tính
-khuyến nghị. Thêm cổng CI là việc cần làm kế tiếp, và cũng là nơi chạy luôn
-test suite ở mục 7.
-
----
-
 ## Phụ lục — các việc cần dọn
 
 Tổng hợp những chỗ tài liệu này chỉ ra là đang lệch chuẩn:
@@ -551,5 +514,4 @@ Tổng hợp những chỗ tài liệu này chỉ ra là đang lệch chuẩn:
 | 7 | Vi phạm hướng phụ thuộc | mục 2.4 |
 | 8 | Thư mục test rỗng | `backend/tests/` |
 | 9 | Makefile trỏ tới `docker-compose.db.yml` / `.local.yml` không tồn tại | `Makefile` |
-| 10 | 38 lỗi mypy trong baseline (26 forward ref, 5 bug thật, 6 che tên) | mục 11.6 |
-| 11 | CI không chạy lint / test / type check | `.github/workflows/deploy.yml` |
+| 10 | Thiếu type hint rải rác; `import *` trong `env.py`; forward ref không phân giải được | mục 4.7 |
