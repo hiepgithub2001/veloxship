@@ -2,7 +2,6 @@
 
 import asyncio
 from logging.config import fileConfig
-
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -11,7 +10,7 @@ from app.core.config import settings
 from app.db.base import Base
 
 # Import all models so Alembic can see them for autogenerate
-from app.models import audit_event, bill, bill_content_line, bill_status_event, customer, service_tier, user  # noqa: F401
+from app.models import *
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
