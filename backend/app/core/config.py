@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     """Strongly-typed settings read from .env / environment."""
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@db:5432/veloxship"
+    DATABASE_URL: str  # Required — must be set via .env or environment
 
     # JWT
     JWT_SECRET: str = "change-me-in-production"
