@@ -53,10 +53,7 @@ Số thứ tự được gán **tự động** bởi hook `process_revision_dire
 | `process_revision_directives` | `alembic/env.py` | gán `rev_id = max(hiện có) + 1` |
 | `revision_environment` | `alembic.ini` | nạp `env.py` cả khi không `--autogenerate` |
 
-> Lịch sử: `8e6679d4b6ec_setup_database_v2.py` lọt vào giữa chuỗi vì trước đây
-> `alembic.ini` thiếu `file_template`. Các id cũ không đúng chuẩn (`0002b`,
-> `0004_drop_districts`, `8e6679d4b6ec`) **giữ nguyên** — đổi tên đồng nghĩa
-> viết lại `down_revision` của chuỗi đã apply lên DB dev.
+> Lịch sử: Chuỗi migration hiện tại đã được chuẩn hóa liên tục từ `0001` đến `0005`.
 
 ### 1.3 Bắt buộc review output của `--autogenerate`
 

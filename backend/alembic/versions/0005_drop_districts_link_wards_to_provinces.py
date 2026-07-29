@@ -1,7 +1,7 @@
 """drop districts and link wards directly to provinces
 
-Revision ID: 0004_drop_districts
-Revises: 8e6679d4b6ec
+Revision ID: 0005
+Revises: 0004
 Create Date: 2026-07-28 16:25:00.000000
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0004_drop_districts'
-down_revision: Union[str, None] = '8e6679d4b6ec'
+revision: str = '0005'
+down_revision: Union[str, None] = '0004'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
