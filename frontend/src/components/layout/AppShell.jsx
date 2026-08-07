@@ -13,6 +13,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   BankOutlined,
+  CarOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
 import { t } from '../../i18n/vi';
@@ -47,6 +48,11 @@ export function AppShell() {
       key: '/buu-cuc',
       icon: <BankOutlined />,
       label: t('layout.depots'),
+    },
+    {
+      key: '/doi-xe',
+      icon: <CarOutlined />,
+      label: t('layout.vehicles'),
     },
   ];
 

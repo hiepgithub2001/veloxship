@@ -29,6 +29,13 @@ _MESSAGES: dict[str, str] = {
     "DEPOT_CODE_EXISTS": "Mã bưu cục đã tồn tại.",
     "WARD_NOT_FOUND": "Mã phường/xã không hợp lệ.",
 
+    # Vehicles
+    "VEHICLE_NOT_FOUND": "Không tìm thấy phương tiện.",
+    "VEHICLE_LICENSE_PLATE_EXISTS": "Biển số xe đã tồn tại trong hệ thống.",
+
+    # Drivers
+    "DRIVER_NOT_FOUND": "Tài xế không tồn tại hoặc không hoạt động.",
+
     # Validation
     "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
     "CONTENT_LINES_REQUIRED": "Phiếu gửi phải có ít nhất một dòng nội dung.",

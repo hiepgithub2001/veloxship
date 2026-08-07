@@ -9,6 +9,7 @@ import { BillListPage } from '../features/bills/pages/BillListPage';
 import { BillCreatePage } from '../features/bills/pages/BillCreatePage';
 import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
 import { DepotListPage } from '../features/depots/pages/DepotListPage';
+import { VehicleListPage } from '../features/vehicles/pages/VehicleListPage';
 
 // Placeholder for customers (later phase)
 function PlaceholderPage({ title }) {
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
       {
         path: 'buu-cuc',
         element: <DepotListPage />,
+      },
+      {
+        path: 'doi-xe',
+        element: <VehicleListPage />,
       },
     ],
   },

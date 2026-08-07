@@ -1,0 +1,536 @@
+{
+  "pbtResults": {
+    "6.4 Write property test for search filter correctness": {
+      "status": "passed",
+      "lastRunTimestamp": 1786012468843
+    },
+    "6.5 Write property test for filter AND composition": {
+      "status": "passed",
+      "lastRunTimestamp": 1786012418789
+    }
+  },
+  "executionHistory": {
+    "1.1 Create Pydantic schemas in `app/schemas/vehicle.py`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131012
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005142656
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010172347
+      }
+    ],
+    "1.2 Register error codes in `app/core/i18n.py`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131053
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005143167
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010173091
+      }
+    ],
+    "2.1 Create `app/crud/vehicle.py` with data access functions": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131088
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010179071
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010311550
+      }
+    ],
+    "3.1 Create `app/services/vehicle_service.py` with business logic": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131137
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010318611
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011358495
+      }
+    ],
+    "4.1 Create `app/api/v1/vehicles.py` with REST endpoints": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131177
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011363438
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011574586
+      }
+    ],
+    "4.2 Wire vehicle router in `app/main.py`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131246
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011580106
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011586030
+      }
+    ],
+    "5. Checkpoint - Backend verification": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131277
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786069039916
+      }
+    ],
+    "6.1 Create unit tests in `tests/unit/test_vehicle_schemas.py`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131309
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011592576
+      },
+      {
+        "executionId": "55cfcbb3-dc9e-45f9-8859-b7910f960067",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012202986
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012636809
+      }
+    ],
+    "6.2 Create unit tests in `tests/unit/test_vehicle_service.py`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131346
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011593428
+      },
+      {
+        "executionId": "55cfcbb3-dc9e-45f9-8859-b7910f960067",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012203744
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012637669
+      }
+    ],
+    "6.3 Create integration tests in `tests/integration/test_vehicle_api.py`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131375
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011593958
+      },
+      {
+        "executionId": "55cfcbb3-dc9e-45f9-8859-b7910f960067",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012205033
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012638676
+      }
+    ],
+    "6.4 Write property test for search filter correctness": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131407
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011595008
+      },
+      {
+        "executionId": "55cfcbb3-dc9e-45f9-8859-b7910f960067",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012205188
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012639288
+      }
+    ],
+    "6.5 Write property test for filter AND composition": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131438
+      },
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011595899
+      },
+      {
+        "executionId": "55cfcbb3-dc9e-45f9-8859-b7910f960067",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012206181
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012640054
+      }
+    ],
+    "6.6 Write property test for pagination slice correctness": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131467
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012645497
+      }
+    ],
+    "6.7 Write property test for input validation boundaries": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131494
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012646302
+      }
+    ],
+    "6.8 Write property test for license plate uniqueness": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131522
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012647133
+      }
+    ],
+    "6.9 Write property test for partial update field preservation": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131547
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012647880
+      }
+    ],
+    "6.10 Write property test for idempotent status toggle": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131578
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012648592
+      }
+    ],
+    "7.1 Create `src/api/vehicles.js` with API functions": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131634
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012659505
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012723618
+      }
+    ],
+    "7.2 Create `src/features/vehicles/schema.js` with zod validation": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131677
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012660080
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012724447
+      }
+    ],
+    "8.1 Create `src/features/vehicles/components/VehicleStatusBadge.jsx`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131706
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012730485
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012833622
+      }
+    ],
+    "8.2 Create `src/features/vehicles/components/VehicleSearchBar.jsx`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131734
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012731332
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012834507
+      }
+    ],
+    "8.3 Create `src/features/vehicles/components/VehicleFilters.jsx`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131767
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012732198
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012835317
+      }
+    ],
+    "8.4 Create `src/features/vehicles/components/VehicleTable.jsx`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131803
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012733049
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012836160
+      }
+    ],
+    "8.5 Create `src/features/vehicles/components/VehicleFormModal.jsx`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131828
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012842077
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786067489272
+      }
+    ],
+    "9.1 Create `src/features/vehicles/pages/VehicleListPage.jsx`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131857
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786067495421
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786068889040
+      }
+    ],
+    "9.2 Add Vietnamese strings to `src/i18n/vi.js`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131887
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786067496237
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786068890391
+      }
+    ],
+    "9.3 Add vehicle route to `src/routes/`": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131916
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786068896174
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786069029017
+      }
+    ],
+    "10. Final checkpoint - Full integration verification": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786005131943
+      },
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786069045820
+      }
+    ],
+    "1. Backend schemas and error codes": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010173124
+      }
+    ],
+    "2. Backend CRUD layer": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786010311579
+      }
+    ],
+    "3. Backend service layer": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011358529
+      }
+    ],
+    "4. Backend API router": [
+      {
+        "executionId": "0cc351f9-2036-4c6b-a611-ad362d228c8d",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786011586060
+      }
+    ],
+    "6. Backend tests": [
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012648618
+      }
+    ],
+    "7. Frontend API layer and schema": [
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786012724493
+      }
+    ],
+    "8. Frontend components": [
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786067489389
+      }
+    ],
+    "9. Frontend page and wiring": [
+      {
+        "executionId": "7f0fc02e-1054-450f-acb7-152c4f93bcc2",
+        "chatSessionId": "sess_6fa62c7f-b86f-4c51-a3f5-2bd175dd3693",
+        "timestamp": 1786069029087
+      }
+    ]
+  }
+}
