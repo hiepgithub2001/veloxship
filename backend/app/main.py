@@ -6,7 +6,7 @@ import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, bills, service_tiers
+from app.api.v1 import auth, bills, service_tiers, storage
 from app.core.exceptions import register_exception_handlers
 import app.models  # noqa: F401
 
@@ -59,3 +59,4 @@ async def request_logging_middleware(request: Request, call_next) -> Response:
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(bills.router, prefix="/api/v1")
 app.include_router(service_tiers.router, prefix="/api/v1")
+app.include_router(storage.router, prefix="/api/v1")

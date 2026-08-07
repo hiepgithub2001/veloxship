@@ -39,6 +39,27 @@ class ForbiddenError(AppError):
         super().__init__(error_code, status_code=403)
 
 
+class InvalidFileTypeError(AppError):
+    """Uploaded file type is not in the allowlist."""
+
+    def __init__(self, error_code: str = "FILE_TYPE_NOT_ALLOWED", details: dict | None = None):
+        super().__init__(error_code, status_code=415, details=details)
+
+
+class FileTooLargeError(AppError):
+    """Uploaded file exceeds the maximum allowed size."""
+
+    def __init__(self, error_code: str = "FILE_SIZE_EXCEEDED", details: dict | None = None):
+        super().__init__(error_code, status_code=413, details=details)
+
+
+class UploadFailedError(AppError):
+    """R2 upload failed."""
+
+    def __init__(self, error_code: str = "UPLOAD_FAILED", details: dict | None = None):
+        super().__init__(error_code, status_code=500, details=details)
+
+
 def register_exception_handlers(app):
     """Register global exception handlers on the FastAPI app."""
 
