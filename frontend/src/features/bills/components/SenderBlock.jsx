@@ -74,7 +74,7 @@ export function SenderBlock({ control, errors, prefix = 'sender' }) {
           name={`${prefix}.phone`}
           control={control}
           render={({ field }) => (
-            <Input {...field} placeholder={t('bills.senderPhone')} id={`${prefix}-phone`} />
+            <Input {...field} placeholder={t('bills.senderPhone')} inputMode="tel" id={`${prefix}-phone`} />
           )}
         />
       </Form.Item>

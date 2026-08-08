@@ -149,3 +149,96 @@ cd frontend
 npm test               # vitest + Testing Library
 npm run test:e2e       # Playwright smoke (login → create → preview)
 ```
+
+---
+
+## PWA Mobile Support
+
+VeloxShip is installable as a Progressive Web App (PWA) on Android and iOS devices.
+
+### Install on Mobile
+
+**Android (Chrome 100+):**
+1. Open `https://your-domain/` in Chrome.
+2. An install banner will appear at the bottom: "Cài đặt ứng dụng vào màn hình chính".
+3. Tap **Cài đặt** to add the app to your home screen.
+
+**iOS (Safari 16.4+):**
+1. Open the app in Safari.
+2. An overlay will guide you: Tap **Share → Thêm vào Màn hình chính**.
+
+### On-Device Testing (Local)
+
+For PWA features to work on a local network, you need HTTPS. Use `mkcert`:
+
+```bash
+# Install mkcert
+brew install mkcert  # macOS
+# or: sudo apt install mkcert  # Linux
+
+# Create local CA + certificates
+mkcert -install
+cd frontend
+mkcert localhost 192.168.x.x   # your LAN IP
+
+# Start with HTTPS
+npx vite --host --https \
+  --cert localhost+1.pem \
+  --key localhost+1-key.pem
+```
+
+Access from your phone: `https://192.168.x.x:5173`
+
+### Mobile Bill Creation Wizard
+
+On screens < 768px, the bill creation form switches to a **6-step wizard**:
+1. Người gửi (Sender)
+2. Người nhận (Receiver)
+3. Nội dung hàng (Package Contents)
+4. Dịch vụ (Service Tier)
+5. Cước phí (Fees)
+6. Xác nhận (Confirm & Submit)
+
+After submission, a PDF preview screen allows **Download**, **Share**, and **Print** actions.
+
+### Connection Handling
+
+- **Offline Banner**: A yellow "Mất kết nối" banner appears at the top when the device loses connectivity.
+- **Online-Only**: The app does not cache API data offline. All form submissions require an active connection.
+- **Network-aware queries**: React Query pauses all queries/mutations while offline.
+
+### Auto-Update
+
+When a new version is deployed:
+1. The service worker detects the update on the next page load.
+2. A prompt appears: "Có phiên bản mới — Cập nhật".
+3. The prompt is **suppressed while the user is mid-wizard** to prevent data loss.
+4. Version info is visible under **Giới thiệu / Phiên bản** in the user dropdown menu.
+
+### PWA File Structure
+
+```
+frontend/
+├── public/                     # PWA icons (committed)
+│   ├── favicon.ico
+│   ├── apple-touch-icon-180x180.png
+│   ├── pwa-64x64.png
+│   ├── pwa-192x192.png
+│   ├── pwa-512x512.png
+│   └── maskable-icon-512x512.png
+├── src/pwa/                    # PWA runtime modules
+│   ├── version.js              # Build-time version constants
+│   ├── registerSW.js           # Service worker registration
+│   ├── useOnlineStatus.js      # Online/offline hook
+│   ├── InstallPrompt.jsx       # Android + iOS install banners
+│   ├── ConnectionBanner.jsx    # Offline warning bar
+│   ├── NoConnectionScreen.jsx  # Full-screen offline state
+│   ├── CompatNotice.jsx        # Non-PWA browser notice
+│   └── UpdatePrompt.jsx        # Auto-update affordance
+└── src/features/bills/create/  # Mobile wizard
+    ├── BillCreateMobile.jsx    # 6-step wizard shell
+    ├── PdfPreviewScreen.jsx    # Post-save PDF viewer
+    ├── useBillDraft.jsx        # Shared form context
+    └── steps/                  # Individual wizard steps
+```
+

@@ -140,7 +140,7 @@ export function BillListPage() {
           {t('bills.create')}
         </Button>
       </div>
-      <Card>
+      <Card styles={{ body: { padding: 0, overflow: 'auto' } }}>
         <Table
           columns={columns}
           dataSource={bills}
@@ -148,6 +148,8 @@ export function BillListPage() {
           loading={loading}
           pagination={pagination}
           onChange={handleTableChange}
+          scroll={{ x: 800 }}
+          size="small"
         />
       </Card>
     </div>

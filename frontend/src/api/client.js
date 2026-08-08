@@ -30,6 +30,17 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Custom error class for network failures (device offline or request unreachable).
+ */
+export class NetworkError extends Error {
+  constructor(originalError) {
+    super('Mất kết nối — vui lòng kiểm tra mạng và thử lại');
+    this.name = 'NetworkError';
+    this.originalError = originalError;
+  }
+}
+
 // Response interceptor — retry once on 401
 let isRefreshing = false;
 let failedQueue = [];
@@ -45,6 +56,14 @@ function processQueue(error, token = null) {
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Detect network errors — no response means the request never reached the server
+    if (
+      error.code === 'ERR_NETWORK' ||
+      (!error.response && typeof navigator !== 'undefined' && navigator.onLine === false)
+    ) {
+      return Promise.reject(new NetworkError(error));
+    }
+
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry && refreshTokenFn) {

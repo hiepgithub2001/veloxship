@@ -8,6 +8,10 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { BillListPage } from '../features/bills/pages/BillListPage';
 import { BillCreatePage } from '../features/bills/pages/BillCreatePage';
 import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
+import { ResponsiveShell } from '../components/ResponsiveShell';
+import { BillCreateMobile } from '../features/bills/create/BillCreateMobile';
+import { PdfPreviewScreen } from '../features/bills/create/PdfPreviewScreen';
+import { AboutScreen } from '../features/settings/AboutScreen';
 
 // Placeholder for customers (later phase)
 function PlaceholderPage({ title }) {
@@ -42,7 +46,16 @@ const router = createBrowserRouter([
       },
       {
         path: 'phieu-gui/tao-moi',
-        element: <BillCreatePage />,
+        element: (
+          <ResponsiveShell
+            desktop={<BillCreatePage />}
+            mobile={<BillCreateMobile />}
+          />
+        ),
+      },
+      {
+        path: 'phieu-gui/tao-moi/preview/:id',
+        element: <PdfPreviewScreen />,
       },
       {
         path: 'phieu-gui/:id',
@@ -51,6 +64,10 @@ const router = createBrowserRouter([
       {
         path: 'khach-hang',
         element: <PlaceholderPage title="Danh sách khách hàng" />,
+      },
+      {
+        path: 'gioi-thieu',
+        element: <AboutScreen />,
       },
     ],
   },

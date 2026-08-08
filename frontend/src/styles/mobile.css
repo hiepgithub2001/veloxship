@@ -1,0 +1,222 @@
+/**
+ * Mobile-specific styles for PWA.
+ * Tap targets, safe-area insets, and PWA component styles.
+ */
+
+/* Safe-area padding for notched devices */
+#root {
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Ensure 44px minimum tap targets on mobile */
+@media (max-width: 768px) {
+  /* Ant Design buttons */
+  .ant-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Ant Design menu items */
+  .ant-menu-item {
+    min-height: 44px !important;
+    line-height: 44px !important;
+  }
+
+  /* Ant Design list items */
+  .ant-list-item {
+    min-height: 44px;
+  }
+
+  /* Inputs and selects */
+  .ant-input,
+  .ant-input-number,
+  .ant-select-selector,
+  .ant-picker {
+    min-height: 44px !important;
+  }
+
+  /* Steps (for the wizard) */
+  .ant-steps-item-icon {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+/* ===== Install Banner ===== */
+.pwa-install-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== iOS Install Overlay ===== */
+.pwa-ios-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease-out;
+}
+
+.pwa-ios-overlay-arrow {
+  position: absolute;
+  bottom: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #fff;
+}
+
+/* ===== Connection Banner ===== */
+.pwa-connection-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== Update Prompt ===== */
+.pwa-update-prompt {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1040;
+  max-width: 360px;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== No Connection Screen ===== */
+.pwa-no-connection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.pwa-no-connection h2 {
+  color: #1a1a1a;
+  margin-bottom: 16px;
+}
+
+.pwa-no-connection p {
+  color: #666;
+  margin-bottom: 24px;
+  max-width: 320px;
+}
+
+/* ===== Mobile wizard specific ===== */
+@media (max-width: 768px) {
+  .bill-wizard-steps .ant-steps-item-title {
+    font-size: 12px !important;
+  }
+
+  .bill-wizard-steps .ant-steps-item-icon {
+    font-size: 12px !important;
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+  }
+
+  /* Step with validation error */
+  .bill-wizard-steps .ant-steps-item-error .ant-steps-item-icon {
+    border-color: #ff4d4f !important;
+    background: #fff2f0 !important;
+  }
+
+  .bill-wizard-steps .ant-steps-item-error .ant-steps-item-icon::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #ff4d4f;
+    border-radius: 50%;
+  }
+}
+
+/* ===== PDF Preview Screen ===== */
+.pdf-preview-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh; /* dynamic viewport height for mobile */
+  background: #f5f5f5;
+}
+
+.pdf-preview-iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+}
+
+.pdf-preview-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  justify-content: center;
+}
+
+.pdf-preview-actions .ant-btn {
+  flex: 1;
+  max-width: 160px;
+}
