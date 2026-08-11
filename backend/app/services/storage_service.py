@@ -1,4 +1,4 @@
-"""Upload service layer — orchestrates validation → R2 upload → response."""
+"""Upload service layer — orchestrates validation → S3 upload → response."""
 from __future__ import annotations
 
 import structlog
@@ -24,7 +24,7 @@ async def upload_file(file: UploadFile) -> UploadResultResponse:
 
     try:
         file.file.seek(0)
-        await storage_helpers.upload_to_r2(
+        await storage_helpers.upload_to_s3(
             file_obj=file.file,
             key=key,
             content_type=result.mime_type,

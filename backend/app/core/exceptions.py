@@ -54,7 +54,7 @@ class FileTooLargeError(AppError):
 
 
 class UploadFailedError(AppError):
-    """R2 upload failed."""
+    """S3 upload failed."""
 
     def __init__(self, error_code: str = "UPLOAD_FAILED", details: dict | None = None):
         super().__init__(error_code, status_code=500, details=details)
