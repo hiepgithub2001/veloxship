@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     CARRIER_WEBSITE: str = "newlinks.vn"
     CARRIER_EMAIL: str = "info@newlinks.vn"
 
+    # AWS S3 storage
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    S3_BUCKET_NAME: str = ""
+    AWS_REGION: str = "ap-southeast-1"
+    UPLOAD_MAX_SIZE_BYTES: int = 20 * 1024 * 1024  # 20 MB
+    UPLOAD_PREFIX: str = "uploads/"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
