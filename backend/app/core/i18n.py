@@ -44,6 +44,9 @@ _MESSAGES: dict[str, str] = {
     "FILE_TYPE_NOT_ALLOWED": "Định dạng tập tin không được hỗ trợ.",
     "FILE_SIZE_EXCEEDED": "Tập tin vượt quá dung lượng cho phép.",
     "UPLOAD_FAILED": "Tải tập tin lên thất bại. Vui lòng thử lại.",
+    "INVALID_IMAGE_URLS": "Danh sách ảnh không hợp lệ.",
+    "IMAGE_UPLOAD_FAILED": "Tải ảnh lên thất bại.",
+    "TOO_MANY_IMAGES": "Tối đa 10 ảnh.",
 
     # Generic
     "INTERNAL_ERROR": "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",

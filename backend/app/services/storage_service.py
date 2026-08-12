@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
-import structlog
-from fastapi import File, UploadFile
+ import structlog
+ from fastapi import File, UploadFile
 
-from app.core.config import settings
-from app.core.exceptions import UploadFailedError
-from app.schemas.storage import UploadResultResponse
-from app.services import storage as storage_helpers
-from app.services.storage.validators import validate_file
+ from app.core.config import settings
+ from app.core.exceptions import UploadFailedError
+ from app.schemas.storage import UploadResultResponse
+ from app.services import storage as storage_helpers
+ from app.services.storage.validators import validate_file
 
-logger = structlog.get_logger()
+ logger = structlog.get_logger()
+
+ MAX_IMAGES_PER_RECORD = 10
+
+ UPLOAD_PREFIX_MAP = {
+     "depot": "depots/",
+     "vehicle": "vehicles/",
+ }
 
 
-async def upload_file(file: UploadFile = File(...)) -> UploadResultResponse:
+ async def upload_file(file: UploadFile = File(...)) -> UploadResultResponse:
     """Validate and upload a file to S3. Can be used directly or as a FastAPI dependency."""
     validated = await validate_file(file)
 

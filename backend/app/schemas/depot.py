@@ -1,6 +1,7 @@
 """Depot schemas — create, update, read, and paginated list."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, field_validator
 
@@ -15,6 +16,7 @@ class DepotCreate(BaseModel):
     phone: str
     address_detail: str
     ward_code: str | None = None
+    image_urls: list[str] | None = None
 
     @field_validator("code")
     @classmethod
@@ -48,6 +50,18 @@ class DepotCreate(BaseModel):
             raise ValueError("Địa chỉ chi tiết phải từ 1 đến 500 ký tự")
         return v
 
+    @field_validator("image_urls")
+    @classmethod
+    def validate_image_urls(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if not isinstance(v, list):
+            raise ValueError("Danh sách ảnh phải là một mảng.")
+        for item in v:
+            if not isinstance(item, str):
+                raise ValueError("Mỗi ảnh phải là một chuỗi ký tự.")
+        return v
+
 
 class DepotUpdate(BaseModel):
     """Schema for partial depot update."""
@@ -57,6 +71,7 @@ class DepotUpdate(BaseModel):
     address_detail: str | None = None
     ward_code: str | None = None
     is_active: bool | None = None
+    image_urls: list[str] | None = None
 
     @field_validator("name")
     @classmethod
@@ -82,6 +97,18 @@ class DepotUpdate(BaseModel):
             raise ValueError("Địa chỉ chi tiết phải từ 1 đến 500 ký tự")
         return v
 
+    @field_validator("image_urls")
+    @classmethod
+    def validate_image_urls(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if not isinstance(v, list):
+            raise ValueError("Danh sách ảnh phải là một mảng.")
+        for item in v:
+            if not isinstance(item, str):
+                raise ValueError("Mỗi ảnh phải là một chuỗi ký tự.")
+        return v
+
 
 class DepotRead(BaseModel):
     """Schema for depot response."""
@@ -96,6 +123,7 @@ class DepotRead(BaseModel):
     province_code: str | None
     province_name: str | None
     is_active: bool
+    image_urls: list[str] | None
     created_at: datetime
     updated_at: datetime
 

@@ -77,15 +77,16 @@ async def get_vehicle_by_license_plate(db: AsyncSession, license_plate: str) -> 
 
 async def create_vehicle(db: AsyncSession, *, payload: VehicleCreate) -> Vehicle:
     """Create a new vehicle record."""
-    vehicle = Vehicle(
-        license_plate=payload.license_plate,
-        vehicle_type=payload.vehicle_type,
-        max_weight_kg=payload.max_weight_kg,
-        max_volume_m3=payload.max_volume_m3,
-        latest_depot_id=payload.latest_depot_id,
-        driver_id=payload.driver_id,
-        status=payload.status or "active",
-    )
+vehicle = Vehicle(
+    license_plate=payload.license_plate,
+    vehicle_type=payload.vehicle_type,
+    max_weight_kg=payload.max_weight_kg,
+    max_volume_m3=payload.max_volume_m3,
+    latest_depot_id=payload.latest_depot_id,
+    driver_id=payload.driver_id,
+    status=payload.status or "active",
+    image_urls=payload.image_urls,
+)
     db.add(vehicle)
     await db.flush()
     await _load_driver_depot(db, [vehicle])

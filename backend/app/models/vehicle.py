@@ -38,6 +38,7 @@ class Vehicle(Base):
         ForeignKey("users.id"), nullable=True,
     )
     status: Mapped[str] = mapped_column(String, nullable=False, default="active")
+    image_urls: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now(),
     )

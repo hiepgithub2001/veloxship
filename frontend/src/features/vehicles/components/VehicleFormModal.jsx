@@ -2,11 +2,13 @@
  * VehicleFormModal — Modal form for creating and editing vehicles.
  * Uses react-hook-form + zod + Ant Design Modal.
  */
-import { useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, Select, message } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Modal, Form, Input, InputNumber, Select, message, Upload, Avatar } from 'antd';
+import { CameraOutlined } from '@ant-design/icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../../auth/AuthContext';
 
 import { vehicleFormSchema } from '../schema';
 import { createVehicle, updateVehicle } from '../../../api/vehicles';
@@ -21,6 +23,12 @@ import { createVehicle, updateVehicle } from '../../../api/vehicles';
 export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
   const isEdit = Boolean(vehicle);
   const queryClient = useQueryClient();
+  const { accessToken } = useAuth();
+
+  const [fileList, setFileList] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  const API_BASE = useMemo(() => import.meta.env.VITE_API_BASE_URL || '/api/v1', []);
 
   const {
     control,
@@ -39,6 +47,31 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
       latest_depot_id: null,
     },
   });
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      fileList.forEach((f) => {
+        if (f.url && f.url.startsWith('blob:')) URL.revokeObjectURL(f.url);
+      });
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Build initial file list from existing vehicle images
+  useEffect(() => {
+    if (isEdit && vehicle?.image_urls?.length) {
+      const existingFiles = vehicle.image_urls.map((key, idx) => ({
+        uid: `existing-${idx}-${key}`,
+        name: key.split('/').pop() || `image-${idx + 1}`,
+        status: 'done',
+        url: key,
+        thumbUrl: undefined,
+      }));
+      setFileList(existingFiles);
+    } else if (!isEdit) {
+      setFileList([]);
+    }
+  }, [isEdit, vehicle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset form when modal opens or vehicle changes
   useEffect(() => {
@@ -67,41 +100,61 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
     }
   }, [open, vehicle, isEdit, reset]);
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: (data) => createVehicle(data),
-    onSuccess: () => {
-      message.success('Đăng ký xe thành công');
+  const handleUploadChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
+
+  const submitWithImages = async (formData) => {
+    if (uploading) return;
+
+    const pendingFiles = fileList.filter((f) => f.status === 'uploading');
+    if (pendingFiles.length > 0) {
+      message.warning('Vui lòng đợi tải ảnh hoàn tất');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('license_plate', formData.license_plate || '');
+      fd.append('vehicle_type', formData.vehicle_type || '');
+      if (formData.max_weight_kg != null) fd.append('max_weight_kg', String(formData.max_weight_kg));
+      if (formData.max_volume_m3 != null) fd.append('max_volume_m3', String(formData.max_volume_m3));
+      fd.append('status', formData.status || 'active');
+      if (formData.driver_id != null) fd.append('driver_id', String(formData.driver_id));
+      if (formData.latest_depot_id != null) fd.append('latest_depot_id', String(formData.latest_depot_id));
+
+      fileList.forEach((f) => {
+        const raw = f.originFileObj || f;
+        if (raw instanceof File) {
+          fd.append('images', raw);
+        }
+      });
+
+      const vehicleId = isEdit ? '/' + vehicle.id : '';
+      const url = `${API_BASE}/vehicles${vehicleId}`;
+      const res = await fetch(url, {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `HTTP ${res.status}`);
+      }
+
+      await res.json();
+      message.success(isEdit ? 'Cập nhật xe thành công' : 'Đăng ký xe thành công');
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       onSuccess?.();
       onClose();
-    },
-    onError: (err) => {
-      message.error(err.response?.data?.message || 'Lỗi kết nối, vui lòng thử lại');
-    },
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: (data) => updateVehicle(vehicle.id, data),
-    onSuccess: () => {
-      message.success('Cập nhật xe thành công');
-      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-      onSuccess?.();
-      onClose();
-    },
-    onError: (err) => {
-      message.error(err.response?.data?.message || 'Lỗi kết nối, vui lòng thử lại');
-    },
-  });
-
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
-
-  const onSubmit = (formData) => {
-    if (isEdit) {
-      updateMutation.mutate(formData);
-    } else {
-      createMutation.mutate(formData);
+    } catch (err) {
+      message.error(err.message || 'Lỗi khi lưu thông tin xe');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -109,15 +162,40 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
     <Modal
       title={isEdit ? 'Sửa thông tin xe' : 'Đăng ký xe mới'}
       open={open}
-      onOk={handleSubmit(onSubmit)}
+      onOk={handleSubmit(submitWithImages)}
       onCancel={onClose}
       okText={isEdit ? 'Cập nhật' : 'Đăng ký'}
       cancelText="Hủy"
-      confirmLoading={isSubmitting}
+      confirmLoading={uploading}
       destroyOnClose
       maskClosable={false}
+      width={720}
     >
       <Form layout="vertical" style={{ marginTop: 16 }}>
+        {/* Ảnh xe */}
+        <Form.Item label="Ảnh xe">
+          <Upload.Dragger
+            accept="image/*"
+            multiple
+            maxCount={10}
+            listType="picture-card"
+            fileList={fileList}
+            onChange={handleUploadChange}
+            beforeUpload={() => false}
+            showUploadList={{
+              showRemoveIcon: true,
+              showPreviewIcon: true,
+            }}
+          >
+            {fileList.length < 10 && (
+              <div>
+                <p style={{ fontSize: 14, margin: 0 }}>Tải ảnh lên</p>
+                <p style={{ fontSize: 12, color: '#999' }}>Click hoặc kéo thả vào đây</p>
+              </div>
+            )}
+          </Upload.Dragger>
+        </Form.Item>
+
         {/* Biển số xe */}
         <Form.Item
           label="Biển số xe"

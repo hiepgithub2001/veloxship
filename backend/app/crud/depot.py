@@ -72,13 +72,14 @@ async def get_depot_by_code(db: AsyncSession, code: str) -> Depot | None:
 
 async def create_depot(db: AsyncSession, *, payload: DepotCreate) -> Depot:
     """Create a new depot record."""
-    depot = Depot(
-        code=payload.code,
-        name=payload.name,
-        phone=payload.phone,
-        address_detail=payload.address_detail,
-        ward_code=payload.ward_code,
-    )
+depot = Depot(
+    code=payload.code,
+    name=payload.name,
+    phone=payload.phone,
+    address_detail=payload.address_detail,
+    ward_code=payload.ward_code,
+    image_urls=payload.image_urls,
+)
     db.add(depot)
     await db.flush()
     await _load_ward_province(db, [depot])

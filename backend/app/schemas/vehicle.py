@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, field_validator
 
@@ -17,7 +18,8 @@ class VehicleCreate(BaseModel):
     max_volume_m3: Decimal
     latest_depot_id: int | None = None
     driver_id: int | None = None
-    status: str | None = None  # defaults to "active" in service
+    status: str | None = None
+    image_urls: list[str] | None = None
 
     @field_validator("license_plate")
     @classmethod
@@ -54,6 +56,18 @@ class VehicleCreate(BaseModel):
             raise ValueError("Trạng thái phải là 'active', 'inactive', hoặc 'maintenance'")
         return v
 
+    @field_validator("image_urls")
+    @classmethod
+    def validate_image_urls(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if not isinstance(v, list):
+            raise ValueError("Danh sách ảnh phải là một mảng.")
+        for item in v:
+            if not isinstance(item, str):
+                raise ValueError("Mỗi ảnh phải là một chuỗi ký tự.")
+        return v
+
 
 class VehicleUpdate(BaseModel):
     """Schema for partial vehicle update."""
@@ -65,6 +79,7 @@ class VehicleUpdate(BaseModel):
     latest_depot_id: int | None = None
     driver_id: int | None = None
     status: str | None = None
+    image_urls: list[str] | None = None
 
     @field_validator("license_plate")
     @classmethod
@@ -101,6 +116,18 @@ class VehicleUpdate(BaseModel):
             raise ValueError("Trạng thái phải là 'active', 'inactive', hoặc 'maintenance'")
         return v
 
+    @field_validator("image_urls")
+    @classmethod
+    def validate_image_urls(cls, v: Any) -> Any:
+        if v is None:
+            return None
+        if not isinstance(v, list):
+            raise ValueError("Danh sách ảnh phải là một mảng.")
+        for item in v:
+            if not isinstance(item, str):
+                raise ValueError("Mỗi ảnh phải là một chuỗi ký tự.")
+        return v
+
 
 class VehicleRead(BaseModel):
     """Schema for vehicle response."""
@@ -115,6 +142,7 @@ class VehicleRead(BaseModel):
     latest_depot_id: int | None
     depot_name: str | None
     status: str
+    image_urls: list[str] | None
     created_at: datetime
     updated_at: datetime
 

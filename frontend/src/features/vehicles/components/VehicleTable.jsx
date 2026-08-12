@@ -2,7 +2,7 @@
  * Vehicle table — displays paginated list of vehicles with actions.
  */
 import { Button, Table, Space, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, CameraOutlined } from '@ant-design/icons';
 import VehicleStatusBadge from './VehicleStatusBadge';
 
 const VEHICLE_TYPE_LABELS = {
@@ -12,6 +12,70 @@ const VEHICLE_TYPE_LABELS = {
 
 export function VehicleTable({ data, loading, page, pageSize, total, onPageChange, onEdit, onDelete }) {
   const columns = [
+    {
+      title: 'Ảnh',
+      key: 'images',
+      width: 100,
+      render: (_, record) => {
+        const urls = record.image_urls;
+        if (!urls || urls.length === 0) {
+          return <CameraOutlined style={{ color: '#ccc', fontSize: 20 }} />;
+        }
+        const display = urls.slice(0, 3);
+        return (
+          <Space size={4}>
+            {display.map((url, idx) => (
+              <div
+                key={idx}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  border: '1px solid #d9d9d9',
+                  backgroundColor: '#f5f5f5',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src={url.startsWith('http') ? url : url}
+                  alt=""
+                  style={{
+                    width: 48,
+                    height: 48,
+                    objectFit: 'cover',
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            ))}
+            {urls.length > 3 && (
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 4,
+                  border: '1px solid #d9d9d9',
+                  backgroundColor: '#f5f5f5',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#666',
+                }}
+              >
+                +{urls.length - 3}
+              </div>
+            )}
+          </Space>
+        );
+      },
+    },
     {
       title: 'Biển số',
       dataIndex: 'license_plate',

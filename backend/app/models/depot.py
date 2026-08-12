@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, ForeignKey, String, Text, func
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -22,6 +23,7 @@ class Depot(Base):
         String, ForeignKey("wards.code"), nullable=True,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+ image_urls: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now(),
     )
