@@ -40,6 +40,11 @@ _MESSAGES: dict[str, str] = {
     "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
     "CONTENT_LINES_REQUIRED": "Phiếu gửi phải có ít nhất một dòng nội dung.",
 
+    # Storage / Upload
+    "FILE_TYPE_NOT_ALLOWED": "Định dạng tập tin không được hỗ trợ.",
+    "FILE_SIZE_EXCEEDED": "Tập tin vượt quá dung lượng cho phép.",
+    "UPLOAD_FAILED": "Tải tập tin lên thất bại. Vui lòng thử lại.",
+
     # Generic
     "INTERNAL_ERROR": "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
 }
