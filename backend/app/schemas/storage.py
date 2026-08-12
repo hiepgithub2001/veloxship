@@ -8,4 +8,3 @@ class UploadResultResponse(BaseModel):
     mime_type: str
     size_bytes: int
     ext: str
-    public_url: str | None = None

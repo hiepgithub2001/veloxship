@@ -25,12 +25,10 @@ class Settings(BaseSettings):
     CARRIER_EMAIL: str = "info@newlinks.vn"
 
     # AWS S3 storage
-    S3_ACCESS_KEY_ID: str = ""
-    S3_SECRET_ACCESS_KEY: str = ""
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
     S3_BUCKET_NAME: str = ""
-    S3_REGION: str = "ap-southeast-1"
-    S3_ENDPOINT_URL: str = ""
-    S3_PUBLIC_BASE_URL: str = ""
+    AWS_REGION: str = "ap-southeast-1"
     UPLOAD_MAX_SIZE_BYTES: int = 20 * 1024 * 1024  # 20 MB
     UPLOAD_PREFIX: str = "uploads/"
 
