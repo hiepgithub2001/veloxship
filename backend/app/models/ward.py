@@ -23,7 +23,7 @@ class Ward(Base):
         nullable=False, server_default=func.now(),
     )
 
-    province: Mapped["Province"] = relationship("Province", back_populates="wards")
+    province: Mapped["Province"] = relationship("Province", back_populates="wards", lazy="joined")
 
     def __repr__(self) -> str:
         return f"<Ward code={self.code} name={self.name}>"

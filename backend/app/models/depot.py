@@ -33,8 +33,20 @@ class Depot(Base):
         nullable=False, server_default=func.now(), onupdate=func.now(),
     )
 
-    ward: Mapped["Ward | None"] = relationship("Ward")
+    ward: Mapped["Ward | None"] = relationship("Ward", lazy="joined")
     users: Mapped[list["User"]] = relationship("User", back_populates="depot")
+
+    @property
+    def ward_name(self) -> str | None:
+        return self.ward.name if self.ward else None
+
+    @property
+    def province_code(self) -> str | None:
+        return self.ward.province.code if self.ward and self.ward.province else None
+
+    @property
+    def province_name(self) -> str | None:
+        return self.ward.province.name if self.ward and self.ward.province else None
 
     def __repr__(self) -> str:
         return f"<Depot id={self.id} code={self.code} name={self.name}>"
