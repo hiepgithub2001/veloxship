@@ -78,6 +78,7 @@ async def create_depot(db: AsyncSession, *, payload: DepotCreate) -> Depot:
         phone=payload.phone,
         address_detail=payload.address_detail,
         ward_code=payload.ward_code,
+        images=payload.images,
     )
     db.add(depot)
     await db.flush()

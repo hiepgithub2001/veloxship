@@ -4,9 +4,16 @@
 import { Button, Table, Space } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import DepotStatusBadge from './DepotStatusBadge';
+import ImagePreviewGroup from '../../../components/common/ImagePreviewGroup';
 
 export function DepotTable({ data, loading, onEdit, onToggleActive, pagination, onPaginationChange }) {
   const columns = [
+    {
+      title: 'Hình ảnh',
+      dataIndex: 'images',
+      key: 'images',
+      render: (images) => <ImagePreviewGroup images={images} />,
+    },
     {
       title: 'Mã',
       dataIndex: 'code',

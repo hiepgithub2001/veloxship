@@ -2,9 +2,10 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_serializer, field_validator
 
 from app.schemas.common import Page
+from app.services.storage import generate_presigned_url
 
 
 class DepotCreate(BaseModel):
@@ -15,6 +16,14 @@ class DepotCreate(BaseModel):
     phone: str
     address_detail: str
     ward_code: str | None = None
+    images: list[str] = []
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, v: list[str]) -> list[str]:
+        if len(v) > 5:
+            raise ValueError("Tối đa 5 hình ảnh cho bưu cục")
+        return v
 
     @field_validator("code")
     @classmethod
@@ -56,7 +65,15 @@ class DepotUpdate(BaseModel):
     phone: str | None = None
     address_detail: str | None = None
     ward_code: str | None = None
+    images: list[str] | None = None
     is_active: bool | None = None
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, v: list[str] | None) -> list[str] | None:
+        if v is not None and len(v) > 5:
+            raise ValueError("Tối đa 5 hình ảnh cho bưu cục")
+        return v
 
     @field_validator("name")
     @classmethod
@@ -95,11 +112,18 @@ class DepotRead(BaseModel):
     ward_name: str | None
     province_code: str | None
     province_name: str | None
+    images: list[str] = []
     is_active: bool
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("images")
+    def serialize_images(self, images: list[str]) -> list[str]:
+        if not images:
+            return []
+        return [generate_presigned_url(img) for img in images]
 
 
 class DepotPage(Page[DepotRead]):

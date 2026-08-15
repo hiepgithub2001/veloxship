@@ -53,10 +53,18 @@ def override_deps(mock_token_decode, mock_user, mock_db_session):
 
 
 from app.schemas.storage import UploadResultResponse
+from app.services.storage import generate_presigned_url
 from app.services.storage_service import upload_file
 
 
 class TestUploadPipelineDependency:
+    def test_generate_presigned_url(self):
+        assert generate_presigned_url("") == ""
+        assert generate_presigned_url("https://example.com/pic.jpg") == "https://example.com/pic.jpg"
+        url = generate_presigned_url("uploads/test.jpg")
+        assert "uploads/test.jpg" in url
+        assert "AWSAccessKeyId" in url or "Signature" in url or "X-Amz-Algorithm" in url
+
     @pytest.mark.asyncio
     async def test_upload_pipeline_success(self):
         file = MagicMock()

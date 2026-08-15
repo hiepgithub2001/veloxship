@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -36,6 +37,9 @@ class Vehicle(Base):
     )
     driver_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id"), nullable=True,
+    )
+    images: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, server_default="[]",
     )
     status: Mapped[str] = mapped_column(String, nullable=False, default="active")
     created_at: Mapped[datetime] = mapped_column(

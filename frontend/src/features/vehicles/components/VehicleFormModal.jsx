@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { vehicleFormSchema } from '../schema';
 import { createVehicle, updateVehicle } from '../../../api/vehicles';
+import ImageUpload from '../../../components/common/ImageUpload';
 
 /**
  * @param {object} props
@@ -37,6 +38,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
       status: 'active',
       driver_id: null,
       latest_depot_id: null,
+      images: [],
     },
   });
 
@@ -52,6 +54,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
           status: vehicle.status || 'active',
           driver_id: vehicle.driver_id ?? null,
           latest_depot_id: vehicle.latest_depot_id ?? null,
+          images: vehicle.images || [],
         });
       } else {
         reset({
@@ -62,6 +65,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
           status: 'active',
           driver_id: null,
           latest_depot_id: null,
+          images: [],
         });
       }
     }
@@ -262,6 +266,23 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
                 placeholder="Nhập mã bưu cục (tùy chọn)"
                 min={1}
                 style={{ width: '100%' }}
+              />
+            )}
+          />
+        </Form.Item>
+        <Form.Item
+          label="Hình ảnh xe (tối đa 5)"
+          validateStatus={errors.images ? 'error' : ''}
+          help={errors.images?.message}
+        >
+          <Controller
+            name="images"
+            control={control}
+            render={({ field }) => (
+              <ImageUpload
+                value={field.value}
+                onChange={field.onChange}
+                maxCount={5}
               />
             )}
           />

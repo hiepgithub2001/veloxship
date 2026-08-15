@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     AWS_REGION: str = "ap-southeast-1"
     UPLOAD_MAX_SIZE_BYTES: int = 20 * 1024 * 1024  # 20 MB
     UPLOAD_PREFIX: str = "uploads/"
+    S3_PRESIGNED_URL_EXPIRES_IN: int = 3600
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

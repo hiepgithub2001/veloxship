@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, ForeignKey, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -20,6 +21,9 @@ class Depot(Base):
     address_detail: Mapped[str] = mapped_column(Text, nullable=False)
     ward_code: Mapped[str | None] = mapped_column(
         String, ForeignKey("wards.code"), nullable=True,
+    )
+    images: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, server_default="[]",
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
