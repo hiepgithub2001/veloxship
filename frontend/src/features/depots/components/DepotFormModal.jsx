@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { depotFormSchema } from '../schema';
 import { createDepot, updateDepot } from '../../../api/depots';
 import { getProvinces, getWardsByProvince } from '../../../api/locations';
+import ImageUpload from '../../../components/common/ImageUpload';
 
 /**
  * @param {object} props
@@ -38,6 +39,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
       phone: '',
       address_detail: '',
       ward_code: undefined,
+      images: [],
     },
   });
 
@@ -66,6 +68,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
           phone: depot.phone || '',
           address_detail: depot.address_detail || '',
           ward_code: depot.ward_code || undefined,
+          images: depot.images || [],
         });
         setSelectedProvinceCode(depot.province_code || null);
       } else {
@@ -75,6 +78,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
           phone: '',
           address_detail: '',
           ward_code: undefined,
+          images: [],
         });
         setSelectedProvinceCode(null);
       }
@@ -250,6 +254,23 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
                 onChange={(val) => {
                   field.onChange(val);
                 }}
+              />
+            )}
+          />
+        </Form.Item>
+        <Form.Item
+          label="Hình ảnh bưu cục (tối đa 5)"
+          validateStatus={errors.images ? 'error' : ''}
+          help={errors.images?.message}
+        >
+          <Controller
+            name="images"
+            control={control}
+            render={({ field }) => (
+              <ImageUpload
+                value={field.value}
+                onChange={field.onChange}
+                maxCount={5}
               />
             )}
           />

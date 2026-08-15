@@ -22,4 +22,5 @@ export const vehicleFormSchema = z.object({
     .default('active'),
   driver_id: z.coerce.number().nullable().optional(),
   latest_depot_id: z.coerce.number().nullable().optional(),
+  images: z.array(z.string()).default([]),
 });

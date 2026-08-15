@@ -4,6 +4,7 @@
 import { Button, Table, Space, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import VehicleStatusBadge from './VehicleStatusBadge';
+import ImagePreviewGroup from '../../../components/common/ImagePreviewGroup';
 
 const VEHICLE_TYPE_LABELS = {
   motorcycle: 'Xe máy',
@@ -12,6 +13,12 @@ const VEHICLE_TYPE_LABELS = {
 
 export function VehicleTable({ data, loading, page, pageSize, total, onPageChange, onEdit, onDelete }) {
   const columns = [
+    {
+      title: 'Hình ảnh',
+      dataIndex: 'images',
+      key: 'images',
+      render: (images) => <ImagePreviewGroup images={images} />,
+    },
     {
       title: 'Biển số',
       dataIndex: 'license_plate',

@@ -85,6 +85,7 @@ async def create_vehicle(db: AsyncSession, *, payload: VehicleCreate) -> Vehicle
         latest_depot_id=payload.latest_depot_id,
         driver_id=payload.driver_id,
         status=payload.status or "active",
+        images=payload.images,
     )
     db.add(vehicle)
     await db.flush()

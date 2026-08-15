@@ -3,9 +3,10 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_serializer, field_validator
 
 from app.schemas.common import Page
+from app.services.storage import generate_presigned_url
 
 
 class VehicleCreate(BaseModel):
@@ -18,6 +19,14 @@ class VehicleCreate(BaseModel):
     latest_depot_id: int | None = None
     driver_id: int | None = None
     status: str | None = None  # defaults to "active" in service
+    images: list[str] = []
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, v: list[str]) -> list[str]:
+        if len(v) > 5:
+            raise ValueError("Tối đa 5 hình ảnh cho phương tiện")
+        return v
 
     @field_validator("license_plate")
     @classmethod
@@ -65,6 +74,14 @@ class VehicleUpdate(BaseModel):
     latest_depot_id: int | None = None
     driver_id: int | None = None
     status: str | None = None
+    images: list[str] | None = None
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, v: list[str] | None) -> list[str] | None:
+        if v is not None and len(v) > 5:
+            raise ValueError("Tối đa 5 hình ảnh cho phương tiện")
+        return v
 
     @field_validator("license_plate")
     @classmethod
@@ -115,10 +132,17 @@ class VehicleRead(BaseModel):
     latest_depot_id: int | None
     depot_name: str | None
     status: str
+    images: list[str] = []
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("images")
+    def serialize_images(self, images: list[str]) -> list[str]:
+        if not images:
+            return []
+        return [generate_presigned_url(img) for img in images]
 
 
 class VehiclePage(Page[VehicleRead]):

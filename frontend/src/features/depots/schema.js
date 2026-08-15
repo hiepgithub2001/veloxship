@@ -25,4 +25,5 @@ export const depotFormSchema = z.object({
     .min(1, 'Địa chỉ chi tiết là bắt buộc.')
     .max(500, 'Địa chỉ chi tiết phải từ 1 đến 500 ký tự'),
   ward_code: z.string().optional(),
+  images: z.array(z.string()).default([]),
 });
