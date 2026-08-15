@@ -4,6 +4,8 @@
  */
 import { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, Select, message } from 'antd';
+import UserSelect from '../../../components/common/UserSelect';
+import DepotSelect from '../../../components/common/DepotSelect';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -231,9 +233,9 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
           />
         </Form.Item>
 
-        {/* Mã tài xế */}
+        {/* Tài xế phụ trách */}
         <Form.Item
-          label="Mã tài xế"
+          label="Tài xế phụ trách"
           validateStatus={errors.driver_id ? 'error' : ''}
           help={errors.driver_id?.message}
         >
@@ -241,19 +243,20 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
             name="driver_id"
             control={control}
             render={({ field }) => (
-              <InputNumber
-                {...field}
-                placeholder="Nhập mã tài xế (tùy chọn)"
-                min={1}
+              <UserSelect
+                value={field.value}
+                onChange={field.onChange}
+                role="shipper"
+                placeholder="Chọn tài xế (tùy chọn)"
                 style={{ width: '100%' }}
               />
             )}
           />
         </Form.Item>
 
-        {/* Mã bưu cục */}
+        {/* Bưu cục hiện tại */}
         <Form.Item
-          label="Mã bưu cục"
+          label="Bưu cục hiện tại"
           validateStatus={errors.latest_depot_id ? 'error' : ''}
           help={errors.latest_depot_id?.message}
         >
@@ -261,10 +264,10 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
             name="latest_depot_id"
             control={control}
             render={({ field }) => (
-              <InputNumber
-                {...field}
-                placeholder="Nhập mã bưu cục (tùy chọn)"
-                min={1}
+              <DepotSelect
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Chọn bưu cục (tùy chọn)"
                 style={{ width: '100%' }}
               />
             )}
