@@ -49,9 +49,17 @@ class Vehicle(Base):
         nullable=False, server_default=func.now(), onupdate=func.now(),
     )
 
-    latest_depot: Mapped["Depot | None"] = relationship("Depot", foreign_keys=[latest_depot_id])
+    latest_depot: Mapped["Depot | None"] = relationship("Depot", foreign_keys=[latest_depot_id], lazy="joined")
     latest_linehaul: Mapped["Linehaul | None"] = relationship("Linehaul", foreign_keys=[latest_linehaul_id])
-    driver: Mapped["User | None"] = relationship("User", foreign_keys=[driver_id])
+    driver: Mapped["User | None"] = relationship("User", foreign_keys=[driver_id], lazy="joined")
+
+    @property
+    def driver_name(self) -> str | None:
+        return self.driver.full_name if self.driver else None
+
+    @property
+    def depot_name(self) -> str | None:
+        return self.latest_depot.name if self.latest_depot else None
 
     def __repr__(self) -> str:
         return f"<Vehicle id={self.id} plate={self.license_plate} type={self.vehicle_type}>"
