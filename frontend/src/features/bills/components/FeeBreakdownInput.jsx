@@ -1,5 +1,5 @@
 /**
- * Fee breakdown input with auto-computed total.
+ * Fee breakdown input with auto-computed total (manual entry).
  */
 import { InputNumber, Radio, Typography, Space, Input } from 'antd';
 import { t } from '../../../i18n/vi';
@@ -9,26 +9,26 @@ const { Text } = Typography;
 
 export function FeeBreakdownInput({ watch, setValue, errors }) {
   const feeMain = watch('fee.fee_main') || 0;
-  const feeFuel = watch('fee.fee_fuel_surcharge') || 0;
-  const feeOther = watch('fee.fee_other_surcharge') || 0;
+  const feeInsurance = watch('fee.fee_insurance') || 0;
+  const feeOther = watch('fee.fee_other') || 0;
   const feeVat = watch('fee.fee_vat') || 0;
-  const total = feeMain + feeFuel + feeOther + feeVat;
+  const total = feeMain + feeInsurance + feeOther + feeVat;
 
   // Auto-update total when components change
   const handleFeeChange = (field, value) => {
     setValue(`fee.${field}`, value || 0);
     const newTotal =
       (field === 'fee_main' ? value || 0 : feeMain) +
-      (field === 'fee_fuel_surcharge' ? value || 0 : feeFuel) +
-      (field === 'fee_other_surcharge' ? value || 0 : feeOther) +
+      (field === 'fee_insurance' ? value || 0 : feeInsurance) +
+      (field === 'fee_other' ? value || 0 : feeOther) +
       (field === 'fee_vat' ? value || 0 : feeVat);
     setValue('fee.fee_total', newTotal);
   };
 
   const feeFields = [
     { key: 'fee_main', label: t('bills.feeMain') },
-    { key: 'fee_fuel_surcharge', label: t('bills.feeFuel') },
-    { key: 'fee_other_surcharge', label: t('bills.feeOther') },
+    { key: 'fee_insurance', label: t('bills.feeInsurance') },
+    { key: 'fee_other', label: t('bills.feeOther') },
     { key: 'fee_vat', label: t('bills.feeVat') },
   ];
 

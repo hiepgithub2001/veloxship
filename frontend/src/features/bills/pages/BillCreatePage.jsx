@@ -1,9 +1,9 @@
 /**
- * Bill creation page — composes all bill form components.
+ * Bill creation page — composes all bill form components (UC-WEB-19).
  */
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Card, message, Space, Divider, Typography } from 'antd';
@@ -15,6 +15,7 @@ import { createBill } from '../../../api/bills';
 import { SenderBlock } from '../components/SenderBlock';
 import { ReceiverBlock } from '../components/ReceiverBlock';
 import { ContentTable } from '../components/ContentTable';
+import { CargoInfoBlock } from '../components/CargoInfoBlock';
 import { ServiceTierSelector } from '../components/ServiceTierSelector';
 import { FeeBreakdownInput } from '../components/FeeBreakdownInput';
 import { BillPrintView } from '../components/BillPrintView';
@@ -22,15 +23,27 @@ import { t } from '../../../i18n/vi';
 
 const { Title } = Typography;
 
-const defaultValues = {
+const emptyParty = {
   customer_id: null,
-  customer_code: null,
-  sender: { name: '', address: '', district: '', province: '', phone: '' },
-  receiver: { name: '', address: '', district: '', province: '', phone: '' },
-  contents: [{ description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null }],
+  name: '',
+  phone: '',
+  address_detail: '',
+  province_code: '',
+  province_name: '',
+  ward_code: '',
+  ward_name: '',
+};
+
+const defaultValues = {
+  sender: { ...emptyParty },
+  receiver: { ...emptyParty },
   cargo_type: 'goods',
   service_tier_code: '',
-  fee: { fee_main: 0, fee_fuel_surcharge: 0, fee_other_surcharge: 0, fee_vat: 0, fee_total: 0 },
+  actual_weight_kg: 0,
+  contents: [{ description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null }],
+  is_insurance_required: false,
+  cod_amount: 0,
+  fee: { fee_main: 0, fee_insurance: 0, fee_other: 0, fee_vat: 0, fee_total: 0 },
   payer: 'sender',
 };
 
@@ -112,14 +125,16 @@ export function BillCreatePage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
           <Card style={{ flex: 1 }}>
-            <SenderBlock control={control} errors={errors} />
+            <SenderBlock control={control} errors={errors} setValue={setValue} watch={watch} />
           </Card>
           <Card style={{ flex: 1 }}>
-            <ReceiverBlock control={control} errors={errors} />
+            <ReceiverBlock control={control} errors={errors} setValue={setValue} watch={watch} />
           </Card>
         </div>
 
         <Card style={{ marginBottom: 16 }}>
+          <CargoInfoBlock control={control} errors={errors} watch={watch} />
+          <Divider />
           <ContentTable
             fields={fields}
             append={append}

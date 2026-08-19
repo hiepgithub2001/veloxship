@@ -107,6 +107,12 @@
 .bill-content-table .num { text-align: right; }
 .bill-content-table .total-row { background: #f9f9f9; }
 
+.bill-weight-note {
+  font-size: 10px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
 .bill-service-fees {
   display: flex;
   gap: 8px;

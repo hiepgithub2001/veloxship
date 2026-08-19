@@ -4,14 +4,20 @@
  */
 import { z } from 'zod';
 
-const phoneRegex = /^\+?[0-9 \-]{8,20}$/;
+const phoneRegex = /^\+?[0-9 -]{8,20}$/;
 
 const partySchema = z.object({
+  customer_id: z.number().nullable().optional(),
   name: z.string().min(1, 'Trường này là bắt buộc.'),
-  address: z.string().min(1, 'Trường này là bắt buộc.'),
-  district: z.string().min(1, 'Trường này là bắt buộc.'),
-  province: z.string().min(1, 'Trường này là bắt buộc.'),
-  phone: z.string().regex(phoneRegex, 'Số điện thoại không hợp lệ.'),
+  phone: z
+    .string()
+    .min(1, 'Trường này là bắt buộc.')
+    .regex(phoneRegex, 'Số điện thoại không hợp lệ.'),
+  address_detail: z.string().min(1, 'Trường này là bắt buộc.'),
+  province_code: z.string().min(1, 'Trường này là bắt buộc.'),
+  province_name: z.string().min(1, 'Trường này là bắt buộc.'),
+  ward_code: z.string().min(1, 'Trường này là bắt buộc.'),
+  ward_name: z.string().min(1, 'Trường này là bắt buộc.'),
 });
 
 const contentLineSchema = z.object({
@@ -26,8 +32,8 @@ const contentLineSchema = z.object({
 const feeSchema = z
   .object({
     fee_main: z.number().min(0, 'Giá trị không được âm.'),
-    fee_fuel_surcharge: z.number().min(0, 'Giá trị không được âm.'),
-    fee_other_surcharge: z.number().min(0, 'Giá trị không được âm.'),
+    fee_insurance: z.number().min(0, 'Giá trị không được âm.'),
+    fee_other: z.number().min(0, 'Giá trị không được âm.'),
     fee_vat: z.number().min(0, 'Giá trị không được âm.'),
     fee_total: z.number().min(0, 'Giá trị không được âm.'),
   })
@@ -35,21 +41,22 @@ const feeSchema = z
     (data) =>
       Math.abs(
         data.fee_total -
-          (data.fee_main + data.fee_fuel_surcharge + data.fee_other_surcharge + data.fee_vat),
+          (data.fee_main + data.fee_insurance + data.fee_other + data.fee_vat),
       ) < 1,
     { message: 'Tổng cước không khớp với tổng các khoản.', path: ['fee_total'] },
   );
 
 export const billCreateSchema = z.object({
-  customer_id: z.number().nullable().optional(),
-  customer_code: z.string().nullable().optional(),
   sender: partySchema,
   receiver: partySchema,
-  contents: z.array(contentLineSchema).min(1, 'Phiếu gửi phải có ít nhất một dòng nội dung.'),
   cargo_type: z.enum(['document', 'goods'], {
     required_error: 'Trường này là bắt buộc.',
   }),
   service_tier_code: z.string().min(1, 'Trường này là bắt buộc.'),
+  actual_weight_kg: z.number().min(0, 'Giá trị không được âm.'),
+  contents: z.array(contentLineSchema).min(1, 'Phiếu gửi phải có ít nhất một dòng nội dung.'),
+  is_insurance_required: z.boolean(),
+  cod_amount: z.number().min(0, 'Giá trị không được âm.'),
   fee: feeSchema,
   payer: z.enum(['sender', 'receiver'], {
     required_error: 'Trường này là bắt buộc.',
