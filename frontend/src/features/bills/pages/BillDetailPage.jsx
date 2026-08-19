@@ -18,12 +18,12 @@ import { t } from '../../../i18n/vi';
 const { Title, Text } = Typography;
 
 const statusColor = {
-  da_tao: 'blue',
-  da_lay_hang: 'cyan',
-  dang_van_chuyen: 'orange',
-  da_giao: 'green',
-  hoan_tra: 'purple',
-  huy: 'red',
+  created: 'blue',
+  picked_up: 'cyan',
+  in_transit: 'orange',
+  delivered: 'green',
+  returned: 'purple',
+  cancelled: 'red',
 };
 
 export function BillDetailPage() {
@@ -74,18 +74,18 @@ export function BillDetailPage() {
           <Card type="inner" title={t('bills.sender')} style={{ flex: 1 }}>
             <Descriptions column={1} size="small">
               <Descriptions.Item label="Họ tên">{bill.sender.name}</Descriptions.Item>
-              <Descriptions.Item label="Địa chỉ">{bill.sender.address}</Descriptions.Item>
-              <Descriptions.Item label="Quận/Huyện">{bill.sender.district}</Descriptions.Item>
-              <Descriptions.Item label="Tỉnh/TP">{bill.sender.province}</Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ">{bill.sender.address_detail}</Descriptions.Item>
+              <Descriptions.Item label="Phường/Xã">{bill.sender.ward_name}</Descriptions.Item>
+              <Descriptions.Item label="Tỉnh/TP">{bill.sender.province_name}</Descriptions.Item>
               <Descriptions.Item label="SĐT">{bill.sender.phone}</Descriptions.Item>
             </Descriptions>
           </Card>
           <Card type="inner" title={t('bills.receiver')} style={{ flex: 1 }}>
             <Descriptions column={1} size="small">
               <Descriptions.Item label="Họ tên">{bill.receiver.name}</Descriptions.Item>
-              <Descriptions.Item label="Địa chỉ">{bill.receiver.address}</Descriptions.Item>
-              <Descriptions.Item label="Quận/Huyện">{bill.receiver.district}</Descriptions.Item>
-              <Descriptions.Item label="Tỉnh/TP">{bill.receiver.province}</Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ">{bill.receiver.address_detail}</Descriptions.Item>
+              <Descriptions.Item label="Phường/Xã">{bill.receiver.ward_name}</Descriptions.Item>
+              <Descriptions.Item label="Tỉnh/TP">{bill.receiver.province_name}</Descriptions.Item>
               <Descriptions.Item label="SĐT">{bill.receiver.phone}</Descriptions.Item>
             </Descriptions>
           </Card>
@@ -94,9 +94,10 @@ export function BillDetailPage() {
         <Card type="inner" title={t('bills.fees')} style={{ marginBottom: 16 }}>
           <Descriptions column={2} size="small">
             <Descriptions.Item label={t('bills.feeMain')}>{formatVND(bill.fee.fee_main)}</Descriptions.Item>
-            <Descriptions.Item label={t('bills.feeFuel')}>{formatVND(bill.fee.fee_fuel_surcharge)}</Descriptions.Item>
-            <Descriptions.Item label={t('bills.feeOther')}>{formatVND(bill.fee.fee_other_surcharge)}</Descriptions.Item>
+            <Descriptions.Item label={t('bills.feeInsurance')}>{formatVND(bill.fee.fee_insurance)}</Descriptions.Item>
+            <Descriptions.Item label={t('bills.feeOther')}>{formatVND(bill.fee.fee_other)}</Descriptions.Item>
             <Descriptions.Item label={t('bills.feeVat')}>{formatVND(bill.fee.fee_vat)}</Descriptions.Item>
+            <Descriptions.Item label={t('bills.codAmount')}>{formatVND(bill.cod_amount)}</Descriptions.Item>
           </Descriptions>
           <div style={{ textAlign: 'right', marginTop: 8 }}>
             <Text strong style={{ fontSize: 16, color: '#C41E3A' }}>
