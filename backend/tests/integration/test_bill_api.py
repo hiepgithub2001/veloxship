@@ -8,6 +8,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from testcontainers.postgres import PostgresContainer
 
 from app.core.security import create_access_token
 from app.db.base import Base
@@ -15,8 +16,6 @@ from app.db.session import get_db
 from app.main import app
 from app.models.service_tier import ServiceTier
 from app.models.user import User
-
-from testcontainers.postgres import PostgresContainer
 
 postgres_container = PostgresContainer("postgres:16-alpine", driver="asyncpg")
 
@@ -39,6 +38,15 @@ async def engine(start_postgres):
     url = get_async_database_url()
     eng = create_async_engine(url, echo=False)
     async with eng.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent"))
+        await conn.execute(
+            text("""
+            CREATE OR REPLACE FUNCTION f_unaccent(text)
+            RETURNS text AS $$
+            SELECT public.unaccent('public.unaccent', $1)
+            $$ LANGUAGE sql IMMUTABLE STRICT;
+        """)
+        )
         await conn.run_sync(Base.metadata.create_all)
         # The tracking-number sequence is created by migrations, not the ORM models.
         await conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bill_tracking_seq START 1 CACHE 50"))
@@ -98,7 +106,9 @@ async def auth_headers(admin_user: User) -> dict[str, str]:
 
 @pytest_asyncio.fixture
 async def service_tier(db_session: AsyncSession) -> ServiceTier:
-    tier = ServiceTier(code="CPN", display_name="Chuyển phát nhanh", scope="domestic", is_active=True)
+    tier = ServiceTier(
+        code="CPN", display_name="Chuyển phát nhanh", scope="domestic", is_active=True
+    )
     db_session.add(tier)
     await db_session.commit()
     return tier
@@ -176,23 +186,23 @@ class TestCreateBill:
     ):
         payload = bill_payload(
             actual_weight_kg=0.1,
-            contents=[{
-                "description": "Hàng cồng kềnh",
-                "quantity": 1,
-                "weight_kg": 0.1,
-                "length_cm": 60,
-                "width_cm": 40,
-                "height_cm": 30,
-            }],
+            contents=[
+                {
+                    "description": "Hàng cồng kềnh",
+                    "quantity": 1,
+                    "weight_kg": 0.1,
+                    "length_cm": 60,
+                    "width_cm": 40,
+                    "height_cm": 30,
+                }
+            ],
         )
         resp = await client.post("/api/v1/bills", json=payload, headers=auth_headers)
         assert resp.status_code == 201
         # dim = 60*40*30/6000 = 12.0 → chargeable = max(0.1, 12.0) = 12.0
         assert resp.json()["chargeable_weight_kg"] == 12.0
 
-    async def test_create_bill_without_service_tier(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_create_bill_without_service_tier(self, client: AsyncClient, auth_headers: dict):
         resp = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
         assert resp.status_code == 404
         assert resp.json()["error_code"] == "TIER_NOT_FOUND"
@@ -238,3 +248,48 @@ class TestCreateBill:
         resp = await client.post("/api/v1/bills", json=payload, headers=auth_headers)
         assert resp.status_code == 400
         assert resp.json()["error_code"] == "CONTENT_LINES_REQUIRED"
+
+
+@pytest.mark.asyncio
+class TestListBills:
+    async def test_searches_by_tracking_number_customer_name_phone_and_bill_id(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post(
+            "/api/v1/bills",
+            json=bill_payload(),
+            headers=auth_headers,
+        )
+        assert created.status_code == 201
+        bill = created.json()
+
+        for search in (
+            bill["tracking_number"],
+            "nguyen van",
+            "0901234567",
+            "0987654321",
+            str(bill["id"]),
+        ):
+            response = await client.get(
+                "/api/v1/bills",
+                params={"search": search},
+                headers=auth_headers,
+            )
+            assert response.status_code == 200
+            assert [item["id"] for item in response.json()["items"]] == [bill["id"]]
+
+        literal_wildcard_search = await client.get(
+            "/api/v1/bills",
+            params={"search": "%"},
+            headers=auth_headers,
+        )
+        assert literal_wildcard_search.status_code == 200
+        assert literal_wildcard_search.json()["items"] == []
+
+        for non_representable_id in ("²", "9" * 100):
+            response = await client.get(
+                "/api/v1/bills",
+                params={"search": non_representable_id},
+                headers=auth_headers,
+            )
+            assert response.status_code == 200

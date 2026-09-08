@@ -6,7 +6,7 @@ import viVN from 'antd/locale/vi_VN';
 
 // Brand colors extracted from the logo (red/black tones)
 const brandColors = {
-  primary: '#C41E3A',      // Rich carrier red
+  primary: '#C41E3A', // Rich carrier red
   primaryHover: '#A01830',
   primaryActive: '#8B1528',
   info: '#1890FF',

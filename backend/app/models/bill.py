@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import BigInteger, Boolean, CheckConstraint, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -45,6 +46,10 @@ class Bill(Base):
     # Customers (FKs)
     sender_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
     receiver_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
+    # Immutable party data used for history and reprints. Customer relations remain
+    # available for reporting only and must never drive a historical bill display.
+    sender_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
+    receiver_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
 
     # Service & Cargo
     cargo_type: Mapped[str] = mapped_column(String, nullable=False)

@@ -133,6 +133,24 @@ class BillStatusUpdate(BaseModel):
     note: str | None = None
 
 
+class BillUpdate(BaseModel):
+    """Controlled bill amendment. Server decides which fields are editable."""
+
+    expected_updated_at: datetime
+    edit_reason: str | None = Field(default=None, min_length=1)
+    sender: BillParty | None = None
+    receiver: BillParty | None = None
+    cargo_type: Literal["document", "goods"] | None = None
+    service_tier_code: str | None = None
+    actual_weight_kg: float | None = Field(default=None, ge=0)
+    contents: list[BillContentLineSchema] | None = None
+    is_insurance_required: bool | None = None
+    cod_amount: float | None = Field(default=None, ge=0)
+    fee: FeeBreakdown | None = None
+    payer: Literal["sender", "receiver"] | None = None
+    note: str | None = None
+
+
 class BillStatusEventRead(BaseModel):
     """Status event in the response."""
 
@@ -143,6 +161,7 @@ class BillStatusEventRead(BaseModel):
     note: str | None = None
     changed_by: int
     created_at: datetime
+    actor_name: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -180,7 +199,17 @@ class BillRead(BaseModel):
     def from_model(cls, bill):
         """Convert a Bill ORM model to a BillRead schema."""
 
-        def to_customer_ref(customer) -> CustomerRef:
+        def to_customer_ref(customer, snapshot) -> CustomerRef:
+            if snapshot:
+                return CustomerRef(
+                    id=customer.id if customer else 0,
+                    code=customer.code if customer else None,
+                    name=snapshot.get("name", ""), phone=snapshot.get("phone"),
+                    customer_type=customer.customer_type if customer else "retail",
+                    address_detail=snapshot.get("address_detail"), province_code=snapshot.get("province_code"),
+                    province_name=snapshot.get("province_name"), ward_code=snapshot.get("ward_code"),
+                    ward_name=snapshot.get("ward_name"),
+                )
             meta = customer.customer_metadata if customer else None
             return CustomerRef(
                 id=customer.id,
@@ -198,8 +227,8 @@ class BillRead(BaseModel):
         return cls(
             id=bill.id,
             tracking_number=bill.tracking_number,
-            sender=to_customer_ref(bill.sender),
-            receiver=to_customer_ref(bill.receiver),
+            sender=to_customer_ref(bill.sender, bill.sender_snapshot),
+            receiver=to_customer_ref(bill.receiver, bill.receiver_snapshot),
             cargo_type=bill.cargo_type,
             service_tier_code=bill.service_tier_code,
             actual_weight_kg=float(bill.actual_weight_kg),

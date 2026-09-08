@@ -3,16 +3,16 @@
 
 :root {
   /* Brand palette */
-  --color-primary: #C41E3A;
-  --primary-color: #C41E3A;
-  --color-primary-hover: #A01830;
-  --color-primary-active: #8B1528;
-  --color-info: #1890FF;
-  --color-success: #52C41A;
-  --color-warning: #FAAD14;
-  --color-error: #FF4D4F;
-  --color-text-base: #1A1A1A;
-  --color-bg-base: #FAFAFA;
+  --color-primary: #c41e3a;
+  --primary-color: #c41e3a;
+  --color-primary-hover: #a01830;
+  --color-primary-active: #8b1528;
+  --color-info: #1890ff;
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-error: #ff4d4f;
+  --color-text-base: #1a1a1a;
+  --color-bg-base: #fafafa;
 }
 
 /* Form section title & brand utility classes */
@@ -42,7 +42,13 @@
 }
 
 html {
-  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Be Vietnam Pro',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -57,9 +63,155 @@ body {
   min-height: 100vh;
 }
 
+.global-bill-search {
+  width: min(360px, 36vw);
+}
+
+.global-bill-search-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 260px;
+}
+
+@media (max-width: 720px) {
+  .global-bill-search {
+    width: min(48vw, 220px);
+  }
+
+  .global-bill-search-option {
+    min-width: 0;
+  }
+  .app-content {
+    margin: 12px !important;
+  }
+  .app-user-name {
+    display: none;
+  }
+  .bill-workspace {
+    gap: 12px;
+  }
+  .bill-workspace .ant-card-body {
+    padding: 16px;
+  }
+  .bill-status-steps .ant-steps-item-title {
+    font-size: 11px;
+  }
+  .bill-status-steps .ant-steps-item-description {
+    display: none;
+  }
+  .bill-fee-line {
+    font-size: 13px;
+  }
+  .bill-party-card {
+    padding: 12px;
+  }
+  .bill-cod-row .ant-input-number {
+    width: 100%;
+  }
+}
+
 /* Vietnamese-friendly print styles */
 @media print {
   .no-print {
     display: none !important;
+  }
+}
+/* Bill workspace: one continuous operational record, optimised for counter work. */
+.bill-workspace {
+  display: grid;
+  gap: 16px;
+}
+.bill-hero {
+  border-top: 4px solid var(--color-primary);
+}
+.bill-hero-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.bill-block-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.bill-block-heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.bill-block-heading span {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+.bill-parties {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.bill-party-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+.bill-party-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+.bill-fee-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(300px, 1.2fr);
+  gap: 32px;
+  align-items: start;
+}
+.bill-fee-list {
+  display: grid;
+  gap: 10px;
+}
+.bill-fee-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #595959;
+}
+.bill-fee-total {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: 18px;
+}
+.bill-cod-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+.bill-status-steps {
+  padding: 8px 4px 0;
+}
+@media (max-width: 720px) {
+  .bill-hero-meta,
+  .bill-parties,
+  .bill-fee-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .bill-cod-row {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .bill-commercial-editor .ant-table-wrapper {
+    overflow-x: auto;
   }
 }

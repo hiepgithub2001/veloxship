@@ -3,7 +3,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.schemas.common import Page
 
 
 class CustomerCreate(BaseModel):
@@ -27,9 +29,18 @@ class CustomerRead(BaseModel):
     name: str
     phone: str | None = None
     customer_type: str
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        default=None,
+        validation_alias="customer_metadata",
+    )
     is_active: bool
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CustomerPage(Page[CustomerRead]):
+    """Paginated customer directory response."""
+
+    pass

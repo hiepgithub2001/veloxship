@@ -11,7 +11,16 @@ const VEHICLE_TYPE_LABELS = {
   truck: 'Xe tải',
 };
 
-export function VehicleTable({ data, loading, page, pageSize, total, onPageChange, onEdit, onDelete }) {
+export function VehicleTable({
+  data,
+  loading,
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  onEdit,
+  onDelete,
+}) {
   const columns = [
     {
       title: 'Hình ảnh',
@@ -65,11 +74,7 @@ export function VehicleTable({ data, loading, page, pageSize, total, onPageChang
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          >
+          <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
             Sửa
           </Button>
           <Popconfirm

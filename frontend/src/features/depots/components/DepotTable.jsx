@@ -6,7 +6,14 @@ import { EditOutlined } from '@ant-design/icons';
 import DepotStatusBadge from './DepotStatusBadge';
 import ImagePreviewGroup from '../../../components/common/ImagePreviewGroup';
 
-export function DepotTable({ data, loading, onEdit, onToggleActive, pagination, onPaginationChange }) {
+export function DepotTable({
+  data,
+  loading,
+  onEdit,
+  onToggleActive,
+  pagination,
+  onPaginationChange,
+}) {
   const columns = [
     {
       title: 'Hình ảnh',
@@ -53,18 +60,10 @@ export function DepotTable({ data, loading, onEdit, onToggleActive, pagination, 
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-          >
+          <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
             Sửa
           </Button>
-          <Button
-            type="link"
-            danger={record.is_active}
-            onClick={() => onToggleActive(record)}
-          >
+          <Button type="link" danger={record.is_active} onClick={() => onToggleActive(record)}>
             {record.is_active ? 'Vô hiệu hóa' : 'Kích hoạt'}
           </Button>
         </Space>

@@ -70,7 +70,17 @@ export function ContentTable({ fields, append, remove, move, insert, getValues, 
         type="dashed"
         icon={<PlusOutlined />}
         onClick={() =>
-          append({ cargo_type: 'goods', description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null, images: [], metadata: {} })
+          append({
+            cargo_type: 'goods',
+            description: '',
+            quantity: 1,
+            weight_kg: 0,
+            length_cm: null,
+            width_cm: null,
+            height_cm: null,
+            images: [],
+            metadata: {},
+          })
         }
         style={{ marginTop: 8, width: '100%' }}
         id="add-content-line"

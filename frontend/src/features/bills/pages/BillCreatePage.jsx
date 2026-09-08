@@ -35,7 +35,19 @@ const emptyParty = {
 const defaultValues = {
   sender: { ...emptyParty },
   receiver: { ...emptyParty },
-  contents: [{ cargo_type: 'goods', description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null, images: [], metadata: {} }],
+  contents: [
+    {
+      cargo_type: 'goods',
+      description: '',
+      quantity: 1,
+      weight_kg: 0,
+      length_cm: null,
+      width_cm: null,
+      height_cm: null,
+      images: [],
+      metadata: {},
+    },
+  ],
   note: '',
   fee: { fee_main: 0, fee_insurance: 0, fee_other: 0, fee_vat: 0, fee_total: 0 },
   payer: 'sender',
@@ -88,18 +100,17 @@ export function BillCreatePage() {
     return (
       <div>
         <Space style={{ marginBottom: 16 }}>
-          <Button
-            type="primary"
-            icon={<PrinterOutlined />}
-            onClick={handlePrint}
-            id="print-bill"
-          >
+          <Button type="primary" icon={<PrinterOutlined />} onClick={handlePrint} id="print-bill">
             {t('bills.print')}
           </Button>
           <Button onClick={() => navigate(`/phieu-gui/${createdBill.id}`)}>
             {t('bills.detail')}
           </Button>
-          <Button onClick={() => { setCreatedBill(null); }}>
+          <Button
+            onClick={() => {
+              setCreatedBill(null);
+            }}
+          >
             {t('bills.create')}
           </Button>
         </Space>
@@ -139,7 +150,9 @@ export function BillCreatePage() {
             watch={watch}
           />
           {errors?.contents && (
-            <div style={{ color: '#ff4d4f', marginTop: 8 }}>{errors.contents.message || errors.contents.root?.message}</div>
+            <div style={{ color: '#ff4d4f', marginTop: 8 }}>
+              {errors.contents.message || errors.contents.root?.message}
+            </div>
           )}
         </Card>
 

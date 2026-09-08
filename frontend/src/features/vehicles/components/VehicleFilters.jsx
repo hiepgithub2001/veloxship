@@ -16,12 +16,7 @@ const VEHICLE_TYPE_OPTIONS = [
   { value: 'truck', label: 'Xe tải' },
 ];
 
-export function VehicleFilters({
-  status,
-  vehicleType,
-  onStatusChange,
-  onVehicleTypeChange,
-}) {
+export function VehicleFilters({ status, vehicleType, onStatusChange, onVehicleTypeChange }) {
   return (
     <Space style={{ marginBottom: 16 }} wrap>
       <Select

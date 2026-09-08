@@ -96,9 +96,7 @@ export function BillListPage() {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={statusColors[status] || 'default'}>
-          {statusText[status] || status}
-        </Tag>
+        <Tag color={statusColors[status] || 'default'}>{statusText[status] || status}</Tag>
       ),
     },
     {
@@ -112,16 +110,12 @@ export function BillListPage() {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="text" 
-            icon={<EyeOutlined />} 
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
             onClick={() => navigate(`/phieu-gui/${record.id}`)}
           />
-          <Button 
-            type="text" 
-            icon={<PrinterOutlined />} 
-            onClick={() => handlePrint(record.id)}
-          />
+          <Button type="text" icon={<PrinterOutlined />} onClick={() => handlePrint(record.id)} />
         </Space>
       ),
     },
@@ -129,8 +123,17 @@ export function BillListPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={3} style={{ margin: 0 }}>{t('bills.title')}</Title>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
+        <Title level={3} style={{ margin: 0 }}>
+          {t('bills.title')}
+        </Title>
         <Button
           type="primary"
           icon={<PlusOutlined />}

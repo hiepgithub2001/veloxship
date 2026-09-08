@@ -3,7 +3,7 @@
  */
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Typography, Avatar, Dropdown, Space } from 'antd';
+import { Layout, Menu, Button, Typography, Avatar, Dropdown, Drawer, Grid, Space } from 'antd';
 import {
   FileTextOutlined,
   TeamOutlined,
@@ -12,18 +12,23 @@ import {
   UserOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  MenuOutlined,
   BankOutlined,
   CarOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
 import { t } from '../../i18n/vi';
 import logo from '../../assets/logo.png';
+import { GlobalBillSearch } from './GlobalBillSearch';
 
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
 
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,6 +72,7 @@ export function AppShell() {
 
   const handleMenuClick = ({ key }) => {
     navigate(key);
+    setMobileNavOpen(false);
   };
 
   const handleUserMenuClick = ({ key }) => {
@@ -77,56 +83,87 @@ export function AppShell() {
   };
 
   // Determine which menu item is selected
-  const selectedKey = menuItems.find((item) => location.pathname === item.key)?.key
-    || menuItems.find((item) => location.pathname.startsWith(item.key) && item.key !== '/phieu-gui/tao-moi')?.key
-    || '/phieu-gui';
+  const selectedKey =
+    menuItems.find((item) => location.pathname === item.key)?.key ||
+    menuItems.find(
+      (item) => location.pathname.startsWith(item.key) && item.key !== '/phieu-gui/tao-moi',
+    )?.key ||
+    '/phieu-gui';
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        trigger={null}
-        width={240}
-        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
-      >
-        <div
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 16px',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-          }}
+      {!isMobile && (
+        <Sider
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          trigger={null}
+          width={240}
+          style={{ position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
         >
-          <img src={logo} alt={t('app.name')} style={{ height: 36 }} />
-          {!collapsed && (
-            <Text
-              strong
-              style={{ color: '#fff', marginLeft: 12, fontSize: 16, whiteSpace: 'nowrap' }}
-            >
-              {t('app.name')}
-            </Text>
-          )}
-        </div>
+          <div
+            style={{
+              height: 64,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 16px',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <img src={logo} alt={t('app.name')} style={{ height: 36 }} />
+            {!collapsed && (
+              <Text
+                strong
+                style={{ color: '#fff', marginLeft: 12, fontSize: 16, whiteSpace: 'nowrap' }}
+              >
+                {t('app.name')}
+              </Text>
+            )}
+          </div>
 
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            items={menuItems}
+            onClick={handleMenuClick}
+            style={{ marginTop: 8 }}
+          />
+        </Sider>
+      )}
+
+      <Drawer
+        title={
+          <Space>
+            <img src={logo} alt="" style={{ height: 30 }} />
+            <Text strong>{t('app.name')}</Text>
+          </Space>
+        }
+        placement="left"
+        width={280}
+        open={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+        styles={{ body: { padding: 0, background: '#001529' } }}
+      >
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[selectedKey]}
           items={menuItems}
           onClick={handleMenuClick}
-          style={{ marginTop: 8 }}
         />
-      </Sider>
+      </Drawer>
 
-      <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: 'margin-left 0.2s' }}>
+      <Layout
+        className="app-main-layout"
+        style={{ marginLeft: isMobile ? 0 : collapsed ? 80 : 240, transition: 'margin-left 0.2s' }}
+      >
         <Header
+          className="app-header"
           style={{
             background: '#fff',
-            padding: '0 24px',
+            padding: isMobile ? '0 12px' : '0 24px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -138,22 +175,39 @@ export function AppShell() {
         >
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={
+              isMobile ? (
+                <MenuOutlined />
+              ) : collapsed ? (
+                <MenuUnfoldOutlined />
+              ) : (
+                <MenuFoldOutlined />
+              )
+            }
+            aria-label="Mở điều hướng"
+            onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}
           />
 
-          <Dropdown
-            menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
-            placement="bottomRight"
-          >
-            <Space style={{ cursor: 'pointer' }}>
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'var(--color-primary)' }} />
-              <Text strong>{currentUser?.full_name}</Text>
-            </Space>
-          </Dropdown>
+          <Space size={isMobile ? 'small' : 'large'} className="app-header-actions">
+            <GlobalBillSearch />
+            <Dropdown
+              menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
+              placement="bottomRight"
+            >
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar
+                  icon={<UserOutlined />}
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                />
+                <Text strong className="app-user-name">
+                  {currentUser?.full_name}
+                </Text>
+              </Space>
+            </Dropdown>
+          </Space>
         </Header>
 
-        <Content style={{ margin: 24 }}>
+        <Content className="app-content" style={{ margin: isMobile ? 12 : 24 }}>
           <Outlet />
         </Content>
       </Layout>

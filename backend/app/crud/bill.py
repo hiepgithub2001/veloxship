@@ -2,14 +2,17 @@
 
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from app.crud import audit as audit_crud
 from app.models.bill import Bill
 from app.models.bill_content_line import BillContentLine
 from app.models.bill_status_event import BillStatusLog
+from app.models.audit_event import AuditEvent
+from app.models.user import User
+from app.models.customer import Customer
 from app.schemas.bill import BillCreate
 from app.services.tracking import next_tracking_number
 
@@ -22,6 +25,16 @@ def _money(value: float) -> Decimal:
 def _weight(value: float) -> Decimal:
     """Coerce a float weight value to a 3-decimal Decimal."""
     return Decimal(str(value)).quantize(Decimal("0.001"))
+
+
+def party_snapshot(party, customer_id: int) -> dict:
+    """Persist input data, rather than a mutable customer profile, on the bill."""
+    return {
+        "customer_id": customer_id, "name": party.name, "phone": party.phone,
+        "address_detail": party.address_detail, "province_code": party.province_code,
+        "province_name": party.province_name, "ward_code": party.ward_code,
+        "ward_name": party.ward_name,
+    }
 
 
 async def create_bill(
@@ -40,6 +53,8 @@ async def create_bill(
         tracking_number=tracking,
         sender_id=sender_id,
         receiver_id=receiver_id,
+        sender_snapshot=party_snapshot(payload.sender, sender_id),
+        receiver_snapshot=party_snapshot(payload.receiver, receiver_id),
         # Service & cargo
         cargo_type=payload.cargo_type,
         service_tier_code=payload.service_tier_code,
@@ -135,17 +150,57 @@ async def get_by_tracking_number(db: AsyncSession, tracking_number: str) -> Bill
     return result.scalar_one_or_none()
 
 
-async def list_bills(db: AsyncSession, page: int = 1, page_size: int = 10) -> tuple[list[Bill], int]:
-    """List bills with pagination."""
+async def list_bills(
+    db: AsyncSession,
+    page: int = 1,
+    page_size: int = 10,
+    search: str | None = None,
+) -> tuple[list[Bill], int]:
+    """List bills with optional diacritic-insensitive tracking/customer search."""
     from sqlalchemy import func
 
-    count_result = await db.execute(select(func.count(Bill.id)))
+    sender = aliased(Customer)
+    receiver = aliased(Customer)
+    base_query = (
+        select(Bill)
+        .join(sender, Bill.sender_id == sender.id)
+        .join(receiver, Bill.receiver_id == receiver.id)
+    )
+
+    search_term = search.strip() if search else ""
+    if search_term:
+        escaped_term = search_term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{escaped_term}%"
+        conditions = [
+            func.f_unaccent(func.lower(Bill.tracking_number)).like(
+                func.f_unaccent(func.lower(pattern)),
+                escape="\\",
+            ),
+            func.f_unaccent(func.lower(sender.name)).like(
+                func.f_unaccent(func.lower(pattern)),
+                escape="\\",
+            ),
+            func.f_unaccent(func.lower(receiver.name)).like(
+                func.f_unaccent(func.lower(pattern)),
+                escape="\\",
+            ),
+            sender.phone.ilike(pattern, escape="\\"),
+            receiver.phone.ilike(pattern, escape="\\"),
+        ]
+        if search_term.isascii() and search_term.isdecimal():
+            bill_id = int(search_term)
+            if bill_id <= 9_223_372_036_854_775_807:
+                conditions.append(Bill.id == bill_id)
+        base_query = base_query.where(or_(*conditions))
+
+    count_result = await db.execute(
+        select(func.count()).select_from(base_query.subquery()),
+    )
     total = count_result.scalar_one()
 
     offset = (page - 1) * page_size
     result = await db.execute(
-        select(Bill)
-        .order_by(Bill.created_at.desc())
+        base_query.order_by(Bill.created_at.desc())
         .offset(offset)
         .limit(page_size)
         .options(
@@ -158,3 +213,24 @@ async def list_bills(db: AsyncSession, page: int = 1, page_size: int = 10) -> tu
     items = list(result.scalars().unique().all())
 
     return items, total
+
+
+async def get_events(db: AsyncSession, bill_id: int) -> dict:
+    """Return status and audit events enriched with actor names for the detail UI."""
+    status_result = await db.execute(
+        select(BillStatusLog, User.full_name).outerjoin(User, User.id == BillStatusLog.changed_by)
+        .where(BillStatusLog.bill_id == bill_id).order_by(BillStatusLog.created_at)
+    )
+    audit_result = await db.execute(
+        select(AuditEvent, User.full_name).outerjoin(User, User.id == AuditEvent.actor_id)
+        .where(AuditEvent.entity_type == "bill", AuditEvent.entity_id == bill_id)
+        .order_by(AuditEvent.created_at)
+    )
+    return {
+        "status_events": [{"id": event.id, "bill_id": event.bill_id, "from_status": event.from_status,
+            "to_status": event.to_status, "note": event.note, "changed_by": event.changed_by,
+            "actor_name": name, "created_at": event.created_at} for event, name in status_result.all()],
+        "audit_events": [{"id": event.id, "action": event.action, "actor_id": event.actor_id,
+            "actor_name": name, "details": event.details, "created_at": event.created_at}
+            for event, name in audit_result.all()],
+    }

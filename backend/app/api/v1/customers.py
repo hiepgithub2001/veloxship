@@ -1,42 +1,55 @@
-"""Customers API — lookup by phone and create."""
+"""Customers API — read-only customer directory.
+
+Customers are introduced by bill creation for now; a manual customer form is
+intentionally out of scope.
+"""
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.deps import get_current_user
+from app.core.exceptions import NotFoundError
 from app.crud import customer as customer_crud
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.customer import CustomerCreate, CustomerRead
+from app.schemas.customer import CustomerPage, CustomerRead
 
 router = APIRouter(prefix="/customers", tags=["customers"])
 
 
-@router.get("", response_model=list[CustomerRead])
+@router.get("", response_model=CustomerPage)
 async def list_customers(
-    phone: str | None = Query(None, description="Filter by phone number"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None, min_length=1, max_length=100),
+    is_active: bool | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List customers, optionally filtered by phone (used for sender/receiver autofill)."""
-    if phone:
-        customer = await customer_crud.get_customer_by_phone(db, phone)
-        return [CustomerRead.model_validate(customer)] if customer else []
-    from app.models.customer import Customer
-    from sqlalchemy import select
+    """List customer profiles created while bills are recorded."""
+    items, total = await customer_crud.list_customers(
+        db,
+        page=page,
+        page_size=page_size,
+        search=search,
+        is_active=is_active,
+    )
+    return CustomerPage(
+        items=[CustomerRead.model_validate(item) for item in items],
+        page=page,
+        page_size=page_size,
+        total=total,
+    )
 
-    result = await db.execute(select(Customer).order_by(Customer.name).limit(100))
-    return [CustomerRead.model_validate(c) for c in result.scalars().all()]
 
-
-@router.post("", response_model=CustomerRead, status_code=201)
-async def create_customer(
-    body: CustomerCreate,
+@router.get("/{customer_id}", response_model=CustomerRead)
+async def get_customer(
+    customer_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Create a new customer (khách vãng lai)."""
-    customer = await customer_crud.create_customer(db, body)
-    await db.commit()
-    await db.refresh(customer)
+    """Return one customer profile for directory inspection."""
+    customer = await customer_crud.get_customer(db, customer_id)
+    if customer is None:
+        raise NotFoundError("CUSTOMER_NOT_FOUND")
     return CustomerRead.model_validate(customer)

@@ -10,16 +10,7 @@ import { BillCreatePage } from '../features/bills/pages/BillCreatePage';
 import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
 import { DepotListPage } from '../features/depots/pages/DepotListPage';
 import { VehicleListPage } from '../features/vehicles/pages/VehicleListPage';
-
-// Placeholder for customers (later phase)
-function PlaceholderPage({ title }) {
-  return (
-    <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>
-      <h2>{title}</h2>
-      <p>Đang phát triển...</p>
-    </div>
-  );
-}
+import { CustomerListPage } from '../features/customers/pages/CustomerListPage';
 
 const router = createBrowserRouter([
   {
@@ -52,7 +43,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'khach-hang',
-        element: <PlaceholderPage title="Danh sách khách hàng" />,
+        element: <CustomerListPage />,
       },
       {
         path: 'buu-cuc',

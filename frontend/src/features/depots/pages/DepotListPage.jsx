@@ -28,7 +28,10 @@ export function DepotListPage() {
 
   // Fetch depots
   const { data, isLoading } = useQuery({
-    queryKey: ['depots', { page: pagination.current, pageSize: pagination.pageSize, search, isActive }],
+    queryKey: [
+      'depots',
+      { page: pagination.current, pageSize: pagination.pageSize, search, isActive },
+    ],
     queryFn: () =>
       getDepots({
         page: pagination.current,
@@ -89,7 +92,14 @@ export function DepotListPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <h2 style={{ margin: 0 }}>Quản lý bưu cục</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           Thêm mới
@@ -107,11 +117,7 @@ export function DepotListPage() {
         onPaginationChange={handlePaginationChange}
       />
 
-      <DepotFormModal
-        open={modalOpen}
-        onClose={handleModalClose}
-        depot={editingDepot}
-      />
+      <DepotFormModal open={modalOpen} onClose={handleModalClose} depot={editingDepot} />
     </div>
   );
 }

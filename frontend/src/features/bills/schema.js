@@ -48,8 +48,7 @@ const feeSchema = z
   .refine(
     (data) =>
       Math.abs(
-        data.fee_total -
-          (data.fee_main + data.fee_insurance + data.fee_other + data.fee_vat),
+        data.fee_total - (data.fee_main + data.fee_insurance + data.fee_other + data.fee_vat),
       ) < 1,
     { message: 'Tổng cước không khớp với tổng các khoản.', path: ['fee_total'] },
   );

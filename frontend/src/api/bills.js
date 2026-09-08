@@ -13,6 +13,11 @@ export async function getBill(id) {
   return data;
 }
 
+export async function updateBill(id, payload) {
+  const { data } = await client.patch(`/bills/${id}`, payload);
+  return data;
+}
+
 export async function downloadBillPdf(id) {
   const response = await client.get(`/bills/${id}/print?as=pdf`, {
     responseType: 'blob',

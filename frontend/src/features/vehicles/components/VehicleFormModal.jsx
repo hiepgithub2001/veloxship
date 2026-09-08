@@ -135,11 +135,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
             name="license_plate"
             control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                placeholder="VD: 51F-123.45"
-                disabled={isEdit}
-              />
+              <Input {...field} placeholder="VD: 51F-123.45" disabled={isEdit} />
             )}
           />
         </Form.Item>
@@ -178,12 +174,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
             name="max_weight_kg"
             control={control}
             render={({ field }) => (
-              <InputNumber
-                {...field}
-                placeholder="VD: 500"
-                min={0}
-                style={{ width: '100%' }}
-              />
+              <InputNumber {...field} placeholder="VD: 500" min={0} style={{ width: '100%' }} />
             )}
           />
         </Form.Item>
@@ -282,11 +273,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
             name="images"
             control={control}
             render={({ field }) => (
-              <ImageUpload
-                value={field.value}
-                onChange={field.onChange}
-                maxCount={5}
-              />
+              <ImageUpload value={field.value} onChange={field.onChange} maxCount={5} />
             )}
           />
         </Form.Item>

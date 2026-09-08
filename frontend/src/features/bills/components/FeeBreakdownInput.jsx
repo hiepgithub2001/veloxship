@@ -52,12 +52,16 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
       </div>
 
       {/* Payer — above the price section */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          marginBottom: 16,
+        }}
+      >
         <h4 className="form-section-title">{t('bills.payer')}</h4>
-        <Radio.Group
-          value={watch('payer')}
-          onChange={(e) => setValue('payer', e.target.value)}
-        >
+        <Radio.Group value={watch('payer')} onChange={(e) => setValue('payer', e.target.value)}>
           <Radio value="sender">{t('bills.payerSender')}</Radio>
           <Radio value="receiver">{t('bills.payerReceiver')}</Radio>
         </Radio.Group>
@@ -71,7 +75,10 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
       {/* Price rows — right-aligned */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         {feeFields.map(({ key, label }) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 12 }}>
+          <div
+            key={key}
+            style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 12 }}
+          >
             <Text style={{ width: 160, textAlign: 'right' }}>{label}:</Text>
             <Space.Compact style={{ width: 200 }}>
               <InputNumber
@@ -84,7 +91,12 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
                 style={{ width: '100%' }}
                 id={`fee-${key}`}
               />
-              <Input style={{ width: '40px', textAlign: 'center', pointerEvents: 'none' }} defaultValue="₫" tabIndex={-1} readOnly />
+              <Input
+                style={{ width: '40px', textAlign: 'center', pointerEvents: 'none' }}
+                defaultValue="₫"
+                tabIndex={-1}
+                readOnly
+              />
             </Space.Compact>
           </div>
         ))}
@@ -103,7 +115,16 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
           <Text strong style={{ width: 160, fontSize: 14, textAlign: 'right' }}>
             {t('bills.feeTotal')}:
           </Text>
-          <Text strong style={{ display: 'block', width: 200, textAlign: 'right', fontSize: 16, color: 'var(--color-primary)' }}>
+          <Text
+            strong
+            style={{
+              display: 'block',
+              width: 200,
+              textAlign: 'right',
+              fontSize: 16,
+              color: 'var(--color-primary)',
+            }}
+          >
             {formatVND(total)}
           </Text>
         </div>
