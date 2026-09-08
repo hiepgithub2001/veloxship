@@ -51,7 +51,7 @@ export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender'
 
   return (
     <div>
-      <h4 style={{ color: '#C41E3A', marginBottom: 8 }}>{t(prefix === 'sender' ? 'bills.sender' : 'bills.receiver')}</h4>
+      <h4 className="form-section-title">{t(prefix === 'sender' ? 'bills.sender' : 'bills.receiver')}</h4>
 
       <Form.Item
         label={t('bills.phone')}

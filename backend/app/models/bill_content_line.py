@@ -1,6 +1,7 @@
 """Bill content line model."""
 
-from sqlalchemy import BigInteger, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import BigInteger, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -16,12 +17,21 @@ class BillContentLine(Base):
         BigInteger, ForeignKey("bills.id", ondelete="CASCADE"), nullable=False,
     )
     line_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    cargo_type: Mapped[str] = mapped_column(String, nullable=False, default="goods")
     description: Mapped[str] = mapped_column(Text, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     weight_kg: Mapped[float] = mapped_column(Numeric(12, 3), nullable=False)
     length_cm: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     width_cm: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     height_cm: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
+    images: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, server_default="[]",
+    )
+    # `metadata` is a reserved declarative attribute name, so the Python attribute
+    # is `metadata_` while the column is literally named `metadata`.
+    metadata_: Mapped[dict] = mapped_column(
+        "metadata", JSONB, nullable=False, server_default="{}",
+    )
 
     bill = relationship("Bill", back_populates="content_lines")
 

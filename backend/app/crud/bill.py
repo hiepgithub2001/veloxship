@@ -55,6 +55,8 @@ async def create_bill(
         fee_total=_money(payload.fee.fee_total),
         # Payer
         payer=payload.payer,
+        # Note (free-text remark)
+        note=payload.note,
         # Audit
         created_by=actor_id,
         updated_by=actor_id,
@@ -67,12 +69,15 @@ async def create_bill(
         content_line = BillContentLine(
             bill_id=bill.id,
             line_no=line.line_no or idx,
+            cargo_type=line.cargo_type,
             description=line.description,
             quantity=line.quantity,
             weight_kg=_weight(line.weight_kg),
             length_cm=line.length_cm,
             width_cm=line.width_cm,
             height_cm=line.height_cm,
+            images=line.images,
+            metadata_=line.metadata,
         )
         db.add(content_line)
 

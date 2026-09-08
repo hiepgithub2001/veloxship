@@ -48,8 +48,8 @@ class Bill(Base):
 
     # Service & Cargo
     cargo_type: Mapped[str] = mapped_column(String, nullable=False)
-    service_tier_code: Mapped[str] = mapped_column(
-        String, ForeignKey("service_tiers.code"), nullable=False,
+    service_tier_code: Mapped[str | None] = mapped_column(
+        String, ForeignKey("service_tiers.code"), nullable=True,
     )
     actual_weight_kg: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False, default=Decimal("0.000"))
     chargeable_weight_kg: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False, default=Decimal("0.000"))
@@ -82,6 +82,7 @@ class Bill(Base):
     delivered_at: Mapped[datetime | None] = mapped_column(nullable=True)
     delivered_to_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Audit
     created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)

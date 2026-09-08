@@ -197,6 +197,31 @@ class TestCreateBill:
         assert resp.status_code == 404
         assert resp.json()["error_code"] == "TIER_NOT_FOUND"
 
+    async def test_create_bill_omits_optional_fields_with_images(
+        self, client: AsyncClient, auth_headers: dict
+    ):
+        payload = bill_payload()
+        for key in (
+            "cargo_type",
+            "service_tier_code",
+            "actual_weight_kg",
+            "is_insurance_required",
+            "cod_amount",
+        ):
+            payload.pop(key, None)
+        payload["contents"][0]["images"] = ["images/sample-1.jpg"]
+
+        resp = await client.post("/api/v1/bills", json=payload, headers=auth_headers)
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["cargo_type"] == "goods"
+        assert data["service_tier_code"] is None
+        assert data["actual_weight_kg"] == 0
+        assert data["is_insurance_required"] is False
+        assert data["cod_amount"] == 0
+        assert len(data["contents"][0]["images"]) == 1
+        assert data["contents"][0]["images"][0].startswith("http")
+
     async def test_create_bill_fee_total_mismatch(
         self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
     ):

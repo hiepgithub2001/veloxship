@@ -1,131 +1,76 @@
 /**
- * Content table — editable list of content lines.
+ * Content table — editable, sortable list of content lines (one card per line).
  */
-import { Button, InputNumber, Input, Table, Space } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useRef, useState } from 'react';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { ContentLineTable } from './ContentLineTable';
 import { t } from '../../../i18n/vi';
 
-export function ContentTable({ fields, append, remove, setValue, watch }) {
-  const columns = [
-    {
-      title: '#',
-      width: 50,
-      render: (_, __, index) => index + 1,
-    },
-    {
-      title: t('bills.description'),
-      dataIndex: 'description',
-      render: (_, __, index) => (
-        <Input
-          value={watch(`contents.${index}.description`)}
-          onChange={(e) => setValue(`contents.${index}.description`, e.target.value)}
-          placeholder={t('bills.description')}
-          id={`content-${index}-description`}
-        />
-      ),
-    },
-    {
-      title: t('bills.quantity'),
-      width: 100,
-      render: (_, __, index) => (
-        <InputNumber
-          min={1}
-          value={watch(`contents.${index}.quantity`)}
-          onChange={(val) => setValue(`contents.${index}.quantity`, val)}
-          style={{ width: '100%' }}
-          id={`content-${index}-quantity`}
-        />
-      ),
-    },
-    {
-      title: t('bills.weight'),
-      width: 130,
-      render: (_, __, index) => (
-        <InputNumber
-          min={0}
-          step={0.01}
-          decimalSeparator=","
-          value={watch(`contents.${index}.weight_kg`)}
-          onChange={(val) => setValue(`contents.${index}.weight_kg`, val)}
-          style={{ width: '100%' }}
-          id={`content-${index}-weight`}
-        />
-      ),
-    },
-    {
-      title: t('bills.length'),
-      width: 90,
-      render: (_, __, index) => (
-        <InputNumber
-          min={0}
-          step={0.1}
-          decimalSeparator=","
-          value={watch(`contents.${index}.length_cm`)}
-          onChange={(val) => setValue(`contents.${index}.length_cm`, val)}
-          style={{ width: '100%' }}
-        />
-      ),
-    },
-    {
-      title: t('bills.width'),
-      width: 90,
-      render: (_, __, index) => (
-        <InputNumber
-          min={0}
-          step={0.1}
-          decimalSeparator=","
-          value={watch(`contents.${index}.width_cm`)}
-          onChange={(val) => setValue(`contents.${index}.width_cm`, val)}
-          style={{ width: '100%' }}
-        />
-      ),
-    },
-    {
-      title: t('bills.height'),
-      width: 90,
-      render: (_, __, index) => (
-        <InputNumber
-          min={0}
-          step={0.1}
-          decimalSeparator=","
-          value={watch(`contents.${index}.height_cm`)}
-          onChange={(val) => setValue(`contents.${index}.height_cm`, val)}
-          style={{ width: '100%' }}
-        />
-      ),
-    },
-    {
-      title: '',
-      width: 50,
-      render: (_, __, index) =>
-        fields.length > 1 && (
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => remove(index)}
-            id={`content-${index}-remove`}
-          />
-        ),
-    },
-  ];
+export function ContentTable({ fields, append, remove, move, insert, getValues, setValue, watch }) {
+  const dragIndex = useRef(null);
+  const [overIndex, setOverIndex] = useState(null);
+
+  const handleDragStart = (index) => (event) => {
+    dragIndex.current = index;
+    event.dataTransfer.effectAllowed = 'move';
+    // Firefox requires data to be set before it will start a drag.
+    event.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragOver = (index) => (event) => {
+    event.preventDefault();
+    setOverIndex(index);
+  };
+
+  const handleDrop = (index) => (event) => {
+    event.preventDefault();
+    const from = dragIndex.current;
+    if (from !== null && from !== index) {
+      move(from, index);
+    }
+    dragIndex.current = null;
+    setOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    dragIndex.current = null;
+    setOverIndex(null);
+  };
+
+  const duplicateLine = (index) => {
+    const line = getValues(`contents.${index}`);
+    insert(index + 1, JSON.parse(JSON.stringify(line)));
+  };
 
   return (
     <div>
-      <h4 style={{ color: '#C41E3A', marginBottom: 8 }}>{t('bills.contents')}</h4>
-      <Table
-        dataSource={fields}
-        columns={columns}
-        pagination={false}
-        rowKey="id"
-        size="small"
-        bordered
-      />
+      <h4 className="form-section-title">{t('bills.contents')}</h4>
+
+      {fields.map((field, index) => (
+        <ContentLineTable
+          key={field.id}
+          index={index}
+          canRemove={fields.length > 1}
+          onRemove={() => remove(index)}
+          onDuplicate={() => duplicateLine(index)}
+          setValue={setValue}
+          watch={watch}
+          dragHandleProps={{
+            onDragStart: handleDragStart(index),
+            onDragEnd: handleDragEnd,
+          }}
+          onDragOver={handleDragOver(index)}
+          onDrop={handleDrop(index)}
+          isDragOver={overIndex === index}
+        />
+      ))}
+
       <Button
         type="dashed"
         icon={<PlusOutlined />}
         onClick={() =>
-          append({ description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null })
+          append({ cargo_type: 'goods', description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null, images: [], metadata: {} })
         }
         style={{ marginTop: 8, width: '100%' }}
         id="add-content-line"

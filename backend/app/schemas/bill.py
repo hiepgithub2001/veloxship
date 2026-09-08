@@ -4,7 +4,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+from app.services.storage import generate_presigned_url
 
 
 class BillStatus(str, Enum):
@@ -52,14 +54,34 @@ class BillContentLineSchema(BaseModel):
     """A single content line in the bill."""
 
     line_no: int | None = None
+    cargo_type: Literal["document", "goods"] = "goods"
     description: str
     quantity: int
     weight_kg: float
     length_cm: float | None = None
     width_cm: float | None = None
     height_cm: float | None = None
+    images: list[str] = []
+    metadata: dict = Field(
+        default_factory=dict,
+        validation_alias="metadata_",
+        serialization_alias="metadata",
+    )
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, v: list[str]) -> list[str]:
+        if len(v) > 3:
+            raise ValueError("Tối đa 3 hình ảnh cho mỗi dòng nội dung")
+        return v
+
+    @field_serializer("images")
+    def serialize_images(self, images: list[str]) -> list[str]:
+        if not images:
+            return []
+        return [generate_presigned_url(img) for img in images]
 
 
 class FeeBreakdown(BaseModel):
@@ -91,14 +113,15 @@ class BillCreate(BaseModel):
 
     sender: BillParty
     receiver: BillParty
-    cargo_type: Literal["document", "goods"]
-    service_tier_code: str
-    actual_weight_kg: float = Field(ge=0)
+    cargo_type: Literal["document", "goods"] = "goods"
+    service_tier_code: str | None = None
+    actual_weight_kg: float = Field(default=0, ge=0)
     contents: list[BillContentLineSchema]
     is_insurance_required: bool = False
     cod_amount: float = Field(default=0, ge=0)
     fee: FeeBreakdown
     payer: Literal["sender", "receiver"]
+    note: str | None = None
 
 
 class BillStatusUpdate(BaseModel):
@@ -132,7 +155,7 @@ class BillRead(BaseModel):
     sender: CustomerRef
     receiver: CustomerRef
     cargo_type: str
-    service_tier_code: str
+    service_tier_code: str | None = None
     actual_weight_kg: float
     chargeable_weight_kg: float
     is_insurance_required: bool
@@ -144,6 +167,7 @@ class BillRead(BaseModel):
     delivered_at: datetime | None = None
     delivered_to_name: str | None = None
     cancellation_reason: str | None = None
+    note: str | None = None
     created_at: datetime
     updated_at: datetime
     created_by: int
@@ -197,6 +221,7 @@ class BillRead(BaseModel):
             delivered_at=bill.delivered_at,
             delivered_to_name=bill.delivered_to_name,
             cancellation_reason=bill.cancellation_reason,
+            note=bill.note,
             created_at=bill.created_at,
             updated_at=bill.updated_at,
             created_by=bill.created_by,

@@ -147,7 +147,7 @@ export function AppShell() {
             placement="bottomRight"
           >
             <Space style={{ cursor: 'pointer' }}>
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#C41E3A' }} />
+              <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'var(--color-primary)' }} />
               <Text strong>{currentUser?.full_name}</Text>
             </Space>
           </Dropdown>

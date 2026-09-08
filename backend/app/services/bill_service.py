@@ -66,13 +66,14 @@ async def create_bill(
     actor_id: int,
 ) -> Bill:
     """Create a bill with full validation (UC-WAYBILL-01 / FR-WAY-02)."""
-    # Validate service tier exists and is active
-    result = await db.execute(
-        select(ServiceTier).where(ServiceTier.code == payload.service_tier_code)
-    )
-    tier = result.scalar_one_or_none()
-    if tier is None or not tier.is_active:
-        raise NotFoundError("TIER_NOT_FOUND")
+    # Validate service tier exists and is active (optional field)
+    if payload.service_tier_code is not None:
+        result = await db.execute(
+            select(ServiceTier).where(ServiceTier.code == payload.service_tier_code)
+        )
+        tier = result.scalar_one_or_none()
+        if tier is None or not tier.is_active:
+            raise NotFoundError("TIER_NOT_FOUND")
 
     if not payload.contents:
         raise AppError("CONTENT_LINES_REQUIRED")

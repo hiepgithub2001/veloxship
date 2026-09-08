@@ -4,6 +4,8 @@
  */
 import { z } from 'zod';
 
+import { CARGO_TYPES } from './contentTypes';
+
 const phoneRegex = /^\+?[0-9 -]{8,20}$/;
 
 const partySchema = z.object({
@@ -21,12 +23,18 @@ const partySchema = z.object({
 });
 
 const contentLineSchema = z.object({
+  cargo_type: z.enum(CARGO_TYPES, {
+    required_error: 'Vui lòng chọn loại hàng.',
+    invalid_type_error: 'Vui lòng chọn loại hàng.',
+  }),
   description: z.string().min(1, 'Trường này là bắt buộc.'),
   quantity: z.number().min(1, 'Giá trị phải lớn hơn 0.'),
   weight_kg: z.number().min(0, 'Giá trị không được âm.'),
   length_cm: z.number().min(0, 'Giá trị không được âm.').nullable().optional(),
   width_cm: z.number().min(0, 'Giá trị không được âm.').nullable().optional(),
   height_cm: z.number().min(0, 'Giá trị không được âm.').nullable().optional(),
+  images: z.array(z.string()).max(3, 'Tối đa 3 ảnh cho mỗi dòng.').default([]),
+  metadata: z.record(z.string(), z.any()).default({}),
 });
 
 const feeSchema = z
@@ -49,14 +57,8 @@ const feeSchema = z
 export const billCreateSchema = z.object({
   sender: partySchema,
   receiver: partySchema,
-  cargo_type: z.enum(['document', 'goods'], {
-    required_error: 'Trường này là bắt buộc.',
-  }),
-  service_tier_code: z.string().min(1, 'Trường này là bắt buộc.'),
-  actual_weight_kg: z.number().min(0, 'Giá trị không được âm.'),
   contents: z.array(contentLineSchema).min(1, 'Phiếu gửi phải có ít nhất một dòng nội dung.'),
-  is_insurance_required: z.boolean(),
-  cod_amount: z.number().min(0, 'Giá trị không được âm.'),
+  note: z.string().optional(),
   fee: feeSchema,
   payer: z.enum(['sender', 'receiver'], {
     required_error: 'Trường này là bắt buộc.',

@@ -15,8 +15,6 @@ import { createBill } from '../../../api/bills';
 import { SenderBlock } from '../components/SenderBlock';
 import { ReceiverBlock } from '../components/ReceiverBlock';
 import { ContentTable } from '../components/ContentTable';
-import { CargoInfoBlock } from '../components/CargoInfoBlock';
-import { ServiceTierSelector } from '../components/ServiceTierSelector';
 import { FeeBreakdownInput } from '../components/FeeBreakdownInput';
 import { BillPrintView } from '../components/BillPrintView';
 import { t } from '../../../i18n/vi';
@@ -37,12 +35,8 @@ const emptyParty = {
 const defaultValues = {
   sender: { ...emptyParty },
   receiver: { ...emptyParty },
-  cargo_type: 'goods',
-  service_tier_code: '',
-  actual_weight_kg: 0,
-  contents: [{ description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null }],
-  is_insurance_required: false,
-  cod_amount: 0,
+  contents: [{ cargo_type: 'goods', description: '', quantity: 1, weight_kg: 0, length_cm: null, width_cm: null, height_cm: null, images: [], metadata: {} }],
+  note: '',
   fee: { fee_main: 0, fee_insurance: 0, fee_other: 0, fee_vat: 0, fee_total: 0 },
   payer: 'sender',
 };
@@ -57,13 +51,14 @@ export function BillCreatePage() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(billCreateSchema),
     defaultValues,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move, insert } = useFieldArray({
     control,
     name: 'contents',
   });
@@ -133,12 +128,13 @@ export function BillCreatePage() {
         </div>
 
         <Card style={{ marginBottom: 16 }}>
-          <CargoInfoBlock control={control} errors={errors} watch={watch} />
-          <Divider />
           <ContentTable
             fields={fields}
             append={append}
             remove={remove}
+            move={move}
+            insert={insert}
+            getValues={getValues}
             setValue={setValue}
             watch={watch}
           />
@@ -147,28 +143,9 @@ export function BillCreatePage() {
           )}
         </Card>
 
-        <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-          <Card style={{ flex: 1 }}>
-            <ServiceTierSelector
-              cargoType={watch('cargo_type')}
-              tierCode={watch('service_tier_code')}
-              onCargoTypeChange={(val) => {
-                setValue('cargo_type', val);
-                setValue('service_tier_code', '');
-              }}
-              onTierChange={(code) => setValue('service_tier_code', code)}
-            />
-            {errors?.cargo_type && (
-              <div style={{ color: '#ff4d4f' }}>{errors.cargo_type.message}</div>
-            )}
-            {errors?.service_tier_code && (
-              <div style={{ color: '#ff4d4f' }}>{errors.service_tier_code.message}</div>
-            )}
-          </Card>
-          <Card style={{ flex: 1 }}>
-            <FeeBreakdownInput watch={watch} setValue={setValue} errors={errors} />
-          </Card>
-        </div>
+        <Card style={{ marginBottom: 16 }}>
+          <FeeBreakdownInput watch={watch} setValue={setValue} errors={errors} />
+        </Card>
 
         <Divider />
 

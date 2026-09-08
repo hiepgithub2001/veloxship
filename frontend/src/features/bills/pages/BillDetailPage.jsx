@@ -100,7 +100,7 @@ export function BillDetailPage() {
             <Descriptions.Item label={t('bills.codAmount')}>{formatVND(bill.cod_amount)}</Descriptions.Item>
           </Descriptions>
           <div style={{ textAlign: 'right', marginTop: 8 }}>
-            <Text strong style={{ fontSize: 16, color: '#C41E3A' }}>
+            <Text strong style={{ fontSize: 16, color: 'var(--color-primary)' }}>
               {t('bills.feeTotal')}: {formatVND(bill.fee.fee_total)}
             </Text>
           </div>

@@ -1,6 +1,38 @@
 /* Global styles for the VeloxShip app */
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
 
+:root {
+  /* Brand palette */
+  --color-primary: #C41E3A;
+  --primary-color: #C41E3A;
+  --color-primary-hover: #A01830;
+  --color-primary-active: #8B1528;
+  --color-info: #1890FF;
+  --color-success: #52C41A;
+  --color-warning: #FAAD14;
+  --color-error: #FF4D4F;
+  --color-text-base: #1A1A1A;
+  --color-bg-base: #FAFAFA;
+}
+
+/* Form section title & brand utility classes */
+.form-section-title {
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
 *,
 *::before,
 *::after {
