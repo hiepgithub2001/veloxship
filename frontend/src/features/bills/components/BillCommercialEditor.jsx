@@ -1,109 +1,92 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, InputNumber, Space, Table } from 'antd';
-import { DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons';
+import { Button, InputNumber, Space, Table, Tag } from 'antd';
+import { SaveOutlined } from '@ant-design/icons';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { ContentTable } from './ContentTable';
+import { CONTENT_TYPES } from '../contentTypes';
+import { contentLineSchema } from '../schema';
+import { ImagePreviewGroup } from '../../../components/common/ImagePreviewGroup';
 import { t } from '../../../i18n/vi';
 
-const emptyLine = () => ({
-  cargo_type: 'goods',
-  description: '',
-  quantity: 1,
-  weight_kg: 0,
-  length_cm: null,
-  width_cm: null,
-  height_cm: null,
-  images: [],
-  metadata: {},
+const commercialSchema = z.object({
+  contents: z.array(contentLineSchema).min(1, 'Phiếu gửi phải có ít nhất một dòng nội dung.'),
+  cod_amount: z.number().min(0, 'Giá trị không được âm.'),
 });
 
-/** Inline, draft-only editor for the parts most often corrected at the counter. */
+const toEditableLine = ({ line_no, ...line }) => line;
+
+const formatMetadataLabel = (key) => key.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
+const formatMetadata = (metadata) =>
+  Object.entries(metadata || {})
+    .filter(([, value]) => value != null && value !== '')
+    .map(([key, value]) => `${formatMetadataLabel(key)}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+    .join(' · ') || '—';
+
+/** Draft-only editor that reuses the content-line form from bill creation. */
 export function BillCommercialEditor({ bill, saving, onSave }) {
   const [editing, setEditing] = useState(false);
-  const [contents, setContents] = useState([]);
-  const [codAmount, setCodAmount] = useState(0);
+  const {
+    control,
+    getValues,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(commercialSchema),
+    defaultValues: { contents: [], cod_amount: 0 },
+  });
+  const { fields, append, insert, move, remove } = useFieldArray({ control, name: 'contents' });
+
   useEffect(() => {
-    setContents(bill.contents.map((line) => ({ ...line })));
-    setCodAmount(bill.cod_amount);
-  }, [bill]);
-  const updateLine = (index, field, value) =>
-    setContents((items) =>
-      items.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
-    );
+    reset({
+      contents: bill.contents.map(toEditableLine),
+      cod_amount: bill.cod_amount,
+    });
+  }, [bill, reset]);
+
   const columns = [
-    { title: '#', width: 44, render: (_, __, index) => index + 1 },
+    { title: '#', width: 48, render: (_, __, index) => index + 1 },
     {
-      title: t('bills.description'),
-      dataIndex: 'description',
-      render: (value, _, index) =>
-        editing ? (
-          <Input value={value} onChange={(e) => updateLine(index, 'description', e.target.value)} />
-        ) : (
-          value
-        ),
+      title: t('bills.cargoType'),
+      width: 112,
+      render: (_, line) => {
+        const cargoType = CONTENT_TYPES.find((type) => type.value === line.cargo_type);
+        return <Tag color="blue">{t(cargoType?.label || 'bills.goods')}</Tag>;
+      },
     },
+    { title: t('bills.description'), dataIndex: 'description', ellipsis: true },
+    { title: t('bills.quantity'), dataIndex: 'quantity', width: 74, align: 'center' },
     {
-      title: t('bills.quantity'),
-      dataIndex: 'quantity',
+      title: t('bills.weight'),
       width: 100,
-      render: (value, _, index) =>
-        editing ? (
-          <InputNumber
-            min={1}
-            value={value}
-            onChange={(v) => updateLine(index, 'quantity', v || 1)}
-          />
-        ) : (
-          value
-        ),
+      render: (_, line) => `${line.weight_kg} kg`,
     },
     {
-      title: 'Kích thước (cm)',
-      width: 230,
-      render: (_, row, index) =>
-        editing ? (
-          <Space.Compact>
-            <InputNumber
-              min={0}
-              value={row.length_cm}
-              placeholder="D"
-              onChange={(v) => updateLine(index, 'length_cm', v)}
-            />
-            <InputNumber
-              min={0}
-              value={row.width_cm}
-              placeholder="R"
-              onChange={(v) => updateLine(index, 'width_cm', v)}
-            />
-            <InputNumber
-              min={0}
-              value={row.height_cm}
-              placeholder="C"
-              onChange={(v) => updateLine(index, 'height_cm', v)}
-            />
-          </Space.Compact>
-        ) : [row.length_cm, row.width_cm, row.height_cm].every((v) => v != null) ? (
-          `${row.length_cm} × ${row.width_cm} × ${row.height_cm}`
-        ) : (
-          '—'
-        ),
+      title: 'Kích thước',
+      width: 150,
+      render: (_, line) => {
+        const dimensions = [line.length_cm, line.width_cm, line.height_cm];
+        return dimensions.every((value) => value != null) ? `${dimensions.join(' × ')} cm` : '—';
+      },
+    },
+    {
+      title: t('bills.images'),
+      width: 72,
+      render: (_, line) => <ImagePreviewGroup images={line.images} />,
+    },
+    {
+      title: 'Thông tin thêm',
+      width: 190,
+      render: (_, line) => <span className="bill-content-metadata">{formatMetadata(line.metadata)}</span>,
     },
   ];
-  if (editing)
-    columns.push({
-      title: '',
-      width: 46,
-      render: (_, __, index) => (
-        <Button
-          danger
-          type="text"
-          icon={<DeleteOutlined />}
-          aria-label="Xóa dòng"
-          disabled={contents.length === 1}
-          onClick={() => setContents((items) => items.filter((_, i) => i !== index))}
-        />
-      ),
-    });
-  const save = () => {
-    onSave({ contents: contents.map(({ line_no, ...line }) => line), cod_amount: codAmount });
+
+  const save = ({ contents, cod_amount: codAmount }) => {
+    onSave({ contents, cod_amount: codAmount });
     setEditing(false);
   };
   return (
@@ -117,20 +100,39 @@ export function BillCommercialEditor({ bill, saving, onSave }) {
           <Button onClick={() => setEditing(true)}>Chỉnh sửa</Button>
         )}
       </div>
-      <Table
-        size="small"
-        rowKey={(_, index) => index}
-        pagination={false}
-        dataSource={contents}
-        columns={columns}
-      />
+      {editing ? (
+        <ContentTable
+          fields={fields}
+          append={append}
+          remove={remove}
+          move={move}
+          insert={insert}
+          getValues={getValues}
+          setValue={setValue}
+          watch={watch}
+        />
+      ) : (
+        <Table
+          className="bill-content-summary-table"
+          size="small"
+          rowKey={(line, index) => line.line_no || index}
+          pagination={false}
+          dataSource={bill.contents}
+          columns={columns}
+        />
+      )}
+      {editing && errors.contents && (
+        <div style={{ color: '#ff4d4f', marginTop: 8 }}>
+          {errors.contents.message || errors.contents.root?.message}
+        </div>
+      )}
       <div className="bill-cod-row">
         <strong>{t('bills.codAmount')}</strong>
         {editing ? (
           <InputNumber
             min={0}
-            value={codAmount}
-            onChange={(value) => setCodAmount(value || 0)}
+            value={watch('cod_amount')}
+            onChange={(value) => setValue('cod_amount', value || 0)}
             formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
             parser={(v) => v.replace(/\./g, '')}
             addonAfter="₫"
@@ -138,26 +140,22 @@ export function BillCommercialEditor({ bill, saving, onSave }) {
         ) : (
           <strong>
             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-              codAmount,
+              bill.cod_amount,
             )}
           </strong>
         )}
       </div>
       {editing && (
         <Space style={{ marginTop: 14 }}>
-          <Button
-            icon={<PlusOutlined />}
-            onClick={() => setContents((items) => [...items, emptyLine()])}
-          >
-            {t('bills.addLine')}
-          </Button>
-          <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={save}>
+          <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={handleSubmit(save)}>
             {t('common.save')}
           </Button>
           <Button
             onClick={() => {
-              setContents(bill.contents.map((line) => ({ ...line })));
-              setCodAmount(bill.cod_amount);
+              reset({
+                contents: bill.contents.map(toEditableLine),
+                cod_amount: bill.cod_amount,
+              });
               setEditing(false);
             }}
           >

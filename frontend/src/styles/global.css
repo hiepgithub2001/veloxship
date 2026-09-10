@@ -187,6 +187,13 @@ body {
   color: var(--color-primary);
   font-size: 18px;
 }
+.bill-content-summary-table .ant-table-cell {
+  vertical-align: middle;
+}
+.bill-content-metadata {
+  color: #595959;
+  font-size: 12px;
+}
 .bill-cod-row {
   display: flex;
   justify-content: flex-end;
