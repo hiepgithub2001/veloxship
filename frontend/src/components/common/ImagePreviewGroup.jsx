@@ -23,9 +23,7 @@ export function ImagePreviewGroup({ images, width = 40, height = 40 }) {
           alt="thumbnail"
         />
         {images.length > 1 && (
-          <span style={{ fontSize: 12, color: '#8c8c8c' }}>
-            +{images.length - 1}
-          </span>
+          <span style={{ fontSize: 12, color: '#8c8c8c' }}>+{images.length - 1}</span>
         )}
         {images.slice(1).map((url, idx) => (
           <Image key={idx} src={url} style={{ display: 'none' }} />

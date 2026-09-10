@@ -99,14 +99,28 @@ export function VehicleListPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <h2 style={{ margin: 0 }}>Quản lý Đội xe</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           Đăng ký xe mới
         </Button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <VehicleSearchBar onSearch={handleSearch} defaultValue={search} />
         <VehicleFilters
           status={status}
@@ -127,11 +141,7 @@ export function VehicleListPage() {
         onDelete={handleDelete}
       />
 
-      <VehicleFormModal
-        open={modalOpen}
-        onClose={handleModalClose}
-        vehicle={editingVehicle}
-      />
+      <VehicleFormModal open={modalOpen} onClose={handleModalClose} vehicle={editingVehicle} />
     </div>
   );
 }

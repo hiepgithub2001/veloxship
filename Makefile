@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend db-revision db-migrate db-seed install setup stop help
+.PHONY: dev backend frontend db-revision db-migrate db-seed install setup stop help test test-backend test-frontend lint lint-frontend lint-backend lint-all format format-frontend format-backend format-all
 
 # Default target
 help: ## Show this help
@@ -74,6 +74,28 @@ test-frontend: ## Run frontend tests
 	cd frontend && npm test
 
 test: test-backend test-frontend ## Run all tests
+
+# ─── Linting & Formatting ───────────────────────────
+
+lint-frontend: ## Run frontend linter (ESLint)
+	cd frontend && npm run lint
+
+lint-backend: ## Run backend linter (ruff)
+	cd backend && . venv/bin/activate && ruff check .
+
+lint: lint-frontend ## Run frontend linter (ESLint)
+
+lint-all: lint-frontend lint-backend ## Run all linters (frontend + backend)
+
+format-frontend: ## Format frontend code (Prettier)
+	cd frontend && npm run format
+
+format-backend: ## Format backend code (black)
+	cd backend && . venv/bin/activate && black .
+
+format: format-frontend ## Format frontend code (Prettier)
+
+format-all: format-frontend format-backend ## Format all frontend and backend code
 
 # ─── Docker ─────────────────────────────────────────
 

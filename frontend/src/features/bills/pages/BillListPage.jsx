@@ -12,21 +12,21 @@ import { formatVND, formatViDateTime } from '../../../lib/format';
 const { Title } = Typography;
 
 const statusColors = {
-  da_tao: 'blue',
-  da_lay_hang: 'cyan',
-  dang_van_chuyen: 'orange',
-  da_giao: 'green',
-  hoan_tra: 'purple',
-  huy: 'red',
+  created: 'blue',
+  picked_up: 'cyan',
+  in_transit: 'orange',
+  delivered: 'green',
+  returned: 'purple',
+  cancelled: 'red',
 };
 
 const statusText = {
-  da_tao: 'Đã tạo',
-  da_lay_hang: 'Đã lấy hàng',
-  dang_van_chuyen: 'Đang vận chuyển',
-  da_giao: 'Đã giao',
-  hoan_tra: 'Hoàn trả',
-  huy: 'Hủy',
+  created: 'Đã tạo',
+  picked_up: 'Đã lấy hàng',
+  in_transit: 'Đang vận chuyển',
+  delivered: 'Đã giao',
+  returned: 'Hoàn trả',
+  cancelled: 'Đã hủy',
 };
 
 export function BillListPage() {
@@ -96,9 +96,7 @@ export function BillListPage() {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={statusColors[status] || 'default'}>
-          {statusText[status] || status}
-        </Tag>
+        <Tag color={statusColors[status] || 'default'}>{statusText[status] || status}</Tag>
       ),
     },
     {
@@ -112,16 +110,12 @@ export function BillListPage() {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="text" 
-            icon={<EyeOutlined />} 
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
             onClick={() => navigate(`/phieu-gui/${record.id}`)}
           />
-          <Button 
-            type="text" 
-            icon={<PrinterOutlined />} 
-            onClick={() => handlePrint(record.id)}
-          />
+          <Button type="text" icon={<PrinterOutlined />} onClick={() => handlePrint(record.id)} />
         </Space>
       ),
     },
@@ -129,8 +123,17 @@ export function BillListPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={3} style={{ margin: 0 }}>{t('bills.title')}</Title>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
+        <Title level={3} style={{ margin: 0 }}>
+          {t('bills.title')}
+        </Title>
         <Button
           type="primary"
           icon={<PlusOutlined />}

@@ -48,6 +48,19 @@ def _format_weight(weight) -> str:
     return f"{float(weight):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+def _party_context(customer) -> dict:
+    """Build a party dict from a customer relationship + metadata."""
+    meta = customer.customer_metadata if customer else None
+    return {
+        "code": customer.code if customer else None,
+        "name": customer.name if customer else "",
+        "phone": customer.phone if customer else "",
+        "address_detail": (meta or {}).get("address_detail", ""),
+        "province_name": (meta or {}).get("province_name", ""),
+        "ward_name": (meta or {}).get("ward_name", ""),
+    }
+
+
 def _prepare_context(bill) -> dict:
     """Build the template rendering context from a bill model."""
     from datetime import datetime, timezone
@@ -82,18 +95,24 @@ def _prepare_context(bill) -> dict:
 
     return {
         "bill": bill,
+        "sender": _party_context(bill.sender),
+        "receiver": _party_context(bill.receiver),
         "barcode_svg": _generate_barcode_svg(bill.tracking_number),
         "qr_base64": _generate_qr_base64(bill.tracking_number),
         "content_lines": content_lines,
         "total_weight": _format_weight(total_weight),
         "total_quantity": total_quantity,
+        "actual_weight": _format_weight(bill.actual_weight_kg),
+        "chargeable_weight": _format_weight(bill.chargeable_weight_kg),
+        "cod_amount": _format_vnd(bill.cod_amount),
         "fee_main": _format_vnd(bill.fee_main),
-        "fee_fuel": _format_vnd(bill.fee_fuel_surcharge),
-        "fee_other": _format_vnd(bill.fee_other_surcharge),
+        "fee_insurance": _format_vnd(bill.fee_insurance),
+        "fee_other": _format_vnd(bill.fee_other),
         "fee_vat": _format_vnd(bill.fee_vat),
         "fee_total": _format_vnd(bill.fee_total),
         "is_sender_payer": bill.payer == "sender",
         "is_document": bill.cargo_type == "document",
+        "is_insurance_required": bill.is_insurance_required,
         "date_day": now.strftime("%d"),
         "date_month": now.strftime("%m"),
         "date_year": now.strftime("%Y"),

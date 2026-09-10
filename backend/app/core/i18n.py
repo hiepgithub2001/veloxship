@@ -16,6 +16,11 @@ _MESSAGES: dict[str, str] = {
     "CANCELLATION_REASON_REQUIRED": "Cần nhập lý do huỷ.",
     "DELIVERED_TO_NAME_REQUIRED": "Cần nhập tên người nhận khi giao hàng.",
     "CANNOT_CANCEL_IN_TRANSIT": "Không thể huỷ phiếu đang vận chuyển hoặc đã giao.",
+    "RETURN_REASON_REQUIRED": "Cần nhập lý do hoàn trả.",
+    "EDIT_REASON_REQUIRED": "Cần nhập lý do thay đổi sau khi đã lấy hàng.",
+    "BILL_FIELDS_LOCKED": "Các thông tin hàng hóa và cước phí đã bị khóa sau khi lấy hàng.",
+    "BILL_LOCKED": "Phiếu ở trạng thái kết thúc không thể chỉnh sửa.",
+    "BILL_STALE": "Phiếu đã được cập nhật bởi người khác. Vui lòng tải lại trước khi lưu.",
     "TIER_SCOPE_MISMATCH": "Dịch vụ không phù hợp với loại hàng.",
     "TIER_NOT_FOUND": "Không tìm thấy loại dịch vụ.",
 

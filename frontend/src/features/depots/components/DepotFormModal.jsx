@@ -152,13 +152,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
           <Controller
             name="code"
             control={control}
-            render={({ field }) => (
-              <Input
-                {...field}
-                placeholder="VD: HCM01"
-                disabled={isEdit}
-              />
-            )}
+            render={({ field }) => <Input {...field} placeholder="VD: HCM01" disabled={isEdit} />}
           />
         </Form.Item>
 
@@ -172,9 +166,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
           <Controller
             name="name"
             control={control}
-            render={({ field }) => (
-              <Input {...field} placeholder="Nhập tên bưu cục" />
-            )}
+            render={({ field }) => <Input {...field} placeholder="Nhập tên bưu cục" />}
           />
         </Form.Item>
 
@@ -188,9 +180,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
           <Controller
             name="phone"
             control={control}
-            render={({ field }) => (
-              <Input {...field} placeholder="VD: 0901234567" />
-            )}
+            render={({ field }) => <Input {...field} placeholder="VD: 0901234567" />}
           />
         </Form.Item>
 
@@ -205,11 +195,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
             name="address_detail"
             control={control}
             render={({ field }) => (
-              <Input.TextArea
-                {...field}
-                placeholder="Nhập địa chỉ chi tiết"
-                rows={2}
-              />
+              <Input.TextArea {...field} placeholder="Nhập địa chỉ chi tiết" rows={2} />
             )}
           />
         </Form.Item>
@@ -267,11 +253,7 @@ export function DepotFormModal({ open, onClose, depot, onSuccess }) {
             name="images"
             control={control}
             render={({ field }) => (
-              <ImageUpload
-                value={field.value}
-                onChange={field.onChange}
-                maxCount={5}
-              />
+              <ImageUpload value={field.value} onChange={field.onChange} maxCount={5} />
             )}
           />
         </Form.Item>

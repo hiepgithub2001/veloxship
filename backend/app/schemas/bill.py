@@ -1,49 +1,97 @@
-"""Bill schemas — create, read, status, events."""
+"""Bill schemas — create, read, status, events (aligned to Hoàng Nam DB v1.1)."""
 
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+from app.services.storage import generate_presigned_url
 
 
 class BillStatus(str, Enum):
-    da_tao = "da_tao"
-    da_lay_hang = "da_lay_hang"
-    dang_van_chuyen = "dang_van_chuyen"
-    da_giao = "da_giao"
-    hoan_tra = "hoan_tra"
-    huy = "huy"
+    created = "created"
+    picked_up = "picked_up"
+    in_transit = "in_transit"
+    delivered = "delivered"
+    returned = "returned"
+    cancelled = "cancelled"
 
 
-class Party(BaseModel):
-    """Sender or receiver block."""
+class BillParty(BaseModel):
+    """Sender/receiver input.
+
+    Either `customer_id` of an existing customer, or inline fields used to
+    get-or-create a customer (khách vãng lai).
+    """
+
+    customer_id: int | None = None
     name: str
-    address: str
-    district: str
-    province: str
-    phone: str
+    phone: str | None = None
+    address_detail: str | None = None
+    province_code: str | None = None
+    province_name: str | None = None
+    ward_code: str | None = None
+    ward_name: str | None = None
+
+
+class CustomerRef(BaseModel):
+    """Customer snapshot used in bill responses (from `customers` + metadata)."""
+
+    id: int
+    code: str | None = None
+    name: str
+    phone: str | None = None
+    customer_type: str
+    address_detail: str | None = None
+    province_code: str | None = None
+    province_name: str | None = None
+    ward_code: str | None = None
+    ward_name: str | None = None
 
 
 class BillContentLineSchema(BaseModel):
     """A single content line in the bill."""
+
     line_no: int | None = None
+    cargo_type: Literal["document", "goods"] = "goods"
     description: str
     quantity: int
     weight_kg: float
     length_cm: float | None = None
     width_cm: float | None = None
     height_cm: float | None = None
+    images: list[str] = []
+    metadata: dict = Field(
+        default_factory=dict,
+        validation_alias="metadata_",
+        serialization_alias="metadata",
+    )
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    @field_validator("images")
+    @classmethod
+    def validate_images(cls, v: list[str]) -> list[str]:
+        if len(v) > 3:
+            raise ValueError("Tối đa 3 hình ảnh cho mỗi dòng nội dung")
+        return v
+
+    @field_serializer("images")
+    def serialize_images(self, images: list[str]) -> list[str]:
+        if not images:
+            return []
+        return [generate_presigned_url(img) for img in images]
 
 
 class FeeBreakdown(BaseModel):
     """Fee breakdown with total validation."""
-    fee_main: float
-    fee_fuel_surcharge: float
-    fee_other_surcharge: float
-    fee_vat: float
-    fee_total: float
+
+    fee_main: float = Field(ge=0)
+    fee_insurance: float = Field(ge=0)
+    fee_other: float = Field(ge=0)
+    fee_vat: float = Field(ge=0)
+    fee_total: float = Field(ge=0)
 
     @field_validator("fee_total")
     @classmethod
@@ -51,8 +99,8 @@ class FeeBreakdown(BaseModel):
         data = info.data
         expected = (
             data.get("fee_main", 0)
-            + data.get("fee_fuel_surcharge", 0)
-            + data.get("fee_other_surcharge", 0)
+            + data.get("fee_insurance", 0)
+            + data.get("fee_other", 0)
             + data.get("fee_vat", 0)
         )
         if abs(v - expected) > 0.01:
@@ -62,55 +110,83 @@ class FeeBreakdown(BaseModel):
 
 class BillCreate(BaseModel):
     """POST /bills request body."""
-    customer_id: int | None = None
-    customer_code: str | None = None
-    sender: Party
-    receiver: Party
+
+    sender: BillParty
+    receiver: BillParty
+    cargo_type: Literal["document", "goods"] = "goods"
+    service_tier_code: str | None = None
+    actual_weight_kg: float = Field(default=0, ge=0)
     contents: list[BillContentLineSchema]
-    cargo_type: str
-    service_tier_code: str
+    is_insurance_required: bool = False
+    cod_amount: float = Field(default=0, ge=0)
     fee: FeeBreakdown
-    payer: str
+    payer: Literal["sender", "receiver"]
+    note: str | None = None
 
 
 class BillStatusUpdate(BaseModel):
     """POST /bills/{id}/status request body."""
+
     to_status: BillStatus
     delivered_to_name: str | None = None
     cancellation_reason: str | None = None
     note: str | None = None
 
 
+class BillUpdate(BaseModel):
+    """Controlled bill amendment. Server decides which fields are editable."""
+
+    expected_updated_at: datetime
+    edit_reason: str | None = Field(default=None, min_length=1)
+    sender: BillParty | None = None
+    receiver: BillParty | None = None
+    cargo_type: Literal["document", "goods"] | None = None
+    service_tier_code: str | None = None
+    actual_weight_kg: float | None = Field(default=None, ge=0)
+    contents: list[BillContentLineSchema] | None = None
+    is_insurance_required: bool | None = None
+    cod_amount: float | None = Field(default=None, ge=0)
+    fee: FeeBreakdown | None = None
+    payer: Literal["sender", "receiver"] | None = None
+    note: str | None = None
+
+
 class BillStatusEventRead(BaseModel):
     """Status event in the response."""
+
     id: int
     bill_id: int
     from_status: str | None = None
     to_status: str
     note: str | None = None
-    actor_id: int
+    changed_by: int
     created_at: datetime
+    actor_name: str | None = None
 
     model_config = {"from_attributes": True}
 
 
 class BillRead(BaseModel):
     """Full bill response."""
+
     id: int
     tracking_number: str
-    customer_code: str | None = None
-    customer_id: int | None = None
-    sender: Party
-    receiver: Party
-    contents: list[BillContentLineSchema]
+    sender: CustomerRef
+    receiver: CustomerRef
     cargo_type: str
-    service_tier_code: str
+    service_tier_code: str | None = None
+    actual_weight_kg: float
+    chargeable_weight_kg: float
+    is_insurance_required: bool
+    cod_amount: float
+    contents: list[BillContentLineSchema]
     fee: FeeBreakdown
     payer: str
     status: str
     delivered_at: datetime | None = None
     delivered_to_name: str | None = None
     cancellation_reason: str | None = None
+    note: str | None = None
     created_at: datetime
     updated_at: datetime
     created_by: int
@@ -119,37 +195,53 @@ class BillRead(BaseModel):
     last_printed_at: datetime | None = None
     last_printed_by: int | None = None
 
-    model_config = {"from_attributes": True}
-
     @classmethod
     def from_model(cls, bill):
         """Convert a Bill ORM model to a BillRead schema."""
+
+        def to_customer_ref(customer, snapshot) -> CustomerRef:
+            if snapshot:
+                return CustomerRef(
+                    id=customer.id if customer else 0,
+                    code=customer.code if customer else None,
+                    name=snapshot.get("name", ""), phone=snapshot.get("phone"),
+                    customer_type=customer.customer_type if customer else "retail",
+                    address_detail=snapshot.get("address_detail"), province_code=snapshot.get("province_code"),
+                    province_name=snapshot.get("province_name"), ward_code=snapshot.get("ward_code"),
+                    ward_name=snapshot.get("ward_name"),
+                )
+            meta = customer.customer_metadata if customer else None
+            return CustomerRef(
+                id=customer.id,
+                code=customer.code,
+                name=customer.name,
+                phone=customer.phone,
+                customer_type=customer.customer_type,
+                address_detail=(meta or {}).get("address_detail"),
+                province_code=(meta or {}).get("province_code"),
+                province_name=(meta or {}).get("province_name"),
+                ward_code=(meta or {}).get("ward_code"),
+                ward_name=(meta or {}).get("ward_name"),
+            )
+
         return cls(
             id=bill.id,
             tracking_number=bill.tracking_number,
-            customer_code=bill.customer_code,
-            customer_id=bill.customer_id,
-            sender=Party(
-                name=bill.sender_name,
-                address=bill.sender_address,
-                district=bill.sender_district,
-                province=bill.sender_province,
-                phone=bill.sender_phone,
-            ),
-            receiver=Party(
-                name=bill.receiver_name,
-                address=bill.receiver_address,
-                district=bill.receiver_district,
-                province=bill.receiver_province,
-                phone=bill.receiver_phone,
-            ),
-            contents=[BillContentLineSchema.model_validate(line) for line in bill.content_lines],
+            sender=to_customer_ref(bill.sender, bill.sender_snapshot),
+            receiver=to_customer_ref(bill.receiver, bill.receiver_snapshot),
             cargo_type=bill.cargo_type,
             service_tier_code=bill.service_tier_code,
+            actual_weight_kg=float(bill.actual_weight_kg),
+            chargeable_weight_kg=float(bill.chargeable_weight_kg),
+            is_insurance_required=bill.is_insurance_required,
+            cod_amount=float(bill.cod_amount),
+            contents=[
+                BillContentLineSchema.model_validate(line) for line in bill.content_lines
+            ],
             fee=FeeBreakdown(
                 fee_main=float(bill.fee_main),
-                fee_fuel_surcharge=float(bill.fee_fuel_surcharge),
-                fee_other_surcharge=float(bill.fee_other_surcharge),
+                fee_insurance=float(bill.fee_insurance),
+                fee_other=float(bill.fee_other),
                 fee_vat=float(bill.fee_vat),
                 fee_total=float(bill.fee_total),
             ),
@@ -158,6 +250,7 @@ class BillRead(BaseModel):
             delivered_at=bill.delivered_at,
             delivered_to_name=bill.delivered_to_name,
             cancellation_reason=bill.cancellation_reason,
+            note=bill.note,
             created_at=bill.created_at,
             updated_at=bill.updated_at,
             created_by=bill.created_by,
@@ -170,6 +263,7 @@ class BillRead(BaseModel):
 
 class BillPage(BaseModel):
     """Paginated bill list response."""
+
     items: list[BillRead]
     page: int
     page_size: int

@@ -3,7 +3,14 @@
  */
 import client from './client';
 
-export async function getVehicles({ page, pageSize, search, status, vehicleType, latestDepotId } = {}) {
+export async function getVehicles({
+  page,
+  pageSize,
+  search,
+  status,
+  vehicleType,
+  latestDepotId,
+} = {}) {
   const params = {};
   if (page != null) params.page = page;
   if (pageSize != null) params.page_size = pageSize;

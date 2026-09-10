@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import BigInteger, Boolean, CheckConstraint, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -45,11 +46,15 @@ class Bill(Base):
     # Customers (FKs)
     sender_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
     receiver_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
+    # Immutable party data used for history and reprints. Customer relations remain
+    # available for reporting only and must never drive a historical bill display.
+    sender_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
+    receiver_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
 
     # Service & Cargo
     cargo_type: Mapped[str] = mapped_column(String, nullable=False)
-    service_tier_code: Mapped[str] = mapped_column(
-        String, ForeignKey("service_tiers.code"), nullable=False,
+    service_tier_code: Mapped[str | None] = mapped_column(
+        String, ForeignKey("service_tiers.code"), nullable=True,
     )
     actual_weight_kg: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False, default=Decimal("0.000"))
     chargeable_weight_kg: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False, default=Decimal("0.000"))
@@ -82,6 +87,7 @@ class Bill(Base):
     delivered_at: Mapped[datetime | None] = mapped_column(nullable=True)
     delivered_to_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     cancellation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Audit
     created_by: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
