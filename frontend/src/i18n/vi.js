@@ -54,6 +54,7 @@ const vi = {
     title: 'Danh sách phiếu gửi',
     create: 'Tạo phiếu gửi',
     detail: 'Chi tiết phiếu gửi',
+    viewFull: 'Xem đầy đủ',
     trackingNumber: 'Mã vận đơn',
     sender: 'Người gửi',
     receiver: 'Người nhận',

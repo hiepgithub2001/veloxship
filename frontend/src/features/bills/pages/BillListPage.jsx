@@ -3,7 +3,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Drawer, Grid, Table, Typography, Space, Tag, message } from 'antd';
-import { PlusOutlined, PrinterOutlined, EyeOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, PrinterOutlined, EyeOutlined, CloseOutlined, ExpandOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { t } from '../../../i18n/vi';
@@ -218,6 +218,13 @@ export function BillListPage() {
               <Button type="text" icon={<CloseOutlined />} onClick={closeDetail}>
                 {t('common.close')}
               </Button>
+              <Button
+                type="text"
+                icon={<ExpandOutlined />}
+                onClick={() => navigate(`/phieu-gui/${selectedId}`)}
+              >
+                {t('bills.viewFull')}
+              </Button>
             </div>
             <BillDetailView id={selectedId} embedded key={selectedId} />
           </div>
@@ -261,6 +268,17 @@ export function BillListPage() {
           mask={false}
           open={isSelecting}
           onClose={closeDetail}
+          extra={
+            selectedId && (
+              <Button
+                type="text"
+                icon={<ExpandOutlined />}
+                onClick={() => navigate(`/phieu-gui/${selectedId}`)}
+              >
+                {t('bills.viewFull')}
+              </Button>
+            )
+          }
         >
           {selectedId && <BillDetailView id={selectedId} embedded key={selectedId} />}
         </Drawer>
