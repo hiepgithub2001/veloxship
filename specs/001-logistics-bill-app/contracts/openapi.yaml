@@ -205,10 +205,10 @@ paths:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - in: query
-          name: q
+          name: search
           required: false
           schema: { type: string }
-          description: Tìm theo mã vận đơn / tên / SĐT (không phân biệt dấu).
+          description: Tìm theo mã vận đơn / tên / SĐT / mã bill (không phân biệt dấu).
         - in: query
           name: status
           required: false
@@ -596,7 +596,7 @@ components:
 
     BillStatus:
       type: string
-      enum: [da_tao, da_lay_hang, dang_van_chuyen, da_giao, hoan_tra, huy]
+      enum: [created, picked_up, in_transit, delivered, returned, cancelled]
 
     Bill:
       type: object

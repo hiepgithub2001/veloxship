@@ -1,5 +1,7 @@
 """Bills API — create, get, print endpoints."""
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,10 +11,26 @@ from app.crud import audit as audit_crud
 from app.crud import bill as bill_crud
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.bill import BillCreate, BillRead, BillPage, BillStatusUpdate, BillUpdate
+from app.schemas.bill import (
+    BillCreate,
+    BillPage,
+    BillRead,
+    BillStatus,
+    BillStatusUpdate,
+    BillUpdate,
+)
 from app.services import bill_service
 
 router = APIRouter(prefix="/bills", tags=["bills"])
+
+
+def _naive_utc(dt: datetime | None) -> datetime | None:
+    """Normalize a filter timestamp to naive UTC, matching `bills.created_at` storage."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC).replace(tzinfo=None)
 
 
 @router.post("", response_model=BillRead, status_code=201)
@@ -31,15 +49,21 @@ async def list_bills(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search: str | None = Query(None, min_length=1, max_length=100),
+    status: BillStatus | None = Query(None),
+    created_from: datetime | None = Query(None),
+    created_to: datetime | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List bills by tracking number, customer name, or customer phone."""
+    """List bills with search, status, and creation-date range filters."""
     items, total = await bill_crud.list_bills(
         db,
         page=page,
         page_size=page_size,
         search=search,
+        status=status.value if status else None,
+        created_from=_naive_utc(created_from),
+        created_to=_naive_utc(created_to),
     )
     return BillPage(
         items=[BillRead.from_model(item) for item in items],
@@ -102,10 +126,8 @@ async def print_bill(
         raise NotFoundError("BILL_NOT_FOUND")
 
     # Increment print count
-    from datetime import datetime, timezone
-
     bill.print_count += 1
-    bill.last_printed_at = datetime.now(timezone.utc)
+    bill.last_printed_at = datetime.now(UTC)
     bill.last_printed_by = current_user.id
     await db.flush()
 

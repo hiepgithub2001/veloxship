@@ -1,13 +1,16 @@
 /**
- * Bill list page — fetches and displays bills.
+ * Bill list page — fetches and displays bills with status and date-range filters.
  */
-import React, { useState, useEffect } from 'react';
-import { Button, Card, Table, Typography, Space, Tag, message } from 'antd';
-import { PlusOutlined, PrinterOutlined, EyeOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Drawer, Grid, Table, Typography, Space, Tag, message } from 'antd';
+import { PlusOutlined, PrinterOutlined, EyeOutlined, CloseOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { t } from '../../../i18n/vi';
 import { listBills, downloadBillPdf } from '../../../api/bills';
 import { formatVND, formatViDateTime } from '../../../lib/format';
+import { BillDetailView } from '../components/BillDetailView';
+import { BillFilters } from '../components/BillFilters';
 
 const { Title } = Typography;
 
@@ -31,33 +34,53 @@ const statusText = {
 
 export function BillListPage() {
   const navigate = useNavigate();
-  const [bills, setBills] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [selectedId, setSelectedId] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [dateRange, setDateRange] = useState(null); // [Dayjs, Dayjs] | null
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const isSelecting = selectedId != null;
 
-  const fetchBills = async (page = 1, pageSize = 10) => {
-    setLoading(true);
-    try {
-      const data = await listBills({ page, page_size: pageSize });
-      setBills(data.items);
-      setPagination({
-        current: data.page,
-        pageSize: data.page_size,
-        total: data.total,
-      });
-    } catch (error) {
-      message.error(t('bills.fetchError') || 'Không thể tải danh sách phiếu gửi');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const createdFrom = dateRange?.[0] ? dateRange[0].startOf('day').toISOString() : undefined;
+  const createdTo = dateRange?.[1] ? dateRange[1].endOf('day').toISOString() : undefined;
+
+  const { data, isFetching, isError } = useQuery({
+    queryKey: ['bills', { page, pageSize, status, createdFrom, createdTo }],
+    queryFn: () =>
+      listBills({
+        page,
+        pageSize,
+        status: status || undefined,
+        createdFrom,
+        createdTo,
+      }),
+    keepPreviousData: true,
+  });
 
   useEffect(() => {
-    fetchBills();
-  }, []);
+    if (isError) {
+      message.error(t('bills.fetchError'));
+    }
+  }, [isError]);
+
+  const bills = data?.items ?? [];
+  const pagination = { current: page, pageSize, total: data?.total ?? 0 };
 
   const handleTableChange = (newPagination) => {
-    fetchBills(newPagination.current, newPagination.pageSize);
+    setPage(newPagination.current);
+    setPageSize(newPagination.pageSize);
+  };
+
+  const handleStatusChange = (value) => {
+    setStatus(value ?? null);
+    setPage(1);
+  };
+
+  const handleDateRangeChange = (dates) => {
+    setDateRange(dates && dates[0] && dates[1] ? dates : null);
+    setPage(1);
   };
 
   const handlePrint = async (id) => {
@@ -66,6 +89,10 @@ export function BillListPage() {
     } catch (error) {
       message.error('Lỗi khi tải phiếu in');
     }
+  };
+
+  const closeDetail = () => {
+    setSelectedId(null);
   };
 
   const columns = [
@@ -113,7 +140,7 @@ export function BillListPage() {
           <Button
             type="text"
             icon={<EyeOutlined />}
-            onClick={() => navigate(`/phieu-gui/${record.id}`)}
+            onClick={() => setSelectedId(record.id)}
           />
           <Button type="text" icon={<PrinterOutlined />} onClick={() => handlePrint(record.id)} />
         </Space>
@@ -121,38 +148,123 @@ export function BillListPage() {
     },
   ];
 
+  // Narrow column set shown while the detail drawer is open (Outlook-style reading pane).
+  const compactColumns = [
+    {
+      title: 'Mã vận đơn',
+      dataIndex: 'tracking_number',
+      key: 'tracking_number',
+      render: (text) => <Typography.Text strong>{text}</Typography.Text>,
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <Tag color={statusColors[status] || 'default'}>{statusText[status] || status}</Tag>
+      ),
+    },
+    {
+      title: 'Tổng cước',
+      dataIndex: ['fee', 'fee_total'],
+      key: 'fee_total',
+      render: (val) => formatVND(val),
+    },
+  ];
+
+  const tableProps = {
+    dataSource: bills,
+    rowKey: 'id',
+    loading: isFetching,
+    onChange: handleTableChange,
+    onRow: (record) => ({
+      onClick: () => setSelectedId(record.id),
+      style: { cursor: 'pointer' },
+    }),
+    rowClassName: (record) => (record.id === selectedId ? 'bill-row-selected' : ''),
+  };
+
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <Title level={3} style={{ margin: 0 }}>
-          {t('bills.title')}
-        </Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => navigate('/phieu-gui/tao-moi')}
-          id="create-bill-btn"
+      {!isMobile && isSelecting ? (
+        // Desktop: the whole list column (header + table) compacts beside the detail.
+        <div className="bill-master-detail">
+          <div className="bill-master-list">
+            <div className="bill-list-header bill-list-header-compact">
+              <Title level={4} style={{ margin: 0 }}>
+                {t('bills.title')}
+              </Title>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate('/phieu-gui/tao-moi')}
+                id="create-bill-btn"
+                block
+              >
+                {t('bills.create')}
+              </Button>
+            </div>
+            <Card>
+              <Table
+                {...tableProps}
+                columns={compactColumns}
+                size="small"
+                pagination={{ ...pagination, simple: true }}
+              />
+            </Card>
+          </div>
+          <div className="bill-master-detail-pane" key={selectedId}>
+            <div className="bill-master-detail-pane-header">
+              <Button type="text" icon={<CloseOutlined />} onClick={closeDetail}>
+                {t('common.close')}
+              </Button>
+            </div>
+            <BillDetailView id={selectedId} embedded key={selectedId} />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="bill-list-header">
+            <Title level={3} style={{ margin: 0 }}>
+              {t('bills.title')}
+            </Title>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/phieu-gui/tao-moi')}
+              id="create-bill-btn"
+            >
+              {t('bills.create')}
+            </Button>
+          </div>
+          <BillFilters
+            status={status}
+            dateRange={dateRange}
+            onStatusChange={handleStatusChange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+          <Card>
+            <Table
+              {...tableProps}
+              columns={isSelecting ? compactColumns : columns}
+              pagination={pagination}
+            />
+          </Card>
+        </>
+      )}
+      {isMobile && (
+        <Drawer
+          className="bill-list-drawer"
+          title={t('bills.detail')}
+          placement="right"
+          width="100%"
+          mask={false}
+          open={isSelecting}
+          onClose={closeDetail}
         >
-          {t('bills.create')}
-        </Button>
-      </div>
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={bills}
-          rowKey="id"
-          loading={loading}
-          pagination={pagination}
-          onChange={handleTableChange}
-        />
-      </Card>
+          {selectedId && <BillDetailView id={selectedId} embedded key={selectedId} />}
+        </Drawer>
+      )}
     </div>
   );
 }

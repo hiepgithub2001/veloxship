@@ -122,6 +122,15 @@ body {
   display: grid;
   gap: 16px;
 }
+.bill-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bill-detail-actions-right {
+  margin-left: auto;
+}
 .bill-hero {
   border-top: 4px solid var(--color-primary);
 }
@@ -247,5 +256,71 @@ body {
   }
   .bill-commercial-editor .ant-table-wrapper {
     overflow-x: auto;
+  }
+}
+/* Bill list: selected row + detail drawer */
+.bill-row-selected > td {
+  background: #fdf1f3;
+}
+.bill-list-drawer .ant-drawer-content,
+.bill-list-drawer .ant-drawer-body {
+  background: #fff;
+}
+.bill-list-drawer .ant-drawer-body {
+  padding: 16px;
+}
+/* Slow the slide-in so the drawer visibly glides from the right (mobile) */
+.bill-list-drawer .ant-drawer-content-wrapper {
+  transition-duration: 0.6s !important;
+}
+/* Bill list: desktop master-detail — compact list beside a detail pane that slides in */
+.bill-master-detail {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  overflow: hidden;
+}
+.bill-master-list {
+  flex: 0 0 340px;
+  max-width: 340px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bill-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.bill-list-header-compact {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.bill-master-detail-pane {
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 16px;
+  animation: bill-slide-in 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.bill-master-detail-pane-header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+@keyframes bill-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }

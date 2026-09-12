@@ -1,5 +1,6 @@
 """Bill CRUD operations (aligned to Hoàng Nam DB v1.1)."""
 
+from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import or_, select
@@ -7,12 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 
 from app.crud import audit as audit_crud
+from app.models.audit_event import AuditEvent
 from app.models.bill import Bill
 from app.models.bill_content_line import BillContentLine
 from app.models.bill_status_event import BillStatusLog
-from app.models.audit_event import AuditEvent
-from app.models.user import User
 from app.models.customer import Customer
+from app.models.user import User
 from app.schemas.bill import BillCreate
 from app.services.tracking import next_tracking_number
 
@@ -155,8 +156,11 @@ async def list_bills(
     page: int = 1,
     page_size: int = 10,
     search: str | None = None,
+    status: str | None = None,
+    created_from: datetime | None = None,
+    created_to: datetime | None = None,
 ) -> tuple[list[Bill], int]:
-    """List bills with optional diacritic-insensitive tracking/customer search."""
+    """List bills with optional diacritic-insensitive search and AND filters."""
     from sqlalchemy import func
 
     sender = aliased(Customer)
@@ -192,6 +196,14 @@ async def list_bills(
             if bill_id <= 9_223_372_036_854_775_807:
                 conditions.append(Bill.id == bill_id)
         base_query = base_query.where(or_(*conditions))
+
+    # AND filters
+    if status:
+        base_query = base_query.where(Bill.status == status)
+    if created_from is not None:
+        base_query = base_query.where(Bill.created_at >= created_from)
+    if created_to is not None:
+        base_query = base_query.where(Bill.created_at <= created_to)
 
     count_result = await db.execute(
         select(func.count()).select_from(base_query.subquery()),
