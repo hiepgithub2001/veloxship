@@ -29,7 +29,7 @@ export function GlobalBillSearch() {
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await listBills({ search: normalizedQuery, page: 1, page_size: 8 });
+        const data = await listBills({ search: normalizedQuery, page: 1, pageSize: 8 });
         if (currentRequest !== requestId.current) return;
         setOptions(
           data.items.map((bill) => ({

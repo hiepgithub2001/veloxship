@@ -3,6 +3,8 @@
 Uses testcontainers[postgres] + asyncpg for real PostgreSQL testing.
 """
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -293,3 +295,63 @@ class TestListBills:
                 headers=auth_headers,
             )
             assert response.status_code == 200
+
+    async def test_filters_by_status(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        b1 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        b2 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        id1, id2 = b1.json()["id"], b2.json()["id"]
+
+        moved = await client.post(
+            f"/api/v1/bills/{id2}/status",
+            json={"to_status": "picked_up"},
+            headers=auth_headers,
+        )
+        assert moved.status_code == 200
+
+        picked = await client.get(
+            "/api/v1/bills", params={"status": "picked_up"}, headers=auth_headers
+        )
+        assert [item["id"] for item in picked.json()["items"]] == [id2]
+
+        created = await client.get(
+            "/api/v1/bills", params={"status": "created"}, headers=auth_headers
+        )
+        assert [item["id"] for item in created.json()["items"]] == [id1]
+
+    async def test_filters_by_created_date_range(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        bill_id = created.json()["id"]
+
+        now = datetime.now(UTC)
+        window = await client.get(
+            "/api/v1/bills",
+            params={
+                "created_from": (now - timedelta(hours=1)).isoformat(),
+                "created_to": (now + timedelta(hours=1)).isoformat(),
+            },
+            headers=auth_headers,
+        )
+        assert bill_id in [item["id"] for item in window.json()["items"]]
+
+        past = await client.get(
+            "/api/v1/bills",
+            params={
+                "created_from": (now - timedelta(days=365)).isoformat(),
+                "created_to": (now - timedelta(days=364)).isoformat(),
+            },
+            headers=auth_headers,
+        )
+        assert bill_id not in [item["id"] for item in past.json()["items"]]
+
+    async def test_unknown_status_returns_400(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        resp = await client.get(
+            "/api/v1/bills", params={"status": "bogus"}, headers=auth_headers
+        )
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "VALIDATION_ERROR"

@@ -38,7 +38,22 @@ export async function getBillPrintHtml(id) {
   return data;
 }
 
-export async function listBills(params = {}) {
+export async function listBills({
+  page,
+  pageSize,
+  search,
+  status,
+  createdFrom,
+  createdTo,
+} = {}) {
+  const params = {};
+  if (page != null) params.page = page;
+  if (pageSize != null) params.page_size = pageSize;
+  if (search) params.search = search;
+  if (status) params.status = status;
+  if (createdFrom) params.created_from = createdFrom;
+  if (createdTo) params.created_to = createdTo;
+
   const { data } = await client.get('/bills', { params });
   return data;
 }
