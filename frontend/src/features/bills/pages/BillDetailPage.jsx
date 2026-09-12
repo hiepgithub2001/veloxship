@@ -16,6 +16,7 @@ import {
   updateBill,
   updateStatus,
 } from '../../../api/bills';
+import { BillCommentSection } from '../components/BillCommentSection';
 import { BillCommercialEditor } from '../components/BillCommercialEditor';
 import { BillPartyEditor } from '../components/BillPartyEditor';
 import { StatusUpdateDrawer } from '../components/StatusUpdateDrawer';
@@ -134,116 +135,101 @@ export function BillDetailPage() {
           items={journeyItems}
         />
       </Card>
-      <Card>
-        <div className="bill-block-heading">
-          <div>
-            <h3>Thông tin liên hệ</h3>
-            <span>Người gửi và người nhận của phiếu này</span>
-          </div>
-        </div>
-        <div className="bill-parties">
-          <BillPartyEditor
-            bill={bill}
-            side="sender"
-            saving={amendment.isPending}
-            onSave={amendment.mutate}
-          />
-          <BillPartyEditor
-            bill={bill}
-            side="receiver"
-            saving={amendment.isPending}
-            onSave={amendment.mutate}
-          />
-        </div>
-      </Card>
-      <Card>
-        <BillCommercialEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
-      </Card>
-      <Card>
-        <div className="bill-block-heading">
-          <div>
-            <h3>Cước phí & thanh toán</h3>
-            <span>Trình bày theo bố cục phiếu gửi</span>
-          </div>
-        </div>
-        <div className="bill-fee-layout">
-          <div>
-            <strong>{t('bills.payer')}</strong>
-            <div style={{ marginTop: 10 }}>
-              {bill.payer === 'sender' ? t('bills.payerSender') : t('bills.payerReceiver')}
-            </div>
-            <div style={{ marginTop: 24 }}>
-              <strong>{t('bills.serviceTier')}</strong>
-              <div style={{ marginTop: 10 }}>
-                {bill.service_tier_code || '—'} · {t(`bills.${bill.cargo_type}`)}
+      <div className="bill-main-grid">
+        <div className="bill-main-col">
+          <Card>
+            <div className="bill-block-heading">
+              <div>
+                <h3>Thông tin liên hệ</h3>
+                <span>Người gửi và người nhận của phiếu này</span>
               </div>
             </div>
-          </div>
-          <div className="bill-fee-list">
-            {[
-              [t('bills.feeMain'), bill.fee.fee_main],
-              [t('bills.feeInsurance'), bill.fee.fee_insurance],
-              [t('bills.feeOther'), bill.fee.fee_other],
-              [t('bills.feeVat'), bill.fee.fee_vat],
-            ].map(([label, amount]) => (
-              <div className="bill-fee-line" key={label}>
-                <span>{label}</span>
-                <strong>{formatVND(amount)}</strong>
-              </div>
-            ))}
-            <div className="bill-fee-line bill-fee-total">
-              <strong>{t('bills.feeTotal')}</strong>
-              <strong>{formatVND(bill.fee.fee_total)}</strong>
+            <div className="bill-parties">
+              <BillPartyEditor
+                bill={bill}
+                side="sender"
+                saving={amendment.isPending}
+                onSave={amendment.mutate}
+              />
+              <BillPartyEditor
+                bill={bill}
+                side="receiver"
+                saving={amendment.isPending}
+                onSave={amendment.mutate}
+              />
             </div>
-          </div>
+          </Card>
+          <Card>
+            <BillCommercialEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
+          </Card>
+          <Card>
+            <div className="bill-block-heading">
+              <div>
+                <h3>Cước phí & thanh toán</h3>
+                <span>Trình bày theo bố cục phiếu gửi</span>
+              </div>
+            </div>
+            <div className="bill-fee-layout">
+              <div>
+                <strong>{t('bills.payer')}</strong>
+                <div style={{ marginTop: 10 }}>
+                  {bill.payer === 'sender' ? t('bills.payerSender') : t('bills.payerReceiver')}
+                </div>
+                <div style={{ marginTop: 24 }}>
+                  <strong>{t('bills.serviceTier')}</strong>
+                  <div style={{ marginTop: 10 }}>
+                    {bill.service_tier_code || '—'} · {t(`bills.${bill.cargo_type}`)}
+                  </div>
+                </div>
+              </div>
+              <div className="bill-fee-list">
+                {[
+                  [t('bills.feeMain'), bill.fee.fee_main],
+                  [t('bills.feeInsurance'), bill.fee.fee_insurance],
+                  [t('bills.feeOther'), bill.fee.fee_other],
+                  [t('bills.feeVat'), bill.fee.fee_vat],
+                ].map(([label, amount]) => (
+                  <div className="bill-fee-line" key={label}>
+                    <span>{label}</span>
+                    <strong>{formatVND(amount)}</strong>
+                  </div>
+                ))}
+                <div className="bill-fee-line bill-fee-total">
+                  <strong>{t('bills.feeTotal')}</strong>
+                  <strong>{formatVND(bill.fee.fee_total)}</strong>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
-      </Card>
-      <Card>
-        <div className="bill-block-heading">
-          <div>
-            <h3>Hành trình vận đơn</h3>
-            <span>Các lần thay đổi trạng thái</span>
-          </div>
+        <div className="bill-side-col">
+          <Card>
+            <div className="bill-block-heading">
+              <div>
+                <h3>Hành trình vận đơn</h3>
+                <span>Các lần thay đổi trạng thái</span>
+              </div>
+            </div>
+            <Timeline
+              items={events.status_events.map((event) => ({
+                color: colors[event.to_status],
+                children: (
+                  <>
+                    <Text strong>{t(`status.${event.to_status}`)}</Text>
+                    <br />
+                    <Text type="secondary">
+                      {formatViDateTime(event.created_at)} ·{' '}
+                      {event.actor_name || `NV #${event.changed_by}`}
+                    </Text>
+                    {event.note && <div>{event.note}</div>}
+                  </>
+                ),
+              }))}
+            />
+          </Card>
+          <BillCommentSection />
         </div>
-        <Timeline
-          items={events.status_events.map((event) => ({
-            color: colors[event.to_status],
-            children: (
-              <>
-                <Text strong>{t(`status.${event.to_status}`)}</Text>
-                <br />
-                <Text type="secondary">
-                  {formatViDateTime(event.created_at)} ·{' '}
-                  {event.actor_name || `NV #${event.changed_by}`}
-                </Text>
-                {event.note && <div>{event.note}</div>}
-              </>
-            ),
-          }))}
-        />
-      </Card>
-      <Card>
-        <div className="bill-block-heading">
-          <div>
-            <h3>{t('bills.auditLog')}</h3>
-            <span>Chỉnh sửa, in lại và thao tác hệ thống</span>
-          </div>
-        </div>
-        <Timeline
-          items={events.audit_events.map((event) => ({
-            children: (
-              <>
-                <Text strong>{event.action}</Text>
-                <br />
-                <Text type="secondary">
-                  {formatViDateTime(event.created_at)} · {event.actor_name || 'Hệ thống'}
-                </Text>
-                {event.details?.reason && <div>Lý do: {event.details.reason}</div>}
-              </>
-            ),
-          }))}
-        />
-      </Card>
+      </div>
       <StatusUpdateDrawer
         bill={bill}
         open={statusOpen}

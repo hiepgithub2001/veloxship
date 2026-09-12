@@ -206,6 +206,33 @@ body {
 .bill-status-steps {
   padding: 8px 4px 0;
 }
+.bill-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 16px;
+  align-items: start;
+}
+.bill-main-col,
+.bill-side-col {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+@media (max-width: 992px) {
+  .bill-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.bill-comment-composer {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.bill-comment-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
 @media (max-width: 720px) {
   .bill-hero-meta,
   .bill-parties,
