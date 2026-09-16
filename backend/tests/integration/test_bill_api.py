@@ -183,6 +183,24 @@ class TestCreateBill:
         assert data["fee"]["fee_total"] == 27500
         assert len(data["contents"]) == 1
 
+    async def test_print_bill_pdf_updates_naive_print_timestamp(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post(
+            "/api/v1/bills", json=bill_payload(), headers=auth_headers
+        )
+        bill_id = created.json()["id"]
+
+        printed = await client.get(
+            f"/api/v1/bills/{bill_id}/print?as=pdf", headers=auth_headers
+        )
+
+        assert printed.status_code == 200
+        assert printed.headers["content-type"] == "application/pdf"
+        refreshed = await client.get(f"/api/v1/bills/{bill_id}", headers=auth_headers)
+        assert refreshed.json()["print_count"] == 1
+        assert refreshed.json()["last_printed_at"] is not None
+
     async def test_chargeable_weight_uses_dim_when_larger(
         self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
     ):

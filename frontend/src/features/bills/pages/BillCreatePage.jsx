@@ -1,14 +1,13 @@
 /**
  * Bill creation page — composes all bill form components (UC-WEB-19).
  */
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Card, message, Space, Divider, Typography } from 'antd';
 import { SaveOutlined, PrinterOutlined } from '@ant-design/icons';
-import { useReactToPrint } from 'react-to-print';
 
 import { billCreateSchema } from '../schema';
 import { createBill } from '../../../api/bills';
@@ -16,7 +15,7 @@ import { SenderBlock } from '../components/SenderBlock';
 import { ReceiverBlock } from '../components/ReceiverBlock';
 import { ContentTable } from '../components/ContentTable';
 import { FeeBreakdownInput } from '../components/FeeBreakdownInput';
-import { BillPrintView } from '../components/BillPrintView';
+import { BillPdfPreview } from '../components/BillPdfPreview';
 import { t } from '../../../i18n/vi';
 
 const { Title } = Typography;
@@ -55,8 +54,8 @@ const defaultValues = {
 
 export function BillCreatePage() {
   const navigate = useNavigate();
-  const printRef = useRef(null);
   const [createdBill, setCreatedBill] = useState(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
 
   const {
     control,
@@ -87,9 +86,7 @@ export function BillCreatePage() {
     },
   });
 
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-  });
+  const handlePrint = () => setPdfOpen(true);
 
   const onSubmit = (data) => {
     mutation.mutate(data);
@@ -115,9 +112,13 @@ export function BillCreatePage() {
           </Button>
         </Space>
 
-        <div ref={printRef}>
-          <BillPrintView bill={createdBill} />
-        </div>
+        <Card>
+          <Title level={3} style={{ margin: 0 }}>
+            {createdBill.tracking_number}
+          </Title>
+          <div style={{ marginTop: 8 }}>Phiếu gửi đã sẵn sàng để in dưới dạng PDF A5.</div>
+        </Card>
+        <BillPdfPreview billId={createdBill.id} open={pdfOpen} onClose={() => setPdfOpen(false)} />
       </div>
     );
   }

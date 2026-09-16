@@ -127,7 +127,9 @@ async def print_bill(
 
     # Increment print count
     bill.print_count += 1
-    bill.last_printed_at = datetime.now(UTC)
+    # Database timestamps are stored without timezone information. Normalize UTC
+    # before binding so asyncpg does not reject an aware datetime value.
+    bill.last_printed_at = datetime.now(UTC).replace(tzinfo=None)
     bill.last_printed_by = current_user.id
     await db.flush()
 

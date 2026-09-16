@@ -18,11 +18,18 @@ export async function updateBill(id, payload) {
   return data;
 }
 
-export async function downloadBillPdf(id) {
-  const response = await client.get(`/bills/${id}/print?as=pdf`, {
+async function fetchBillPdf(id) {
+  return client.get(`/bills/${id}/print?as=pdf`, {
     responseType: 'blob',
   });
-  // Trigger browser download
+}
+
+export async function getBillPrintHtml(id) {
+  const { data } = await client.get(`/bills/${id}/print?as=html`);
+  return data;
+}
+
+function saveBillPdf(response, id) {
   const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
   const link = document.createElement('a');
   link.href = url;
@@ -33,19 +40,12 @@ export async function downloadBillPdf(id) {
   window.URL.revokeObjectURL(url);
 }
 
-export async function getBillPrintHtml(id) {
-  const { data } = await client.get(`/bills/${id}/print?as=html`);
-  return data;
+export async function downloadBillPdf(id) {
+  const response = await fetchBillPdf(id);
+  saveBillPdf(response, id);
 }
 
-export async function listBills({
-  page,
-  pageSize,
-  search,
-  status,
-  createdFrom,
-  createdTo,
-} = {}) {
+export async function listBills({ page, pageSize, search, status, createdFrom, createdTo } = {}) {
   const params = {};
   if (page != null) params.page = page;
   if (pageSize != null) params.page_size = pageSize;

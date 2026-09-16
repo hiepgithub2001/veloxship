@@ -1,0 +1,16 @@
+.bill-pdf-modal .ant-modal-body {
+  min-block-size: min(76dvh, 760px);
+}
+
+.bill-pdf-loading {
+  display: grid;
+  min-block-size: min(76dvh, 760px);
+  place-items: center;
+}
+
+.bill-pdf-frame {
+  display: block;
+  inline-size: 100%;
+  block-size: min(76dvh, 760px);
+  border: 1px solid #d9d9d9;
+}

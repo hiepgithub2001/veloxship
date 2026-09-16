@@ -131,6 +131,7 @@ async def get_bill(db: AsyncSession, bill_id: int) -> Bill | None:
             selectinload(Bill.status_logs),
             selectinload(Bill.sender),
             selectinload(Bill.receiver),
+            selectinload(Bill.service_tier),
         )
     )
     return result.scalar_one_or_none()

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Space, Spin, Steps, Tag, Timeline, Typography, message } from 'antd';
@@ -8,7 +8,6 @@ import {
   PrinterOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
-import { useReactToPrint } from 'react-to-print';
 import {
   downloadBillPdf,
   getBill,
@@ -19,8 +18,8 @@ import {
 import { BillCommentSection } from './BillCommentSection';
 import { BillCommercialEditor } from './BillCommercialEditor';
 import { BillPartyEditor } from './BillPartyEditor';
+import { BillPdfPreview } from './BillPdfPreview';
 import { StatusUpdateDrawer } from './StatusUpdateDrawer';
-import { BillPrintView } from './BillPrintView';
 import { formatVND, formatViDateTime } from '../../../lib/format';
 import { t } from '../../../i18n/vi';
 
@@ -44,8 +43,8 @@ const terminal = new Set(['delivered', 'returned', 'cancelled']);
 export function BillDetailView({ id, embedded = false }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const printRef = useRef(null);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const {
     data: bill,
     isLoading,
@@ -77,7 +76,7 @@ export function BillDetailView({ id, embedded = false }) {
     },
     onError: (e) => message.error(e.response?.data?.message || 'Không thể cập nhật trạng thái.'),
   });
-  const print = useReactToPrint({ contentRef: printRef });
+  const print = () => setPdfOpen(true);
   if (isLoading) return <Spin size="large" style={{ display: 'block', margin: '40px auto' }} />;
   if (error || !bill)
     return (
@@ -169,7 +168,11 @@ export function BillDetailView({ id, embedded = false }) {
             </div>
           </Card>
           <Card>
-            <BillCommercialEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
+            <BillCommercialEditor
+              bill={bill}
+              saving={amendment.isPending}
+              onSave={amendment.mutate}
+            />
           </Card>
           <Card>
             <div className="bill-block-heading">
@@ -246,9 +249,14 @@ export function BillDetailView({ id, embedded = false }) {
         saving={status.isPending}
         onSubmit={status.mutate}
       />
-      <div ref={printRef} style={{ position: 'absolute', left: '-9999px' }}>
-        <BillPrintView bill={bill} />
-      </div>
+      <BillPdfPreview
+        billId={bill.id}
+        open={pdfOpen}
+        onClose={() => {
+          setPdfOpen(false);
+          refresh();
+        }}
+      />
     </div>
   );
 }

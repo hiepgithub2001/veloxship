@@ -1,39 +1,459 @@
-/* Print-only stylesheet for the delivery bill */
 @page {
-  size: A4;
-  margin: 10mm;
+  size: A5 landscape;
+  margin: 4mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: #111;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 7.2pt;
+  line-height: 1.15;
+}
+
+.bill-copy {
+  position: relative;
+  inline-size: 202mm;
+  block-size: 140mm;
+  padding: 3mm 3mm 3mm 12mm;
+  border: 0.25mm solid #333;
+  break-after: page;
+  page-break-after: always;
+}
+
+.bill-copy:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+
+.perforation {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 8mm;
+  border-inline-start: 0.2mm dashed #777;
+}
+
+.form-shell {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
+.bill-header {
+  display: grid;
+  grid-template-columns: 30% 30% 40%;
+  align-items: center;
+  min-block-size: 20mm;
+  border: 0.25mm solid #333;
+  border-block-end: 0;
+}
+
+.brand-block,
+.title-block,
+.tracking-block {
+  min-inline-size: 0;
+  text-align: center;
+}
+
+.brand-block img {
+  display: block;
+  inline-size: 25mm;
+  block-size: 11mm;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.carrier-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 8pt;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.title-block h1 {
+  margin: 0 0 1mm;
+  font-size: 14pt;
+  line-height: 1;
+}
+
+.customer-code {
+  inline-size: 30mm;
+  min-block-size: 7mm;
+  padding: 1.5mm;
+  margin: 0 auto;
+  border: 0.35mm solid #222;
+  text-align: start;
+}
+
+.tracking-block {
+  padding-inline: 3mm;
+}
+
+.barcode {
+  block-size: 12mm;
+}
+
+.barcode svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 12mm;
+}
+
+.tracking-number {
+  margin-block-start: 1mm;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12pt;
+}
+
+.tracking-number strong {
+  color: #c9361d;
+  font-weight: 400;
+  letter-spacing: 0.3mm;
+}
+
+table {
+  border-spacing: 0;
+}
+
+.form-table {
+  inline-size: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.form-table th,
+.form-table td {
+  border: 0.2mm solid #333;
+  vertical-align: top;
+}
+
+.form-table th {
+  block-size: 5mm;
+  padding: 1mm 1.5mm;
+  font-size: 7.2pt;
+  text-align: start;
+}
+
+.form-table th + th,
+.form-table td + td {
+  border-inline-start: 0;
+}
+
+.section-number {
+  display: inline-block;
+  inline-size: 8mm;
+  margin: -1mm 1.2mm -1mm -1.5mm;
+  padding-block: 1mm;
+  border-inline-end: 0.2mm solid #333;
+  font-size: 9pt;
+  font-weight: 400;
+  text-align: center;
+}
+
+.form-table small {
+  font-size: 6.5pt;
+  font-weight: 400;
+}
+
+.half {
+  inline-size: 50%;
+}
+
+.party-table tbody td {
+  block-size: 24mm;
+  padding: 1.2mm 1.5mm 0;
+}
+
+.field-line {
+  display: flex;
+  min-block-size: 4.2mm;
+  gap: 1mm;
+  padding-block: 0.8mm 0.4mm;
+  border-block-end: 0.2mm dotted #555;
+}
+
+.field-line strong {
+  flex: 0 0 auto;
+}
+
+.field-line span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.field-line.address {
+  min-block-size: 6.5mm;
+}
+
+.field-split {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 2mm;
+  min-block-size: 4.2mm;
+  padding-block: 0.8mm;
+  border-block-end: 0.2mm solid #555;
+}
+
+.content-width {
+  inline-size: 42%;
+}
+
+.fee-width {
+  inline-size: 58%;
+}
+
+.commercial-table > tbody > tr > td {
+  block-size: 36mm;
+}
+
+.nested-cell {
+  padding: 0;
+}
+
+.content-lines,
+.service-fee-detail,
+.fee-list {
+  inline-size: 100%;
+  block-size: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.content-lines th,
+.content-lines td,
+.service-fee-detail td,
+.fee-list th,
+.fee-list td {
+  border: 0.15mm solid #555;
+  text-align: center;
+}
+
+.content-lines th,
+.content-lines td {
+  padding: 0.5mm;
+  font-size: 6pt;
+  font-weight: 400;
+}
+
+.content-lines thead {
+  block-size: 7mm;
+}
+
+.content-lines tbody tr {
+  block-size: 4.2mm;
+}
+
+.content-lines.compact tbody tr {
+  block-size: 3mm;
+}
+
+.content-lines.compact th,
+.content-lines.compact td {
+  padding: 0.25mm;
+  font-size: 5.2pt;
+}
+
+.content-lines tfoot {
+  block-size: 4mm;
+}
+
+.content-lines tbody td:first-child,
+.content-lines tfoot td {
+  text-align: start;
+}
+
+.description {
+  inline-size: 33%;
+}
+
+.quantity {
+  inline-size: 13%;
+}
+
+.weight {
+  inline-size: 17%;
+}
+
+.dimension {
+  inline-size: 12.333%;
+}
+
+.classification-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  min-block-size: 7mm;
+  border-block-end: 0.15mm solid #555;
+  font-size: 6pt;
+}
+
+.classification-row > span {
+  padding-inline: 1mm;
+  white-space: nowrap;
+}
+
+.box {
+  display: inline-block;
+  position: relative;
+  inline-size: 3mm;
+  block-size: 3mm;
+  margin-inline-end: 1mm;
+  border: 0.2mm solid #333;
+  vertical-align: -0.6mm;
+}
+
+.box.checked::after {
+  position: absolute;
+  inset: -0.8mm 0 0;
+  content: "×";
+  font-size: 9pt;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+}
+
+.service-fee-detail {
+  block-size: 29mm;
+}
+
+.fee-list-width {
+  inline-size: 54%;
+}
+
+.service-list-width {
+  inline-size: 46%;
+}
+
+.service-fee-detail > tbody > tr > td {
+  padding: 0;
+}
+
+.fee-list th,
+.fee-list td {
+  padding: 0.45mm 1mm;
+  font-size: 5.8pt;
+  font-weight: 400;
+  text-align: start;
+}
+
+.fee-list td {
+  text-align: end;
+}
+
+.fee-list .total th,
+.fee-list .total td {
+  font-weight: 700;
+}
+
+.service-options {
+  padding: 1mm !important;
+}
+
+.service-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1mm;
+}
+
+.service-columns span {
+  display: block;
+  min-block-size: 3.5mm;
+  font-size: 6pt;
+  white-space: nowrap;
+}
+
+.payer-line {
+  display: flex;
+  justify-content: space-between;
+  padding-block-start: 0.8mm;
+  border-block-start: 0.15mm solid #555;
+  font-size: 5.8pt;
+}
+
+.signature-table tbody td {
+  block-size: 24mm;
+  padding: 1.5mm;
+  font-size: 6pt;
+}
+
+.signature-date {
+  margin-block-end: 7mm;
+  text-align: center;
+}
+
+.signature-table p {
+  inline-size: 70%;
+  margin: 0 0 1mm;
+  line-height: 1.3;
+}
+
+.staff-line {
+  padding-block-start: 1mm;
+  border-block-start: 0.15mm solid #555;
+}
+
+.receiver-note {
+  inline-size: auto !important;
+  margin-block-start: 7mm !important;
+  text-align: center;
+}
+
+.bill-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-block-size: 5mm;
+  padding-inline: 9mm;
+  border: 0.2mm solid #333;
+  border-block-start: 0;
+  font-size: 6.2pt;
+}
+
+.bill-footer strong {
+  font-size: 6pt;
+  text-transform: uppercase;
+}
+
+@media screen {
+  body {
+    display: grid;
+    place-content: start center;
+    min-block-size: 100dvb;
+    padding: 20px;
+    background: #e9e9e9;
+  }
+
+  .bill-copy {
+    margin-block-end: 20px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgb(0 0 0 / 16%);
+  }
+}
+
+@media screen and (max-width: 850px) {
+  body {
+    padding: 8px;
+  }
+
+  .bill-copy {
+    margin-block-end: 12px;
+    zoom: 0.64;
+  }
 }
 
 @media print {
   body {
-    padding: 0;
-    margin: 0;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-
-  .bill {
-    width: 100%;
-    border-width: 2px;
-    page-break-inside: avoid;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-}
-
-/* Screen-only helpers */
-@media screen {
-  body {
-    background: #eee;
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-  }
-
-  .bill {
-    background: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 }

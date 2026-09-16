@@ -3,14 +3,21 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Drawer, Grid, Table, Typography, Space, Tag, message } from 'antd';
-import { PlusOutlined, PrinterOutlined, EyeOutlined, CloseOutlined, ExpandOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  PrinterOutlined,
+  EyeOutlined,
+  CloseOutlined,
+  ExpandOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { t } from '../../../i18n/vi';
-import { listBills, downloadBillPdf } from '../../../api/bills';
+import { listBills } from '../../../api/bills';
 import { formatVND, formatViDateTime } from '../../../lib/format';
 import { BillDetailView } from '../components/BillDetailView';
 import { BillFilters } from '../components/BillFilters';
+import { BillPdfPreview } from '../components/BillPdfPreview';
 
 const { Title } = Typography;
 
@@ -39,6 +46,7 @@ export function BillListPage() {
   const [dateRange, setDateRange] = useState(null); // [Dayjs, Dayjs] | null
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [printBillId, setPrintBillId] = useState(null);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const isSelecting = selectedId != null;
@@ -83,13 +91,7 @@ export function BillListPage() {
     setPage(1);
   };
 
-  const handlePrint = async (id) => {
-    try {
-      await downloadBillPdf(id);
-    } catch (error) {
-      message.error('Lỗi khi tải phiếu in');
-    }
-  };
+  const handlePrint = (id) => setPrintBillId(id);
 
   const closeDetail = () => {
     setSelectedId(null);
@@ -137,12 +139,15 @@ export function BillListPage() {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
+          <Button type="text" icon={<EyeOutlined />} onClick={() => setSelectedId(record.id)} />
           <Button
             type="text"
-            icon={<EyeOutlined />}
-            onClick={() => setSelectedId(record.id)}
+            icon={<PrinterOutlined />}
+            onClick={(event) => {
+              event.stopPropagation();
+              handlePrint(record.id);
+            }}
           />
-          <Button type="text" icon={<PrinterOutlined />} onClick={() => handlePrint(record.id)} />
         </Space>
       ),
     },
@@ -283,6 +288,11 @@ export function BillListPage() {
           {selectedId && <BillDetailView id={selectedId} embedded key={selectedId} />}
         </Drawer>
       )}
+      <BillPdfPreview
+        billId={printBillId}
+        open={printBillId != null}
+        onClose={() => setPrintBillId(null)}
+      />
     </div>
   );
 }
