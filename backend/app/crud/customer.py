@@ -1,10 +1,21 @@
 """Customer CRUD operations."""
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.customer import Customer
 from app.schemas.customer import CustomerCreate
+
+
+async def _next_customer_code(db: AsyncSession) -> str:
+    """Generate the next unique customer code from the DB sequence.
+
+    Format: {PREFIX}{seq:06d}  e.g. KH000001
+    """
+    result = await db.execute(text("SELECT nextval('customer_code_seq')"))
+    seq_value = result.scalar_one()
+    return f"{settings.CUSTOMER_CODE_PREFIX}{seq_value:06d}"
 
 
 def _build_metadata(payload: CustomerCreate) -> dict | None:
@@ -77,6 +88,7 @@ async def list_customers(
 async def create_customer(db: AsyncSession, payload: CustomerCreate) -> Customer:
     """Create a customer, storing address fields into `metadata`."""
     customer = Customer(
+        code=await _next_customer_code(db),
         name=payload.name,
         phone=payload.phone,
         customer_type=payload.customer_type,

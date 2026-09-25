@@ -50,8 +50,9 @@ async def engine(start_postgres):
         """)
         )
         await conn.run_sync(Base.metadata.create_all)
-        # The tracking-number sequence is created by migrations, not the ORM models.
+        # Sequences are created by migrations, not the ORM models.
         await conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bill_tracking_seq START 1 CACHE 50"))
+        await conn.execute(text("CREATE SEQUENCE IF NOT EXISTS customer_code_seq START 1 CACHE 50"))
     yield eng
     async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

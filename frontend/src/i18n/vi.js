@@ -112,6 +112,8 @@ const vi = {
     payerReceiver: 'Người nhận thanh toán',
     customerCode: 'Mã KH',
     selectCustomer: 'Chọn khách hàng',
+    customerSearchPlaceholder: 'Tìm theo tên, mã KH hoặc SĐT...',
+    customerSearchEmpty: 'Không tìm thấy khách hàng.',
     saveAndPrint: 'Lưu & In phiếu',
     print: 'In phiếu',
     reprint: 'In lại',
