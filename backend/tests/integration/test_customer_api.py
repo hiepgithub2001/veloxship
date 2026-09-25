@@ -1,9 +1,11 @@
-"""Integration tests for the read-only customer directory."""
+"""Integration tests for the customer directory, edit, bill history, and metrics."""
+
+from decimal import Decimal
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
@@ -11,6 +13,7 @@ from app.core.security import create_access_token
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
+from app.models.bill import Bill
 from app.models.customer import Customer
 from app.models.user import User
 
@@ -137,3 +140,118 @@ async def test_customer_directory_detail_and_manual_creation_is_not_exposed(
 
     create = await client.post("/api/v1/customers", json={"name": "Manual"}, headers=auth_headers)
     assert create.status_code == 405
+
+
+@pytest_asyncio.fixture
+async def bill_records(engine, customers, auth_headers) -> list[int]:
+    """Create bills referencing the seeded customers as sender and receiver."""
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
+        users = (await session.execute(select(User).where(User.username == "customer_admin"))).scalars().first()
+        sender = (await session.execute(select(Customer).where(Customer.code == "KH-001"))).scalar_one()
+        receiver = (await session.execute(select(Customer).where(Customer.phone == "0901000002"))).scalar_one()
+
+        def make_bill(tracking: str, sender: Customer, receiver: Customer, fee: float) -> Bill:
+            return Bill(
+                tracking_number=tracking,
+                sender_id=sender.id,
+                receiver_id=receiver.id,
+                sender_snapshot={},
+                receiver_snapshot={},
+                cargo_type="goods",
+                status="created",
+                payer="sender",
+                fee_main=Decimal(str(fee)),
+                fee_insurance=Decimal("0.00"),
+                fee_other=Decimal("0.00"),
+                fee_vat=Decimal("0.00"),
+                fee_total=Decimal(str(fee)),
+                created_by=users.id,
+                updated_by=users.id,
+            )
+
+        session.add_all(
+            [
+                make_bill("TN-001", sender, receiver, 100000),
+                make_bill("TN-002", receiver, sender, 200000),
+                make_bill("TN-003", sender, receiver, 50000),
+            ]
+        )
+        await session.commit()
+        return [sender.id, receiver.id]
+
+
+@pytest.mark.asyncio
+async def test_update_customer_partial_and_metadata_merge(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    customers,
+):
+    listing = await client.get(
+        "/api/v1/customers", params={"search": "Cửa hàng Hà Nội"}, headers=auth_headers
+    )
+    customer_id = listing.json()["items"][0]["id"]
+
+    response = await client.patch(
+        f"/api/v1/customers/{customer_id}",
+        json={"name": "Cửa hàng Hà Nội (mới)", "address_detail": "2 Phố Huế"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "Cửa hàng Hà Nội (mới)"
+    assert body["metadata"]["address_detail"] == "2 Phố Huế"
+    assert body["metadata"]["province_name"] == "Hà Nội"  # preserved
+
+
+@pytest.mark.asyncio
+async def test_update_customer_not_found(client: AsyncClient, auth_headers: dict[str, str]):
+    response = await client.patch(
+        "/api/v1/customers/999999", json={"name": "X"}, headers=auth_headers
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_customer_metrics(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    bill_records,
+):
+    sender_id = bill_records[0]
+    response = await client.get(
+        f"/api/v1/customers/{sender_id}/metrics", headers=auth_headers
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_bills"] == 3
+    assert body["total_revenue"] == 350000
+
+
+@pytest.mark.asyncio
+async def test_customer_bills_with_role_filter(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    bill_records,
+):
+    sender_id = bill_records[0]
+
+    all_response = await client.get(
+        f"/api/v1/customers/{sender_id}/bills", headers=auth_headers
+    )
+    assert all_response.status_code == 200
+    assert all_response.json()["total"] == 3
+
+    sender_response = await client.get(
+        f"/api/v1/customers/{sender_id}/bills", params={"role": "sender"}, headers=auth_headers
+    )
+    assert sender_response.status_code == 200
+    assert sender_response.json()["total"] == 2
+
+    receiver_response = await client.get(
+        f"/api/v1/customers/{sender_id}/bills", params={"role": "receiver"}, headers=auth_headers
+    )
+    assert receiver_response.status_code == 200
+    assert receiver_response.json()["total"] == 1

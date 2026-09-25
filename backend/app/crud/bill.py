@@ -227,6 +227,72 @@ async def list_bills(
     return items, total
 
 
+async def list_bills_by_customer(
+    db: AsyncSession,
+    *,
+    customer_id: int,
+    role: str | None = None,
+    page: int = 1,
+    page_size: int = 10,
+) -> tuple[list[Bill], int]:
+    """List bills where a customer is sender and/or receiver, with a role filter."""
+    from sqlalchemy import func
+
+    sender = aliased(Customer)
+    receiver = aliased(Customer)
+    base_query = (
+        select(Bill)
+        .join(sender, Bill.sender_id == sender.id)
+        .join(receiver, Bill.receiver_id == receiver.id)
+    )
+
+    if role == "sender":
+        base_query = base_query.where(Bill.sender_id == customer_id)
+    elif role == "receiver":
+        base_query = base_query.where(Bill.receiver_id == customer_id)
+    else:
+        base_query = base_query.where(
+            or_(Bill.sender_id == customer_id, Bill.receiver_id == customer_id)
+        )
+
+    count_result = await db.execute(
+        select(func.count()).select_from(base_query.subquery()),
+    )
+    total = count_result.scalar_one()
+
+    result = await db.execute(
+        base_query.order_by(Bill.created_at.desc(), Bill.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .options(
+            selectinload(Bill.content_lines),
+            selectinload(Bill.status_logs),
+            selectinload(Bill.sender),
+            selectinload(Bill.receiver),
+        )
+    )
+    items = list(result.scalars().unique().all())
+    return items, total
+
+async def customer_bill_metrics(db: AsyncSession, customer_id: int) -> dict:
+    """Return total bills and total revenue for a customer (excluding cancelled)."""
+    from sqlalchemy import func
+
+    result = await db.execute(
+        select(
+            func.count(Bill.id),
+            func.coalesce(func.sum(Bill.fee_total), 0),
+        ).where(
+            or_(Bill.sender_id == customer_id, Bill.receiver_id == customer_id),
+            Bill.status != "cancelled",
+        )
+    )
+    total_bills, total_revenue = result.one()
+    return {
+        "total_bills": int(total_bills),
+        "total_revenue": float(total_revenue),
+    }
+
 async def get_events(db: AsyncSession, bill_id: int) -> dict:
     """Return status and audit events enriched with actor names for the detail UI."""
     status_result = await db.execute(

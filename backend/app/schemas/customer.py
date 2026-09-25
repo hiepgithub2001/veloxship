@@ -40,6 +40,29 @@ class CustomerRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CustomerUpdate(BaseModel):
+    """Partial update for a customer profile.
+
+    Address fields are flattened into `metadata` JSONB, mirroring
+    `CustomerCreate`. `code` is intentionally immutable.
+    """
+
+    name: str | None = None
+    phone: str | None = None
+    customer_type: str | None = None
+    address_detail: str | None = None
+    province_code: str | None = None
+    province_name: str | None = None
+    ward_code: str | None = None
+    ward_name: str | None = None
+    is_active: bool | None = None
+
+class CustomerMetrics(BaseModel):
+    """Headline metrics for a customer's bill activity."""
+
+    total_bills: int
+    total_revenue: float
+
 class CustomerPage(Page[CustomerRead]):
     """Paginated customer directory response."""
 

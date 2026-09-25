@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models.customer import Customer
-from app.schemas.customer import CustomerCreate
+from app.schemas.customer import CustomerCreate, CustomerUpdate
 
 
 async def _next_customer_code(db: AsyncSession) -> str:
@@ -97,4 +97,35 @@ async def create_customer(db: AsyncSession, payload: CustomerCreate) -> Customer
     )
     db.add(customer)
     await db.flush()
+    return customer
+
+_ADDRESS_FIELDS = (
+    "address_detail",
+    "province_code",
+    "province_name",
+    "ward_code",
+    "ward_name",
+)
+
+async def update_customer(
+    db: AsyncSession, customer: Customer, payload: CustomerUpdate,
+) -> Customer:
+    """Partially update a customer, merging address fields into `metadata`."""
+    update_data = payload.model_dump(exclude_unset=True)
+
+    metadata = dict(customer.customer_metadata or {})
+    for field in _ADDRESS_FIELDS:
+        if field in update_data:
+            value = update_data.pop(field)
+            if value is None:
+                metadata.pop(field, None)
+            else:
+                metadata[field] = value
+    customer.customer_metadata = metadata or None
+
+    for field, value in update_data.items():
+        setattr(customer, field, value)
+
+    await db.flush()
+    await db.refresh(customer)
     return customer

@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { Input, Select, Space, Typography } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '../../../api/customers';
 import { t } from '../../../i18n/vi';
-import CustomerDetailDrawer from '../components/CustomerDetailDrawer';
 import CustomerTable from '../components/CustomerTable';
 
 const { Title, Text } = Typography;
 
 export function CustomerListPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [isActive, setIsActive] = useState(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', { search, isActive, ...pagination }],
@@ -68,13 +68,7 @@ export function CustomerListPage() {
         onPaginationChange={(next) =>
           setPagination({ current: next.current, pageSize: next.pageSize })
         }
-        onView={setSelectedCustomer}
-      />
-
-      <CustomerDetailDrawer
-        customer={selectedCustomer}
-        open={selectedCustomer !== null}
-        onClose={() => setSelectedCustomer(null)}
+        onView={(customer) => navigate(`/khach-hang/${customer.id}`)}
       />
     </div>
   );

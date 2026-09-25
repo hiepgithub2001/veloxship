@@ -11,6 +11,7 @@ import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
 import { DepotListPage } from '../features/depots/pages/DepotListPage';
 import { VehicleListPage } from '../features/vehicles/pages/VehicleListPage';
 import { CustomerListPage } from '../features/customers/pages/CustomerListPage';
+import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPage';
 
 const router = createBrowserRouter([
   {
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: 'khach-hang',
         element: <CustomerListPage />,
+      },
+      {
+        path: 'khach-hang/:id',
+        element: <CustomerDetailPage />,
       },
       {
         path: 'buu-cuc',
