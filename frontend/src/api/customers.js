@@ -18,9 +18,3 @@ export async function getCustomer(id) {
   const { data } = await client.get(`/customers/${id}`);
   return data;
 }
-
-export async function getCustomerByPhone(phone) {
-  if (!phone) return null;
-  const page = await getCustomers({ search: phone, isActive: true, pageSize: 20 });
-  return page.items?.find((customer) => customer.phone === phone) || null;
-}

@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Tracking number
     TRACKING_NUMBER_PREFIX: str = "NL"
 
+    # Customer code
+    CUSTOMER_CODE_PREFIX: str = "KH"
+
     # Carrier branding (used in print template)
     CARRIER_NAME: str = "Vận Chuyển HN"
     CARRIER_HOTLINE: str = "0972 160 610"

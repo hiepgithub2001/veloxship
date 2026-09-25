@@ -1,17 +1,24 @@
 /**
- * PartyBlock — sender/receiver form with phone autofill + province/ward cascade.
+ * PartyBlock — sender/receiver form with customer autocomplete (name/code/phone)
+ * plus province/ward cascade.
  */
-import { Form, Input, Select, message } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { useEffect, useRef, useState } from 'react';
+import { AutoComplete, Form, Input, Select, Tag, message } from 'antd';
 import { Controller } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { getProvinces, getWardsByProvince } from '../../../api/locations';
-import { getCustomerByPhone } from '../../../api/customers';
+import { getCustomers } from '../../../api/customers';
 import { t } from '../../../i18n/vi';
 
 export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender' }) {
   const name = (field) => `${prefix}.${field}`;
   const err = (field) => errors?.[prefix]?.[field];
+
+  const [query, setQuery] = useState('');
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedCode, setSelectedCode] = useState('');
+  const requestId = useRef(0);
 
   const { data: provinces = [] } = useQuery({
     queryKey: ['provinces'],
@@ -26,27 +33,64 @@ export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender'
     enabled: !!provinceCode,
   });
 
-  const handlePhoneSearch = async (phone) => {
-    if (!phone) return;
-    try {
-      const customer = await getCustomerByPhone(phone);
-      if (customer) {
-        setValue(name('customer_id'), customer.id);
-        setValue(name('name'), customer.name || '');
-        setValue(name('phone'), customer.phone || phone);
-        setValue(name('address_detail'), customer.metadata?.address_detail || '');
-        setValue(name('province_code'), customer.metadata?.province_code || '');
-        setValue(name('province_name'), customer.metadata?.province_name || '');
-        setValue(name('ward_code'), customer.metadata?.ward_code || '');
-        setValue(name('ward_name'), customer.metadata?.ward_name || '');
-        message.info(t('bills.customerAutofilled'));
-      } else {
-        setValue(name('customer_id'), null);
-        message.info(t('bills.newPhoneHint'));
-      }
-    } catch {
-      message.error(t('common.loading'));
+  useEffect(() => {
+    const normalizedQuery = query.trim();
+    const currentRequest = ++requestId.current;
+    if (!normalizedQuery) {
+      setOptions([]);
+      setLoading(false);
+      return undefined;
     }
+
+    const timer = window.setTimeout(async () => {
+      setLoading(true);
+      try {
+        const data = await getCustomers({
+          search: normalizedQuery,
+          isActive: true,
+          pageSize: 20,
+        });
+        if (currentRequest !== requestId.current) return;
+        setOptions(
+          data.items.map((customer) => ({
+            value: String(customer.id),
+            customer,
+            label: (
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span>{customer.name}</span>
+                <span style={{ color: '#8c8c8c', whiteSpace: 'nowrap' }}>
+                  {[customer.code, customer.phone].filter(Boolean).join(' · ') || '—'}
+                </span>
+              </div>
+            ),
+          })),
+        );
+      } catch {
+        if (currentRequest === requestId.current) setOptions([]);
+      } finally {
+        if (currentRequest === requestId.current) setLoading(false);
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  const selectCustomer = (_, option) => {
+    const customer = option?.customer;
+    if (!customer) return;
+    const metadata = customer.metadata || {};
+    setValue(name('customer_id'), customer.id);
+    setValue(name('name'), customer.name || '');
+    setValue(name('phone'), customer.phone || '');
+    setValue(name('address_detail'), metadata.address_detail || '');
+    setValue(name('province_code'), metadata.province_code || '');
+    setValue(name('province_name'), metadata.province_name || '');
+    setValue(name('ward_code'), metadata.ward_code || '');
+    setValue(name('ward_name'), metadata.ward_name || '');
+    setSelectedCode(customer.code || '');
+    setQuery('');
+    setOptions([]);
+    message.info(t('bills.customerAutofilled'));
   };
 
   return (
@@ -54,6 +98,29 @@ export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender'
       <h4 className="form-section-title">
         {t(prefix === 'sender' ? 'bills.sender' : 'bills.receiver')}
       </h4>
+
+      <Form.Item label={t('bills.selectCustomer')}>
+        <AutoComplete
+          value={query}
+          options={options}
+          onSearch={setQuery}
+          onSelect={selectCustomer}
+          filterOption={false}
+          notFoundContent={query.trim() && !loading ? t('bills.customerSearchEmpty') : null}
+          id={`${prefix}-customer-search`}
+        >
+          <Input.Search
+            placeholder={t('bills.customerSearchPlaceholder')}
+            enterButton
+            loading={loading}
+          />
+        </AutoComplete>
+        {selectedCode && (
+          <Tag color="blue" style={{ marginTop: 6 }}>
+            {t('bills.customerCode')}: {selectedCode}
+          </Tag>
+        )}
+      </Form.Item>
 
       <Form.Item
         label={t('bills.phone')}
@@ -64,13 +131,7 @@ export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender'
           name={name('phone')}
           control={control}
           render={({ field }) => (
-            <Input.Search
-              {...field}
-              placeholder={t('bills.phonePlaceholder')}
-              enterButton={<SearchOutlined />}
-              onSearch={handlePhoneSearch}
-              id={`${prefix}-phone`}
-            />
+            <Input {...field} placeholder={t('bills.phonePlaceholder')} id={`${prefix}-phone`} />
           )}
         />
       </Form.Item>
