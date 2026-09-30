@@ -1,21 +1,15 @@
 /**
  * Bill list page — fetches and displays bills with status and date-range filters.
+ * Selecting a bill navigates to the dedicated detail page (`/phieu-gui/:id`).
  */
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Drawer, Grid, Table, Typography, Space, Tag, message } from 'antd';
-import {
-  PlusOutlined,
-  PrinterOutlined,
-  EyeOutlined,
-  CloseOutlined,
-  ExpandOutlined,
-} from '@ant-design/icons';
+import { Button, Card, Table, Typography, Space, Tag, message } from 'antd';
+import { PlusOutlined, PrinterOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { t } from '../../../i18n/vi';
 import { listBills } from '../../../api/bills';
 import { formatVND, formatViDateTime } from '../../../lib/format';
-import { BillDetailView } from '../components/BillDetailView';
 import { BillFilters } from '../components/BillFilters';
 import { BillPdfPreview } from '../components/BillPdfPreview';
 
@@ -41,15 +35,11 @@ const statusText = {
 
 export function BillListPage() {
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState(null);
   const [status, setStatus] = useState(null);
   const [dateRange, setDateRange] = useState(null); // [Dayjs, Dayjs] | null
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [printBillId, setPrintBillId] = useState(null);
-  const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
-  const isSelecting = selectedId != null;
 
   const createdFrom = dateRange?.[0] ? dateRange[0].startOf('day').toISOString() : undefined;
   const createdTo = dateRange?.[1] ? dateRange[1].endOf('day').toISOString() : undefined;
@@ -91,11 +81,9 @@ export function BillListPage() {
     setPage(1);
   };
 
-  const handlePrint = (id) => setPrintBillId(id);
+  const openDetail = (id) => navigate(`/phieu-gui/${id}`);
 
-  const closeDetail = () => {
-    setSelectedId(null);
-  };
+  const handlePrint = (id) => setPrintBillId(id);
 
   const columns = [
     {
@@ -139,7 +127,7 @@ export function BillListPage() {
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} onClick={() => setSelectedId(record.id)} />
+          <Button type="text" icon={<EyeOutlined />} onClick={() => openDetail(record.id)} />
           <Button
             type="text"
             icon={<PrinterOutlined />}
@@ -153,141 +141,41 @@ export function BillListPage() {
     },
   ];
 
-  // Narrow column set shown while the detail drawer is open (Outlook-style reading pane).
-  const compactColumns = [
-    {
-      title: 'Mã vận đơn',
-      dataIndex: 'tracking_number',
-      key: 'tracking_number',
-      render: (text) => <Typography.Text strong>{text}</Typography.Text>,
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={statusColors[status] || 'default'}>{statusText[status] || status}</Tag>
-      ),
-    },
-    {
-      title: 'Tổng cước',
-      dataIndex: ['fee', 'fee_total'],
-      key: 'fee_total',
-      render: (val) => formatVND(val),
-    },
-  ];
-
   const tableProps = {
     dataSource: bills,
     rowKey: 'id',
     loading: isFetching,
     onChange: handleTableChange,
     onRow: (record) => ({
-      onClick: () => setSelectedId(record.id),
+      onClick: () => openDetail(record.id),
       style: { cursor: 'pointer' },
     }),
-    rowClassName: (record) => (record.id === selectedId ? 'bill-row-selected' : ''),
   };
 
   return (
     <div>
-      {!isMobile && isSelecting ? (
-        // Desktop: the whole list column (header + table) compacts beside the detail.
-        <div className="bill-master-detail">
-          <div className="bill-master-list">
-            <div className="bill-list-header bill-list-header-compact">
-              <Title level={4} style={{ margin: 0 }}>
-                {t('bills.title')}
-              </Title>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => navigate('/phieu-gui/tao-moi')}
-                id="create-bill-btn"
-                block
-              >
-                {t('bills.create')}
-              </Button>
-            </div>
-            <Card>
-              <Table
-                {...tableProps}
-                columns={compactColumns}
-                size="small"
-                pagination={{ ...pagination, simple: true }}
-              />
-            </Card>
-          </div>
-          <div className="bill-master-detail-pane" key={selectedId}>
-            <div className="bill-master-detail-pane-header">
-              <Button type="text" icon={<CloseOutlined />} onClick={closeDetail}>
-                {t('common.close')}
-              </Button>
-              <Button
-                type="text"
-                icon={<ExpandOutlined />}
-                onClick={() => navigate(`/phieu-gui/${selectedId}`)}
-              >
-                {t('bills.viewFull')}
-              </Button>
-            </div>
-            <BillDetailView id={selectedId} embedded key={selectedId} />
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="bill-list-header">
-            <Title level={3} style={{ margin: 0 }}>
-              {t('bills.title')}
-            </Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate('/phieu-gui/tao-moi')}
-              id="create-bill-btn"
-            >
-              {t('bills.create')}
-            </Button>
-          </div>
-          <BillFilters
-            status={status}
-            dateRange={dateRange}
-            onStatusChange={handleStatusChange}
-            onDateRangeChange={handleDateRangeChange}
-          />
-          <Card>
-            <Table
-              {...tableProps}
-              columns={isSelecting ? compactColumns : columns}
-              pagination={pagination}
-            />
-          </Card>
-        </>
-      )}
-      {isMobile && (
-        <Drawer
-          className="bill-list-drawer"
-          title={t('bills.detail')}
-          placement="right"
-          width="100%"
-          mask={false}
-          open={isSelecting}
-          onClose={closeDetail}
-          extra={
-            selectedId && (
-              <Button
-                type="text"
-                icon={<ExpandOutlined />}
-                onClick={() => navigate(`/phieu-gui/${selectedId}`)}
-              >
-                {t('bills.viewFull')}
-              </Button>
-            )
-          }
+      <div className="bill-list-header">
+        <Title level={3} style={{ margin: 0 }}>
+          {t('bills.title')}
+        </Title>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => navigate('/phieu-gui/tao-moi')}
+          id="create-bill-btn"
         >
-          {selectedId && <BillDetailView id={selectedId} embedded key={selectedId} />}
-        </Drawer>
-      )}
+          {t('bills.create')}
+        </Button>
+      </div>
+      <BillFilters
+        status={status}
+        dateRange={dateRange}
+        onStatusChange={handleStatusChange}
+        onDateRangeChange={handleDateRangeChange}
+      />
+      <Card>
+        <Table {...tableProps} columns={columns} pagination={pagination} />
+      </Card>
       <BillPdfPreview
         billId={printBillId}
         open={printBillId != null}
