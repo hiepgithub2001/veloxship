@@ -45,7 +45,17 @@ export async function downloadBillPdf(id) {
   saveBillPdf(response, id);
 }
 
-export async function listBills({ page, pageSize, search, status, createdFrom, createdTo } = {}) {
+export async function listBills({
+  page,
+  pageSize,
+  search,
+  status,
+  createdFrom,
+  createdTo,
+  trackingNumber,
+  senderName,
+  receiverName,
+} = {}) {
   const params = {};
   if (page != null) params.page = page;
   if (pageSize != null) params.page_size = pageSize;
@@ -53,8 +63,26 @@ export async function listBills({ page, pageSize, search, status, createdFrom, c
   if (status) params.status = status;
   if (createdFrom) params.created_from = createdFrom;
   if (createdTo) params.created_to = createdTo;
+  if (trackingNumber) params.tracking_number = trackingNumber;
+  if (senderName) params.sender_name = senderName;
+  if (receiverName) params.receiver_name = receiverName;
 
   const { data } = await client.get('/bills', { params });
+  return data;
+}
+
+export async function exportBills(ids) {
+  const response = await client.get('/bills/export', {
+    params: { ids: ids.join(',') },
+    responseType: 'blob',
+  });
+  return response;
+}
+
+export async function getBillsPrintHtml(ids) {
+  const { data } = await client.get('/bills/print-batch', {
+    params: { ids: ids.join(',') },
+  });
   return data;
 }
 

@@ -52,10 +52,13 @@ async def list_bills(
     status: BillStatus | None = Query(None),
     created_from: datetime | None = Query(None),
     created_to: datetime | None = Query(None),
+    tracking_number: str | None = Query(None, min_length=1, max_length=100),
+    sender_name: str | None = Query(None, min_length=1, max_length=100),
+    receiver_name: str | None = Query(None, min_length=1, max_length=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List bills with search, status, and creation-date range filters."""
+    """List bills with search, status, creation-date range, and party filters."""
     items, total = await bill_crud.list_bills(
         db,
         page=page,
@@ -64,6 +67,9 @@ async def list_bills(
         status=status.value if status else None,
         created_from=_naive_utc(created_from),
         created_to=_naive_utc(created_to),
+        tracking_number=tracking_number,
+        sender_name=sender_name,
+        receiver_name=receiver_name,
     )
     return BillPage(
         items=[BillRead.from_model(item) for item in items],
@@ -71,6 +77,55 @@ async def list_bills(
         page_size=page_size,
         total=total,
     )
+
+
+def _parse_ids(ids: str) -> list[int]:
+    """Parse a comma-separated ID list into a deduplicated int list."""
+    return list(dict.fromkeys(int(x) for x in ids.split(",") if x.strip().isdigit()))
+
+
+@router.get("/export")
+async def export_bills(
+    ids: str = Query(..., description="Comma-separated bill IDs"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Export the selected bills to an xlsx workbook."""
+    from app.services.export_service import build_bills_xlsx
+
+    bills = await bill_crud.get_bills_by_ids(db, _parse_ids(ids))
+    buffer = build_bills_xlsx(bills)
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="phieu-gui.xlsx"'},
+    )
+
+
+@router.get("/print-batch")
+async def print_bills_batch(
+    ids: str = Query(..., description="Comma-separated bill IDs"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Render the selected bills as one printable HTML document."""
+    from app.services.print_service import render_bills_html
+
+    bills = await bill_crud.get_bills_by_ids(db, _parse_ids(ids))
+    for bill in bills:
+        bill.print_count += 1
+        bill.last_printed_at = datetime.now(UTC).replace(tzinfo=None)
+        bill.last_printed_by = current_user.id
+        await audit_crud.log_event(
+            db,
+            actor_id=current_user.id,
+            action="bill.printed",
+            entity_type="bill",
+            entity_id=bill.id,
+            details={"print_count": bill.print_count},
+        )
+    await db.flush()
+    return Response(content=render_bills_html(bills), media_type="text/html")
 
 
 @router.get("/{bill_id}", response_model=BillRead)

@@ -2,6 +2,7 @@
 
 import base64
 import io
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -214,3 +215,35 @@ def render_bill_pdf(bill) -> bytes:
     except ImportError:
         # Local development may omit WeasyPrint's native dependencies.
         return html_str.encode("utf-8")
+
+
+def render_bills_html(bills) -> str:
+    """Render multiple bills into a single HTML document, one bill per page.
+
+    Each bill is rendered to its standalone document and its <main> block is
+    extracted; the shared print stylesheet is kept once and a page break is
+    forced between consecutive bills.
+    """
+    parts: list[str] = []
+    css = ""
+    for bill in bills:
+        html = render_bill_html(bill)
+        if not css:
+            style_match = re.search(r"<style>(.*?)</style>", html, re.S)
+            if style_match:
+                css = style_match.group(1)
+        main_match = re.search(r'<main class="print-document">(.*?)</main>', html, re.S)
+        if main_match:
+            parts.append(main_match.group(1))
+
+    batch_css = css + (
+        "\n.print-document + .print-document { break-before: page; page-break-before: always; }\n"
+    )
+    body = "".join(
+        f'<main class="print-document">{part}</main>' for part in parts
+    )
+    return (
+        '<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">'
+        '<title>Phiếu Gửi</title>'
+        f"<style>{batch_css}</style></head><body>{body}</body></html>"
+    )

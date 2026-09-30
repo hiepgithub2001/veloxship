@@ -373,3 +373,75 @@ class TestListBills:
         )
         assert resp.status_code == 400
         assert resp.json()["error_code"] == "VALIDATION_ERROR"
+
+    async def test_filters_by_tracking_sender_and_receiver(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        b1 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        b2 = await client.post(
+            "/api/v1/bills",
+            json=bill_payload(
+                receiver={"name": "Phạm Thị Khác", "phone": "0944444444"},
+            ),
+            headers=auth_headers,
+        )
+        bill1, bill2 = b1.json(), b2.json()
+
+        by_tracking = await client.get(
+            "/api/v1/bills",
+            params={"tracking_number": bill1["tracking_number"]},
+            headers=auth_headers,
+        )
+        assert [item["id"] for item in by_tracking.json()["items"]] == [bill1["id"]]
+
+        # Both bills share the default sender name; the filter is diacritic-insensitive.
+        by_sender = await client.get(
+            "/api/v1/bills", params={"sender_name": "nguyen van a"}, headers=auth_headers
+        )
+        assert {item["id"] for item in by_sender.json()["items"]} == {bill1["id"], bill2["id"]}
+
+        by_receiver = await client.get(
+            "/api/v1/bills", params={"receiver_name": "pham thi khac"}, headers=auth_headers
+        )
+        assert [item["id"] for item in by_receiver.json()["items"]] == [bill2["id"]]
+
+
+@pytest.mark.asyncio
+class TestBillBulkActions:
+    async def test_export_selected_bills_xlsx(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        b1 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        b2 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        ids = f"{b1.json()['id']},{b2.json()['id']}"
+
+        resp = await client.get(
+            "/api/v1/bills/export", params={"ids": ids}, headers=auth_headers
+        )
+        assert resp.status_code == 200
+        assert (
+            resp.headers["content-type"]
+            == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        # An xlsx file is a ZIP archive.
+        assert resp.content[:2] == b"PK"
+
+    async def test_print_batch_returns_combined_html_and_counts(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        b1 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        b2 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        bill1, bill2 = b1.json(), b2.json()
+        ids = f"{bill1['id']},{bill2['id']}"
+
+        resp = await client.get(
+            "/api/v1/bills/print-batch", params={"ids": ids}, headers=auth_headers
+        )
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/html")
+        assert bill1["tracking_number"] in resp.text
+        assert bill2["tracking_number"] in resp.text
+
+        for bill_id in (bill1["id"], bill2["id"]):
+            got = await client.get(f"/api/v1/bills/{bill_id}", headers=auth_headers)
+            assert got.json()["print_count"] == 1

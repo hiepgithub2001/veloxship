@@ -1,17 +1,25 @@
 /**
  * Bill list page — fetches and displays bills with status and date-range filters.
- * Selecting a bill navigates to the dedicated detail page (`/phieu-gui/:id`).
+ * Filters and pagination live in the URL so returning from the detail page
+ * (via the shared BackButton) restores the exact previous view.
  */
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Card, Table, Typography, Space, Tag, message } from 'antd';
-import { PlusOutlined, PrinterOutlined, EyeOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import {
+  PlusOutlined,
+  PrinterOutlined,
+  EyeOutlined,
+  FileExcelOutlined,
+} from '@ant-design/icons';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { t } from '../../../i18n/vi';
-import { listBills } from '../../../api/bills';
+import { listBills, exportBills } from '../../../api/bills';
 import { formatVND, formatViDateTime } from '../../../lib/format';
 import { BillFilters } from '../components/BillFilters';
 import { BillPdfPreview } from '../components/BillPdfPreview';
+import { BillBatchPrintModal } from '../components/BillBatchPrintModal';
 
 const { Title } = Typography;
 
@@ -35,17 +43,29 @@ const statusText = {
 
 export function BillListPage() {
   const navigate = useNavigate();
-  const [status, setStatus] = useState(null);
-  const [dateRange, setDateRange] = useState(null); // [Dayjs, Dayjs] | null
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [printBillId, setPrintBillId] = useState(null);
+  const [batchPrintIds, setBatchPrintIds] = useState(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  const status = searchParams.get('status') || null;
+  const page = Number(searchParams.get('page')) || 1;
+  const pageSize = Number(searchParams.get('pageSize')) || 10;
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+  const tracking = searchParams.get('tracking') || '';
+  const sender = searchParams.get('sender') || '';
+  const receiver = searchParams.get('receiver') || '';
+  const dateRange = from && to ? [dayjs(from), dayjs(to)] : null; // [Dayjs, Dayjs] | null
 
   const createdFrom = dateRange?.[0] ? dateRange[0].startOf('day').toISOString() : undefined;
   const createdTo = dateRange?.[1] ? dateRange[1].endOf('day').toISOString() : undefined;
 
   const { data, isFetching, isError } = useQuery({
-    queryKey: ['bills', { page, pageSize, status, createdFrom, createdTo }],
+    queryKey: [
+      'bills',
+      { page, pageSize, status, createdFrom, createdTo, tracking, sender, receiver },
+    ],
     queryFn: () =>
       listBills({
         page,
@@ -53,6 +73,9 @@ export function BillListPage() {
         status: status || undefined,
         createdFrom,
         createdTo,
+        trackingNumber: tracking || undefined,
+        senderName: sender || undefined,
+        receiverName: receiver || undefined,
       }),
     keepPreviousData: true,
   });
@@ -66,24 +89,79 @@ export function BillListPage() {
   const bills = data?.items ?? [];
   const pagination = { current: page, pageSize, total: data?.total ?? 0 };
 
+  const updateParams = (patch) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        Object.entries(patch).forEach(([key, value]) => {
+          if (value == null || value === '') next.delete(key);
+          else next.set(key, String(value));
+        });
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
   const handleTableChange = (newPagination) => {
-    setPage(newPagination.current);
-    setPageSize(newPagination.pageSize);
+    updateParams({ page: newPagination.current, pageSize: newPagination.pageSize });
   };
 
   const handleStatusChange = (value) => {
-    setStatus(value ?? null);
-    setPage(1);
+    updateParams({ status: value ?? null, page: 1 });
   };
 
   const handleDateRangeChange = (dates) => {
-    setDateRange(dates && dates[0] && dates[1] ? dates : null);
-    setPage(1);
+    updateParams({
+      from: dates?.[0] ? dates[0].format('YYYY-MM-DD') : null,
+      to: dates?.[1] ? dates[1].format('YYYY-MM-DD') : null,
+      page: 1,
+    });
   };
 
   const openDetail = (id) => navigate(`/phieu-gui/${id}`);
 
   const handlePrint = (id) => setPrintBillId(id);
+
+  const handleSearchFilters = ({ tracking: trackingValue, sender: senderValue, receiver: receiverValue }) => {
+    updateParams({
+      tracking: trackingValue || null,
+      sender: senderValue || null,
+      receiver: receiverValue || null,
+      page: 1,
+    });
+  };
+
+  const handleResetFilters = () => {
+    updateParams({ tracking: null, sender: null, receiver: null, page: 1 });
+  };
+
+  const handleSelectChange = (keys) => setSelectedRowKeys(keys);
+
+  const handleExportExcel = async () => {
+    if (selectedRowKeys.length === 0) return;
+    try {
+      const response = await exportBills(selectedRowKeys);
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'phieu-gui.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      message.error(t('bills.exportError'));
+    }
+  };
+
+  const handlePrintSelected = () => {
+    if (selectedRowKeys.length === 0) return;
+    setBatchPrintIds(selectedRowKeys);
+  };
 
   const columns = [
     {
@@ -146,6 +224,10 @@ export function BillListPage() {
     rowKey: 'id',
     loading: isFetching,
     onChange: handleTableChange,
+    rowSelection: {
+      selectedRowKeys,
+      onChange: handleSelectChange,
+    },
     onRow: (record) => ({
       onClick: () => openDetail(record.id),
       style: { cursor: 'pointer' },
@@ -170,9 +252,29 @@ export function BillListPage() {
       <BillFilters
         status={status}
         dateRange={dateRange}
+        tracking={tracking}
+        sender={sender}
+        receiver={receiver}
         onStatusChange={handleStatusChange}
         onDateRangeChange={handleDateRangeChange}
+        onSearch={handleSearchFilters}
+        onReset={handleResetFilters}
       />
+      {selectedRowKeys.length > 0 && (
+        <Card style={{ marginBottom: 16 }} styles={{ body: { padding: '8px 16px' } }}>
+          <Space size="middle" wrap>
+            <Typography.Text>
+              {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
+            </Typography.Text>
+            <Button icon={<FileExcelOutlined />} onClick={handleExportExcel}>
+              {t('bills.exportExcel')}
+            </Button>
+            <Button icon={<PrinterOutlined />} onClick={handlePrintSelected}>
+              {t('bills.print')}
+            </Button>
+          </Space>
+        </Card>
+      )}
       <Card>
         <Table {...tableProps} columns={columns} pagination={pagination} />
       </Card>
@@ -180,6 +282,11 @@ export function BillListPage() {
         billId={printBillId}
         open={printBillId != null}
         onClose={() => setPrintBillId(null)}
+      />
+      <BillBatchPrintModal
+        billIds={batchPrintIds}
+        open={batchPrintIds != null && batchPrintIds.length > 0}
+        onClose={() => setBatchPrintIds(null)}
       />
     </div>
   );

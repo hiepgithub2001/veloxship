@@ -1,13 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Space, Spin, Steps, Tag, Timeline, Typography, message } from 'antd';
-import {
-  ArrowLeftOutlined,
-  FilePdfOutlined,
-  PrinterOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+import { FilePdfOutlined, PrinterOutlined, SwapOutlined } from '@ant-design/icons';
+import BackButton from '../../../components/common/BackButton';
 import {
   downloadBillPdf,
   getBill,
@@ -36,12 +31,9 @@ const colors = {
 const terminal = new Set(['delivered', 'returned', 'cancelled']);
 
 /**
- * Bill detail workspace — shared by the full-page route and the list-page drawer.
- *
- * `embedded` hides the back button (the list/drawer already provide navigation).
+ * Bill detail workspace — rendered by the dedicated detail route (`/phieu-gui/:id`).
  */
-export function BillDetailView({ id, embedded = false }) {
-  const navigate = useNavigate();
+export function BillDetailView({ id }) {
   const qc = useQueryClient();
   const [statusOpen, setStatusOpen] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
@@ -82,7 +74,7 @@ export function BillDetailView({ id, embedded = false }) {
     return (
       <Card>
         <Title level={4}>{t('bills.notFound')}</Title>
-        <Button onClick={() => navigate('/phieu-gui')}>{t('common.back')}</Button>
+        <BackButton />
       </Card>
     );
   const current = flow.indexOf(bill.status);
@@ -96,11 +88,7 @@ export function BillDetailView({ id, embedded = false }) {
   return (
     <div className="bill-workspace">
       <div className="bill-detail-actions">
-        {!embedded && (
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/phieu-gui')}>
-            {t('common.back')}
-          </Button>
-        )}
+        <BackButton />
         <Space wrap className="bill-detail-actions-right">
           <Button type="primary" icon={<PrinterOutlined />} onClick={print}>
             {bill.print_count ? t('bills.reprint') : t('bills.print')}
