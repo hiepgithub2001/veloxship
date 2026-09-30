@@ -16,7 +16,8 @@ import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { t } from '../../../i18n/vi';
 import { listBills, exportBills } from '../../../api/bills';
-import { formatVND, formatViDateTime } from '../../../lib/format';
+import { formatVND, formatViDate } from '../../../lib/format';
+import { ImagePreviewGroup } from '../../../components/common/ImagePreviewGroup';
 import { BillFilters } from '../components/BillFilters';
 import { BillPdfPreview } from '../components/BillPdfPreview';
 import { BillBatchPrintModal } from '../components/BillBatchPrintModal';
@@ -40,6 +41,9 @@ const statusText = {
   returned: 'Hoàn trả',
   cancelled: 'Đã hủy',
 };
+
+const formatAddress = (party) =>
+  [party?.address_detail, party?.ward_name, party?.province_name].filter(Boolean).join(', ');
 
 export function BillListPage() {
   const navigate = useNavigate();
@@ -165,44 +169,88 @@ export function BillListPage() {
 
   const columns = [
     {
+      title: 'STT',
+      key: 'index',
+      width: 60,
+      render: (_, __, index) => (page - 1) * pageSize + index + 1,
+    },
+    {
+      title: 'Ngày',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 110,
+      render: (date) => formatViDate(date),
+    },
+    {
       title: 'Mã vận đơn',
       dataIndex: 'tracking_number',
       key: 'tracking_number',
+      width: 170,
       render: (text) => <Typography.Text strong>{text}</Typography.Text>,
     },
     {
-      title: 'Người gửi',
-      dataIndex: ['sender', 'name'],
-      key: 'sender_name',
+      title: 'Tỉnh phát',
+      dataIndex: ['sender', 'province_name'],
+      key: 'sender_province',
+      width: 130,
     },
     {
-      title: 'Người nhận',
-      dataIndex: ['receiver', 'name'],
-      key: 'receiver_name',
-    },
-    {
-      title: 'Tổng cước',
-      dataIndex: ['fee', 'fee_total'],
-      key: 'fee_total',
-      render: (val) => formatVND(val),
+      title: 'COD',
+      dataIndex: 'cod_amount',
+      key: 'cod_amount',
+      width: 120,
+      render: (val) => (val ? formatVND(val) : '—'),
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
+      width: 150,
       render: (status) => (
         <Tag color={statusColors[status] || 'default'}>{statusText[status] || status}</Tag>
       ),
     },
     {
-      title: 'Ngày tạo',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date) => formatViDateTime(date),
+      title: 'Người nhận',
+      dataIndex: ['receiver', 'name'],
+      key: 'receiver_name',
+      width: 160,
+    },
+    {
+      title: 'Hình ảnh',
+      key: 'images',
+      width: 90,
+      render: (_, record) => {
+        const images = (record.contents || []).flatMap((c) => c.images || []).filter(Boolean);
+        return <ImagePreviewGroup images={images} />;
+      },
+    },
+    {
+      title: 'SĐT người nhận',
+      dataIndex: ['receiver', 'phone'],
+      key: 'receiver_phone',
+      width: 140,
+    },
+    {
+      title: 'Địa chỉ người nhận',
+      key: 'receiver_address',
+      width: 220,
+      ellipsis: true,
+      render: (_, record) => formatAddress(record.receiver),
+    },
+    {
+      title: 'Ghi chú',
+      dataIndex: 'note',
+      key: 'note',
+      width: 160,
+      ellipsis: true,
+      render: (text) => text || '—',
     },
     {
       title: 'Thao tác',
       key: 'actions',
+      fixed: 'right',
+      width: 100,
       render: (_, record) => (
         <Space size="middle">
           <Button type="text" icon={<EyeOutlined />} onClick={() => openDetail(record.id)} />
@@ -224,6 +272,7 @@ export function BillListPage() {
     rowKey: 'id',
     loading: isFetching,
     onChange: handleTableChange,
+    scroll: { x: 'max-content' },
     rowSelection: {
       selectedRowKeys,
       onChange: handleSelectChange,

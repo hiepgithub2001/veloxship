@@ -4,11 +4,12 @@
  * the user presses "Tìm kiếm" (or Enter); status/date apply immediately.
  */
 import { useEffect, useState } from 'react';
-import { Button, Card, DatePicker, Input, Select, Space } from 'antd';
+import { Button, Card, DatePicker, Input, Select, Space, Typography } from 'antd';
 import { SearchOutlined, UndoOutlined } from '@ant-design/icons';
 import { t } from '../../../i18n/vi';
 
 const { RangePicker } = DatePicker;
+const { Title } = Typography;
 
 const STATUS_OPTIONS = [
   'created',
@@ -65,6 +66,7 @@ export function BillFilters({
           allowClear
           placeholder={t('bills.trackingFilter')}
           style={{ width: 180 }}
+
         />
         <Input
           value={draft.sender}
@@ -95,12 +97,6 @@ export function BillFilters({
           onChange={onDateRangeChange}
           placeholder={t('bills.dateRangePlaceholder')}
         />
-        <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-          {t('common.search')}
-        </Button>
-        <Button icon={<UndoOutlined />} onClick={handleReset}>
-          {t('bills.resetFilters')}
-        </Button>
       </Space>
     </Card>
   );
