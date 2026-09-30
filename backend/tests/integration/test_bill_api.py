@@ -445,3 +445,98 @@ class TestBillBulkActions:
         for bill_id in (bill1["id"], bill2["id"]):
             got = await client.get(f"/api/v1/bills/{bill_id}", headers=auth_headers)
             assert got.json()["print_count"] == 1
+
+
+@pytest.mark.asyncio
+class TestUpdateBill:
+    async def test_update_bill_fee(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post(
+            "/api/v1/bills", json=bill_payload(), headers=auth_headers
+        )
+        bill = created.json()
+
+        resp = await client.patch(
+            f"/api/v1/bills/{bill['id']}",
+            json={
+                "expected_updated_at": bill["updated_at"],
+                "fee": {
+                    "fee_main": 30000,
+                    "fee_insurance": 1000,
+                    "fee_other": 0,
+                    "fee_vat": 3100,
+                    "fee_total": 34100,
+                },
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["fee"]["fee_main"] == 30000
+        assert data["fee"]["fee_insurance"] == 1000
+        assert data["fee"]["fee_other"] == 0
+        assert data["fee"]["fee_vat"] == 3100
+        assert data["fee"]["fee_total"] == 34100
+
+        # Persisted on a fresh read
+        got = await client.get(f"/api/v1/bills/{bill['id']}", headers=auth_headers)
+        assert got.json()["fee"]["fee_total"] == 34100
+
+    async def test_update_bill_fee_total_mismatch(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post(
+            "/api/v1/bills", json=bill_payload(), headers=auth_headers
+        )
+        bill = created.json()
+
+        resp = await client.patch(
+            f"/api/v1/bills/{bill['id']}",
+            json={
+                "expected_updated_at": bill["updated_at"],
+                "fee": {
+                    "fee_main": 30000,
+                    "fee_insurance": 0,
+                    "fee_other": 0,
+                    "fee_vat": 0,
+                    "fee_total": 99999,
+                },
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "VALIDATION_ERROR"
+
+    async def test_update_bill_fee_after_pickup_is_locked(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post(
+            "/api/v1/bills", json=bill_payload(), headers=auth_headers
+        )
+        bill = created.json()
+
+        moved = await client.post(
+            f"/api/v1/bills/{bill['id']}/status",
+            json={"to_status": "picked_up"},
+            headers=auth_headers,
+        )
+        assert moved.status_code == 200
+
+        resp = await client.patch(
+            f"/api/v1/bills/{bill['id']}",
+            json={
+                "expected_updated_at": moved.json()["updated_at"],
+                "edit_reason": "Điều chỉnh cước",
+                "fee": {
+                    "fee_main": 30000,
+                    "fee_insurance": 0,
+                    "fee_other": 0,
+                    "fee_vat": 0,
+                    "fee_total": 30000,
+                },
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 409
+        assert resp.json()["error_code"] == "BILL_FIELDS_LOCKED"

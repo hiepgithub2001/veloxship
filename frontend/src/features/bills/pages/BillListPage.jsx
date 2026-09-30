@@ -298,20 +298,21 @@ export function BillListPage() {
           {t('bills.create')}
         </Button>
       </div>
-      <BillFilters
-        status={status}
-        dateRange={dateRange}
-        tracking={tracking}
-        sender={sender}
-        receiver={receiver}
-        onStatusChange={handleStatusChange}
-        onDateRangeChange={handleDateRangeChange}
-        onSearch={handleSearchFilters}
-        onReset={handleResetFilters}
-      />
       <Card
-        extra={selectedRowKeys.length > 0 && (
-          <Space size="middle" wrap>
+      >
+        <BillFilters
+          status={status}
+          dateRange={dateRange}
+          tracking={tracking}
+          sender={sender}
+          receiver={receiver}
+          onStatusChange={handleStatusChange}
+          onDateRangeChange={handleDateRangeChange}
+          onSearch={handleSearchFilters}
+          onReset={handleResetFilters}
+        />
+        {selectedRowKeys.length > 0 && (
+          <Space size="middle" wrap style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <Typography.Text>
               {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
             </Typography.Text>
@@ -323,8 +324,6 @@ export function BillListPage() {
             </Button>
           </Space>
         )}
-      >
-
         <Table {...tableProps} columns={columns} pagination={pagination} />
       </Card>
       <BillPdfPreview

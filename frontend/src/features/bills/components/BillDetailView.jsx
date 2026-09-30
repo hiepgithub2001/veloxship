@@ -12,6 +12,7 @@ import {
 } from '../../../api/bills';
 import { BillCommentSection } from './BillCommentSection';
 import { BillCommercialEditor } from './BillCommercialEditor';
+import { BillFeeEditor } from './BillFeeEditor';
 import { BillPartyEditor } from './BillPartyEditor';
 import { BillPdfPreview } from './BillPdfPreview';
 import { StatusUpdateDrawer } from './StatusUpdateDrawer';
@@ -163,43 +164,7 @@ export function BillDetailView({ id }) {
             />
           </Card>
           <Card>
-            <div className="bill-block-heading">
-              <div>
-                <h3>Cước phí & thanh toán</h3>
-                <span>Trình bày theo bố cục phiếu gửi</span>
-              </div>
-            </div>
-            <div className="bill-fee-layout">
-              <div>
-                <strong>{t('bills.payer')}</strong>
-                <div style={{ marginTop: 10 }}>
-                  {bill.payer === 'sender' ? t('bills.payerSender') : t('bills.payerReceiver')}
-                </div>
-                <div style={{ marginTop: 24 }}>
-                  <strong>{t('bills.serviceTier')}</strong>
-                  <div style={{ marginTop: 10 }}>
-                    {bill.service_tier_code || '—'} · {t(`bills.${bill.cargo_type}`)}
-                  </div>
-                </div>
-              </div>
-              <div className="bill-fee-list">
-                {[
-                  [t('bills.feeMain'), bill.fee.fee_main],
-                  [t('bills.feeInsurance'), bill.fee.fee_insurance],
-                  [t('bills.feeOther'), bill.fee.fee_other],
-                  [t('bills.feeVat'), bill.fee.fee_vat],
-                ].map(([label, amount]) => (
-                  <div className="bill-fee-line" key={label}>
-                    <span>{label}</span>
-                    <strong>{formatVND(amount)}</strong>
-                  </div>
-                ))}
-                <div className="bill-fee-line bill-fee-total">
-                  <strong>{t('bills.feeTotal')}</strong>
-                  <strong>{formatVND(bill.fee.fee_total)}</strong>
-                </div>
-              </div>
-            </div>
+            <BillFeeEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
           </Card>
         </div>
         <div className="bill-side-col">

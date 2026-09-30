@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, DatePicker, Input, Select, Space, Typography } from 'antd';
 import { SearchOutlined, UndoOutlined } from '@ant-design/icons';
 import { t } from '../../../i18n/vi';
+import Search from 'antd/es/input/Search';
 
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
@@ -57,16 +58,16 @@ export function BillFilters({
   };
 
   return (
-    <Card style={{ marginBottom: 16 }} styles={{ body: { padding: 16 } }}>
+    <div style={{ marginBottom: 16 }}>
       <Space wrap size="middle">
-        <Input
+        <Search
           value={draft.tracking}
           onChange={setField('tracking')}
           onPressEnter={handleSearch}
           allowClear
+          enterButton={<SearchOutlined />}
           placeholder={t('bills.trackingFilter')}
           style={{ width: 180 }}
-
         />
         <Input
           value={draft.sender}
@@ -98,7 +99,7 @@ export function BillFilters({
           placeholder={t('bills.dateRangePlaceholder')}
         />
       </Space>
-    </Card>
+    </div>
   );
 }
 
