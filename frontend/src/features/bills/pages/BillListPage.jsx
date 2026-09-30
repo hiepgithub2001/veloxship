@@ -260,8 +260,8 @@ export function BillListPage() {
         onSearch={handleSearchFilters}
         onReset={handleResetFilters}
       />
-      {selectedRowKeys.length > 0 && (
-        <Card style={{ marginBottom: 16 }} styles={{ body: { padding: '8px 16px' } }}>
+      <Card
+        extra={selectedRowKeys.length > 0 && (
           <Space size="middle" wrap>
             <Typography.Text>
               {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
@@ -273,9 +273,9 @@ export function BillListPage() {
               {t('bills.print')}
             </Button>
           </Space>
-        </Card>
-      )}
-      <Card>
+        )}
+      >
+
         <Table {...tableProps} columns={columns} pagination={pagination} />
       </Card>
       <BillPdfPreview
