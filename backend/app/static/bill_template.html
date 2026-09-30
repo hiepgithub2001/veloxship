@@ -84,9 +84,6 @@
                     </tr>
                     {% endfor %}
                   </tbody>
-                  <tfoot>
-                    <tr><td colspan="6">TL thực tế: {{ actual_weight }} kg &nbsp; • &nbsp; TL tính cước: {{ chargeable_weight }} kg</td></tr>
-                  </tfoot>
                 </table>
               </td>
               <td class="nested-cell">
@@ -108,7 +105,12 @@
                           <tr><th>Phụ phí khác:</th><td>{{ fee_other }} ₫</td></tr>
                           <tr><th>VAT:</th><td>{{ fee_vat }} ₫</td></tr>
                           <tr class="total"><th>Tổng cộng:</th><td>{{ fee_total }} ₫</td></tr>
-                          <tr><th>Thu hộ COD:</th><td>{{ cod_amount }} ₫</td></tr>
+                          <tr>
+                            <th>
+                              <i class="box {% if is_sender_payer %}checked{% endif %}"></i>Người gửi thanh toán
+                            </th>
+                            <td><i class="box {% if not is_sender_payer %}checked{% endif %}"></i>Người nhận thanh toán</td>
+                          </tr>
                         </table>
                       </td>
                       <td class="service-options">
@@ -123,10 +125,6 @@
                             <span><i class="box {% if service.checked %}checked{% endif %}"></i>{{ service.label }}</span>
                             {% endfor %}
                           </div>
-                        </div>
-                        <div class="payer-line">
-                          <span><i class="box {% if is_sender_payer %}checked{% endif %}"></i>NG trả</span>
-                          <span><i class="box {% if not is_sender_payer %}checked{% endif %}"></i>NN trả</span>
                         </div>
                       </td>
                     </tr>

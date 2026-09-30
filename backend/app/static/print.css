@@ -143,8 +143,8 @@ table {
   text-align: start;
 }
 
-.form-table th + th,
-.form-table td + td {
+.form-table th+th,
+.form-table td+td {
   border-inline-start: 0;
 }
 
@@ -211,7 +211,7 @@ table {
   inline-size: 58%;
 }
 
-.commercial-table > tbody > tr > td {
+.commercial-table>tbody>tr>td {
   block-size: 36mm;
 }
 
@@ -235,6 +235,14 @@ table {
 .fee-list td {
   border: 0.15mm solid #555;
   text-align: center;
+}
+
+.service-fee-detail td:first-child {
+  border: 0;
+}
+
+.service-fee-detail td.service-options {
+  border-inline-start: 0;
 }
 
 .content-lines th,
@@ -288,17 +296,32 @@ table {
 }
 
 .classification-row {
+  position: relative;
+  /* Quan trọng để định vị đường kẻ thẳng hàng với bảng phí/dịch vụ bên dưới */
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 27% 27% 23% 23%;
   align-items: center;
   min-block-size: 7mm;
-  border-block-end: 0.15mm solid #555;
   font-size: 6pt;
 }
 
-.classification-row > span {
+.classification-row>span {
   padding-inline: 1mm;
   white-space: nowrap;
+}
+
+/* Tạo đường kẻ thẳng đứng ngay giữa "Hàng hóa/Pack" và "Trong nước",
+   đúng vị trí 54% để thẳng hàng với cột cước phí (54%) bên dưới */
+.classification-row::after {
+  content: "";
+  position: absolute;
+  left: 54%;
+  top: 0;
+  bottom: 0;
+  width: 0.5px;
+  /* Độ dày đường kẻ */
+  background-color: #000;
+  /* Màu đường kẻ, chỉnh lại nếu cần */
 }
 
 .box {
@@ -308,7 +331,7 @@ table {
   block-size: 3mm;
   margin-inline-end: 1mm;
   border: 0.2mm solid #333;
-  vertical-align: -0.6mm;
+  vertical-align: middle;
 }
 
 .box.checked::after {
@@ -334,7 +357,7 @@ table {
   inline-size: 46%;
 }
 
-.service-fee-detail > tbody > tr > td {
+.service-fee-detail>tbody>tr>td {
   padding: 0;
 }
 
@@ -374,10 +397,19 @@ table {
 
 .payer-line {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5mm;
   padding-block-start: 0.8mm;
   border-block-start: 0.15mm solid #555;
   font-size: 5.8pt;
+}
+
+.classification-row>span,
+.service-columns span,
+.payer-line span {
+  display: flex;
+  align-items: center;
 }
 
 .signature-table tbody td {
