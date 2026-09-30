@@ -1,12 +1,15 @@
-"""Print service — renders bill to HTML and PDF."""
+"""Print service — renders the canonical A5 delivery bill to HTML and PDF."""
 
 import base64
 import io
+import re
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import barcode
-import qrcode
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from pathlib import Path
 
 from app.core.config import settings
 
@@ -16,126 +19,231 @@ _env = Environment(
     autoescape=select_autoescape(["html"]),
 )
 
+_DOMESTIC_SERVICES = (
+    ("CPN", "CPN"),
+    ("PHT", "PHT"),
+    ("DUONG_BO", "Đường bộ"),
+    ("T48H", "48H"),
+    ("NGUYEN_CHUYEN", "Nguyên chuyến"),
+    ("KHAC", "Khác"),
+)
+_INTERNATIONAL_SERVICES = (
+    ("INTL_EXPRESS", "Express"),
+    ("INTL_ECONOMY", "Economy"),
+    ("INTL_OTHER", "Other"),
+)
+_COPY_LABELS = (
+    "Liên 1 — Người gửi",
+    "Liên 2 — Vận chuyển",
+    "Liên 3 — Người nhận",
+)
+
+
+def _asset_data_uri(filename: str, mime_type: str) -> str:
+    encoded = base64.b64encode((_TEMPLATE_DIR / filename).read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
 
 def _generate_barcode_svg(tracking_number: str) -> str:
-    """Generate a Code128 barcode as inline SVG."""
+    """Generate a compact Code 128 barcode as inline SVG."""
     code128 = barcode.get("code128", tracking_number, writer=barcode.writer.SVGWriter())
     svg_io = io.BytesIO()
-    code128.write(svg_io, options={"write_text": False, "module_height": 12})
+    code128.write(
+        svg_io,
+        options={
+            "write_text": False,
+            "module_height": 10,
+            "quiet_zone": 1.5,
+            "font_size": 0,
+        },
+    )
     return svg_io.getvalue().decode("utf-8")
 
 
-def _generate_qr_base64(tracking_number: str) -> str:
-    """Generate a QR code as base64-encoded PNG."""
-    url = f"https://{settings.CARRIER_WEBSITE}/tra-cuu/{tracking_number}"
-    qr = qrcode.make(url, box_size=4, border=1)
-    img_io = io.BytesIO()
-    qr.save(img_io, format="PNG")
-    return base64.b64encode(img_io.getvalue()).decode("utf-8")
-
-
-def _format_vnd(amount) -> str:
-    """Format a number as VND with dot separator."""
+def _format_vnd(amount: Decimal | int | float | None) -> str:
+    """Format a number as whole Vietnamese đồng with dot separators."""
     if amount is None:
         return "0"
-    return f"{int(amount):,}".replace(",", ".")
+    return f"{int(Decimal(str(amount))):,}".replace(",", ".")
 
 
-def _format_weight(weight) -> str:
-    """Format weight with comma decimal."""
-    if weight is None:
-        return "0,00"
-    return f"{float(weight):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+def _format_number(value: Decimal | int | float | None, decimals: int = 2) -> str:
+    """Format a decimal using Vietnamese separators without a unit suffix."""
+    if value is None:
+        return ""
+    rendered = f"{Decimal(str(value)):,.{decimals}f}"
+    return rendered.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def _party_context(customer) -> dict:
-    """Build a party dict from a customer relationship + metadata."""
-    meta = customer.customer_metadata if customer else None
+def _format_dimension(value: Decimal | int | float | None) -> str:
+    if value is None:
+        return ""
+    number = Decimal(str(value))
+    if number == number.to_integral():
+        return str(int(number))
+    return _format_number(number, 1)
+
+
+def _party_context(customer, snapshot: dict | None) -> dict[str, str]:
+    """Build historical party details from the immutable bill snapshot."""
+    data = snapshot or {}
+    if not data and customer is not None:
+        metadata = customer.customer_metadata or {}
+        data = {
+            "name": customer.name,
+            "phone": customer.phone,
+            "address_detail": metadata.get("address_detail"),
+            "province_name": metadata.get("province_name"),
+            "ward_name": metadata.get("ward_name"),
+        }
     return {
-        "code": customer.code if customer else None,
-        "name": customer.name if customer else "",
-        "phone": customer.phone if customer else "",
-        "address_detail": (meta or {}).get("address_detail", ""),
-        "province_name": (meta or {}).get("province_name", ""),
-        "ward_name": (meta or {}).get("ward_name", ""),
+        "code": data.get("code")
+        or (customer.code if customer is not None else None)
+        or "KH-LẺ",
+        "name": data.get("name") or "",
+        "phone": data.get("phone") or "",
+        "address_detail": data.get("address_detail") or "",
+        "district_name": data.get("district_name") or "—",
+        "province_name": data.get("province_name") or "",
+        "ward_name": data.get("ward_name") or "",
     }
 
 
+def _service_options(
+    selected_code: str | None, options: tuple[tuple[str, str], ...]
+) -> list[dict]:
+    return [
+        {"code": code, "label": label, "checked": selected_code == code}
+        for code, label in options
+    ]
+
+
+def _local_bill_date(value: datetime | None) -> datetime:
+    bill_date = value or datetime.now(UTC)
+    if bill_date.tzinfo is None:
+        bill_date = bill_date.replace(tzinfo=UTC)
+    return bill_date.astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
+
+
 def _prepare_context(bill) -> dict:
-    """Build the template rendering context from a bill model."""
-    from datetime import datetime, timezone
-
-    now = datetime.now(timezone.utc)
-
-    # Content lines
+    """Build a renderer-only context from a fully loaded bill model."""
     content_lines = []
-    total_weight = 0
-    total_quantity = 0
     for line in bill.content_lines:
-        dimensions = ""
-        if line.length_cm or line.width_cm or line.height_cm:
-            parts = []
-            if line.length_cm:
-                parts.append(f"{float(line.length_cm):.0f}")
-            if line.width_cm:
-                parts.append(f"{float(line.width_cm):.0f}")
-            if line.height_cm:
-                parts.append(f"{float(line.height_cm):.0f}")
-            dimensions = " × ".join(parts) + " cm"
+        content_lines.append(
+            {
+                "description": line.description,
+                "quantity": line.quantity,
+                "weight": _format_number(line.weight_kg),
+                "length": _format_dimension(line.length_cm),
+                "width": _format_dimension(line.width_cm),
+                "height": _format_dimension(line.height_cm),
+                "is_blank": False,
+            }
+        )
+    content_lines.extend(
+        {
+            "description": "",
+            "quantity": "",
+            "weight": "",
+            "length": "",
+            "width": "",
+            "height": "",
+            "is_blank": True,
+        }
+        for _ in range(max(0, 5 - len(content_lines)))
+    )
 
-        content_lines.append({
-            "line_no": line.line_no,
-            "description": line.description,
-            "quantity": line.quantity,
-            "weight": _format_weight(line.weight_kg),
-            "dimensions": dimensions,
-        })
-        total_weight += float(line.weight_kg)
-        total_quantity += line.quantity
+    service_code = bill.service_tier_code
+    service_scope = getattr(bill.service_tier, "scope", None)
+    if service_scope is None and service_code:
+        service_scope = (
+            "international" if service_code.startswith("INTL_") else "domestic"
+        )
+
+    copy_count = max(1, min(int(settings.BILL_PDF_COPY_COUNT), len(_COPY_LABELS)))
+    bill_date = _local_bill_date(bill.created_at)
 
     return {
-        "bill": bill,
-        "sender": _party_context(bill.sender),
-        "receiver": _party_context(bill.receiver),
+        "tracking_number": bill.tracking_number,
+        "print_css": (_TEMPLATE_DIR / "print.css").read_text(encoding="utf-8"),
+        "logo_data_uri": _asset_data_uri("logo.png", "image/png"),
+        "sender": _party_context(bill.sender, bill.sender_snapshot),
+        "receiver": _party_context(bill.receiver, bill.receiver_snapshot),
         "barcode_svg": _generate_barcode_svg(bill.tracking_number),
-        "qr_base64": _generate_qr_base64(bill.tracking_number),
         "content_lines": content_lines,
-        "total_weight": _format_weight(total_weight),
-        "total_quantity": total_quantity,
-        "actual_weight": _format_weight(bill.actual_weight_kg),
-        "chargeable_weight": _format_weight(bill.chargeable_weight_kg),
+        "compact_content": len(bill.content_lines) > 5,
+        "actual_weight": _format_number(bill.actual_weight_kg),
+        "chargeable_weight": _format_number(bill.chargeable_weight_kg),
         "cod_amount": _format_vnd(bill.cod_amount),
         "fee_main": _format_vnd(bill.fee_main),
+        "fee_fuel_surcharge": "0",
         "fee_insurance": _format_vnd(bill.fee_insurance),
         "fee_other": _format_vnd(bill.fee_other),
         "fee_vat": _format_vnd(bill.fee_vat),
         "fee_total": _format_vnd(bill.fee_total),
         "is_sender_payer": bill.payer == "sender",
         "is_document": bill.cargo_type == "document",
-        "is_insurance_required": bill.is_insurance_required,
-        "date_day": now.strftime("%d"),
-        "date_month": now.strftime("%m"),
-        "date_year": now.strftime("%Y"),
+        "is_domestic": service_scope == "domestic",
+        "is_international": service_scope == "international",
+        "domestic_services": _service_options(service_code, _DOMESTIC_SERVICES),
+        "international_services": _service_options(
+            service_code, _INTERNATIONAL_SERVICES
+        ),
+        "date_day": bill_date.strftime("%d"),
+        "date_month": bill_date.strftime("%m"),
+        "date_year": bill_date.strftime("%Y"),
+        "copies": [{"label": label} for label in _COPY_LABELS[:copy_count]],
         "carrier_name": settings.CARRIER_NAME,
         "carrier_hotline": settings.CARRIER_HOTLINE,
-        "carrier_website": settings.CARRIER_WEBSITE,
         "carrier_email": settings.CARRIER_EMAIL,
     }
 
 
 def render_bill_html(bill) -> str:
-    """Render the bill to HTML."""
+    """Render the bill to standalone HTML."""
     template = _env.get_template("bill_template.html")
-    context = _prepare_context(bill)
-    return template.render(**context)
+    return template.render(**_prepare_context(bill))
 
 
 def render_bill_pdf(bill) -> bytes:
-    """Render the bill to PDF via WeasyPrint."""
+    """Render the bill to a three-copy A5 PDF via WeasyPrint."""
     html_str = render_bill_html(bill)
     try:
         from weasyprint import HTML
+
         return HTML(string=html_str, base_url=str(_TEMPLATE_DIR)).write_pdf()
     except ImportError:
-        # WeasyPrint not available (dev without native deps) — return HTML as UTF-8
+        # Local development may omit WeasyPrint's native dependencies.
         return html_str.encode("utf-8")
+
+
+def render_bills_html(bills) -> str:
+    """Render multiple bills into a single HTML document, one bill per page.
+
+    Each bill is rendered to its standalone document and its <main> block is
+    extracted; the shared print stylesheet is kept once and a page break is
+    forced between consecutive bills.
+    """
+    parts: list[str] = []
+    css = ""
+    for bill in bills:
+        html = render_bill_html(bill)
+        if not css:
+            style_match = re.search(r"<style>(.*?)</style>", html, re.S)
+            if style_match:
+                css = style_match.group(1)
+        main_match = re.search(r'<main class="print-document">(.*?)</main>', html, re.S)
+        if main_match:
+            parts.append(main_match.group(1))
+
+    batch_css = css + (
+        "\n.print-document + .print-document { break-before: page; page-break-before: always; }\n"
+    )
+    body = "".join(
+        f'<main class="print-document">{part}</main>' for part in parts
+    )
+    return (
+        '<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">'
+        '<title>Phiếu Gửi</title>'
+        f"<style>{batch_css}</style></head><body>{body}</body></html>"
+    )

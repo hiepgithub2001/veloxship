@@ -2,12 +2,31 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Boolean, CheckConstraint, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.customer import Customer
+    from app.models.depot import Depot
+    from app.models.linehaul import Linehaul
+    from app.models.partner import Partner
+    from app.models.service_tier import ServiceTier
+    from app.models.user import User
 
 
 class Bill(Base):
@@ -105,6 +124,7 @@ class Bill(Base):
     # Relationships
     sender: Mapped["Customer"] = relationship("Customer", foreign_keys=[sender_id])
     receiver: Mapped["Customer"] = relationship("Customer", foreign_keys=[receiver_id])
+    service_tier: Mapped["ServiceTier | None"] = relationship("ServiceTier")
     origin_depot: Mapped["Depot | None"] = relationship("Depot", foreign_keys=[origin_depot_id])
     destination_depot: Mapped["Depot | None"] = relationship("Depot", foreign_keys=[destination_depot_id])
     latest_depot: Mapped["Depot | None"] = relationship("Depot", foreign_keys=[latest_depot_id])

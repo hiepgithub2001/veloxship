@@ -28,6 +28,18 @@ def _weight(value: float) -> Decimal:
     return Decimal(str(value)).quantize(Decimal("0.001"))
 
 
+def _like_unaccent(column, term: str):
+    """Case/diacritic-insensitive LIKE filter (escapes LIKE wildcards)."""
+    from sqlalchemy import func
+
+    escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    pattern = f"%{escaped}%"
+    return func.f_unaccent(func.lower(column)).like(
+        func.f_unaccent(func.lower(pattern)),
+        escape="\\",
+    )
+
+
 def party_snapshot(party, customer_id: int) -> dict:
     """Persist input data, rather than a mutable customer profile, on the bill."""
     return {
@@ -131,6 +143,7 @@ async def get_bill(db: AsyncSession, bill_id: int) -> Bill | None:
             selectinload(Bill.status_logs),
             selectinload(Bill.sender),
             selectinload(Bill.receiver),
+            selectinload(Bill.service_tier),
         )
     )
     return result.scalar_one_or_none()
@@ -151,6 +164,26 @@ async def get_by_tracking_number(db: AsyncSession, tracking_number: str) -> Bill
     return result.scalar_one_or_none()
 
 
+async def get_bills_by_ids(db: AsyncSession, bill_ids: list[int]) -> list[Bill]:
+    """Load multiple bills fully, preserving the input order."""
+    unique_ids = list(dict.fromkeys(bill_ids))
+    if not unique_ids:
+        return []
+    result = await db.execute(
+        select(Bill)
+        .where(Bill.id.in_(unique_ids))
+        .options(
+            selectinload(Bill.content_lines),
+            selectinload(Bill.status_logs),
+            selectinload(Bill.sender),
+            selectinload(Bill.receiver),
+            selectinload(Bill.service_tier),
+        )
+    )
+    by_id = {bill.id: bill for bill in result.scalars().unique().all()}
+    return [by_id[bill_id] for bill_id in unique_ids if bill_id in by_id]
+
+
 async def list_bills(
     db: AsyncSession,
     page: int = 1,
@@ -159,6 +192,9 @@ async def list_bills(
     status: str | None = None,
     created_from: datetime | None = None,
     created_to: datetime | None = None,
+    tracking_number: str | None = None,
+    sender_name: str | None = None,
+    receiver_name: str | None = None,
 ) -> tuple[list[Bill], int]:
     """List bills with optional diacritic-insensitive search and AND filters."""
     from sqlalchemy import func
@@ -204,6 +240,14 @@ async def list_bills(
         base_query = base_query.where(Bill.created_at >= created_from)
     if created_to is not None:
         base_query = base_query.where(Bill.created_at <= created_to)
+    if tracking_number and tracking_number.strip():
+        base_query = base_query.where(
+            _like_unaccent(Bill.tracking_number, tracking_number.strip())
+        )
+    if sender_name and sender_name.strip():
+        base_query = base_query.where(_like_unaccent(sender.name, sender_name.strip()))
+    if receiver_name and receiver_name.strip():
+        base_query = base_query.where(_like_unaccent(receiver.name, receiver_name.strip()))
 
     count_result = await db.execute(
         select(func.count()).select_from(base_query.subquery()),

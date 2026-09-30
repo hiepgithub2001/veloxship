@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     CARRIER_HOTLINE: str = "0972 160 610"
     CARRIER_WEBSITE: str = "newlinks.vn"
     CARRIER_EMAIL: str = "info@newlinks.vn"
+    BILL_PDF_COPY_COUNT: int = 3
 
     # AWS S3 storage
     AWS_ACCESS_KEY_ID: str = ""

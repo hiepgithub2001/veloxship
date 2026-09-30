@@ -1,14 +1,8 @@
-import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Card, Space, Spin, Steps, Tag, Timeline, Typography, message } from 'antd';
-import {
-  ArrowLeftOutlined,
-  FilePdfOutlined,
-  PrinterOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
-import { useReactToPrint } from 'react-to-print';
+import { FilePdfOutlined, PrinterOutlined, SwapOutlined } from '@ant-design/icons';
+import BackButton from '../../../components/common/BackButton';
 import {
   downloadBillPdf,
   getBill,
@@ -18,9 +12,10 @@ import {
 } from '../../../api/bills';
 import { BillCommentSection } from './BillCommentSection';
 import { BillCommercialEditor } from './BillCommercialEditor';
+import { BillFeeEditor } from './BillFeeEditor';
 import { BillPartyEditor } from './BillPartyEditor';
+import { BillPdfPreview } from './BillPdfPreview';
 import { StatusUpdateDrawer } from './StatusUpdateDrawer';
-import { BillPrintView } from './BillPrintView';
 import { formatVND, formatViDateTime } from '../../../lib/format';
 import { t } from '../../../i18n/vi';
 
@@ -37,15 +32,12 @@ const colors = {
 const terminal = new Set(['delivered', 'returned', 'cancelled']);
 
 /**
- * Bill detail workspace — shared by the full-page route and the list-page drawer.
- *
- * `embedded` hides the back button (the list/drawer already provide navigation).
+ * Bill detail workspace — rendered by the dedicated detail route (`/phieu-gui/:id`).
  */
-export function BillDetailView({ id, embedded = false }) {
-  const navigate = useNavigate();
+export function BillDetailView({ id }) {
   const qc = useQueryClient();
-  const printRef = useRef(null);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const {
     data: bill,
     isLoading,
@@ -77,13 +69,13 @@ export function BillDetailView({ id, embedded = false }) {
     },
     onError: (e) => message.error(e.response?.data?.message || 'Không thể cập nhật trạng thái.'),
   });
-  const print = useReactToPrint({ contentRef: printRef });
+  const print = () => setPdfOpen(true);
   if (isLoading) return <Spin size="large" style={{ display: 'block', margin: '40px auto' }} />;
   if (error || !bill)
     return (
       <Card>
         <Title level={4}>{t('bills.notFound')}</Title>
-        <Button onClick={() => navigate('/phieu-gui')}>{t('common.back')}</Button>
+        <BackButton />
       </Card>
     );
   const current = flow.indexOf(bill.status);
@@ -97,11 +89,7 @@ export function BillDetailView({ id, embedded = false }) {
   return (
     <div className="bill-workspace">
       <div className="bill-detail-actions">
-        {!embedded && (
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/phieu-gui')}>
-            {t('common.back')}
-          </Button>
-        )}
+        <BackButton />
         <Space wrap className="bill-detail-actions-right">
           <Button type="primary" icon={<PrinterOutlined />} onClick={print}>
             {bill.print_count ? t('bills.reprint') : t('bills.print')}
@@ -169,46 +157,14 @@ export function BillDetailView({ id, embedded = false }) {
             </div>
           </Card>
           <Card>
-            <BillCommercialEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
+            <BillCommercialEditor
+              bill={bill}
+              saving={amendment.isPending}
+              onSave={amendment.mutate}
+            />
           </Card>
           <Card>
-            <div className="bill-block-heading">
-              <div>
-                <h3>Cước phí & thanh toán</h3>
-                <span>Trình bày theo bố cục phiếu gửi</span>
-              </div>
-            </div>
-            <div className="bill-fee-layout">
-              <div>
-                <strong>{t('bills.payer')}</strong>
-                <div style={{ marginTop: 10 }}>
-                  {bill.payer === 'sender' ? t('bills.payerSender') : t('bills.payerReceiver')}
-                </div>
-                <div style={{ marginTop: 24 }}>
-                  <strong>{t('bills.serviceTier')}</strong>
-                  <div style={{ marginTop: 10 }}>
-                    {bill.service_tier_code || '—'} · {t(`bills.${bill.cargo_type}`)}
-                  </div>
-                </div>
-              </div>
-              <div className="bill-fee-list">
-                {[
-                  [t('bills.feeMain'), bill.fee.fee_main],
-                  [t('bills.feeInsurance'), bill.fee.fee_insurance],
-                  [t('bills.feeOther'), bill.fee.fee_other],
-                  [t('bills.feeVat'), bill.fee.fee_vat],
-                ].map(([label, amount]) => (
-                  <div className="bill-fee-line" key={label}>
-                    <span>{label}</span>
-                    <strong>{formatVND(amount)}</strong>
-                  </div>
-                ))}
-                <div className="bill-fee-line bill-fee-total">
-                  <strong>{t('bills.feeTotal')}</strong>
-                  <strong>{formatVND(bill.fee.fee_total)}</strong>
-                </div>
-              </div>
-            </div>
+            <BillFeeEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
           </Card>
         </div>
         <div className="bill-side-col">
@@ -246,9 +202,14 @@ export function BillDetailView({ id, embedded = false }) {
         saving={status.isPending}
         onSubmit={status.mutate}
       />
-      <div ref={printRef} style={{ position: 'absolute', left: '-9999px' }}>
-        <BillPrintView bill={bill} />
-      </div>
+      <BillPdfPreview
+        billId={bill.id}
+        open={pdfOpen}
+        onClose={() => {
+          setPdfOpen(false);
+          refresh();
+        }}
+      />
     </div>
   );
 }

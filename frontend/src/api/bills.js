@@ -18,11 +18,18 @@ export async function updateBill(id, payload) {
   return data;
 }
 
-export async function downloadBillPdf(id) {
-  const response = await client.get(`/bills/${id}/print?as=pdf`, {
+async function fetchBillPdf(id) {
+  return client.get(`/bills/${id}/print?as=pdf`, {
     responseType: 'blob',
   });
-  // Trigger browser download
+}
+
+export async function getBillPrintHtml(id) {
+  const { data } = await client.get(`/bills/${id}/print?as=html`);
+  return data;
+}
+
+function saveBillPdf(response, id) {
   const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
   const link = document.createElement('a');
   link.href = url;
@@ -33,9 +40,9 @@ export async function downloadBillPdf(id) {
   window.URL.revokeObjectURL(url);
 }
 
-export async function getBillPrintHtml(id) {
-  const { data } = await client.get(`/bills/${id}/print?as=html`);
-  return data;
+export async function downloadBillPdf(id) {
+  const response = await fetchBillPdf(id);
+  saveBillPdf(response, id);
 }
 
 export async function listBills({
@@ -45,6 +52,9 @@ export async function listBills({
   status,
   createdFrom,
   createdTo,
+  trackingNumber,
+  senderName,
+  receiverName,
 } = {}) {
   const params = {};
   if (page != null) params.page = page;
@@ -53,8 +63,26 @@ export async function listBills({
   if (status) params.status = status;
   if (createdFrom) params.created_from = createdFrom;
   if (createdTo) params.created_to = createdTo;
+  if (trackingNumber) params.tracking_number = trackingNumber;
+  if (senderName) params.sender_name = senderName;
+  if (receiverName) params.receiver_name = receiverName;
 
   const { data } = await client.get('/bills', { params });
+  return data;
+}
+
+export async function exportBills(ids) {
+  const response = await client.get('/bills/export', {
+    params: { ids: ids.join(',') },
+    responseType: 'blob',
+  });
+  return response;
+}
+
+export async function getBillsPrintHtml(ids) {
+  const { data } = await client.get('/bills/print-batch', {
+    params: { ids: ids.join(',') },
+  });
   return data;
 }
 
