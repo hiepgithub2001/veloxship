@@ -22,10 +22,10 @@ class Settings(BaseSettings):
     CUSTOMER_CODE_PREFIX: str = "KH"
 
     # Carrier branding (used in print template)
-    CARRIER_NAME: str = "Vận Chuyển HN"
-    CARRIER_HOTLINE: str = "0972 160 610"
-    CARRIER_WEBSITE: str = "newlinks.vn"
-    CARRIER_EMAIL: str = "info@newlinks.vn"
+    CARRIER_NAME: str = "Vận Chuyển Hoàng Nam"
+    CARRIER_HOTLINE: str = "0989784688"
+    CARRIER_WEBSITE: str = ""
+    CARRIER_EMAIL: str = "Tranthuyduong01051986@gmail.com"
     BILL_PDF_COPY_COUNT: int = 3
 
     # AWS S3 storage
