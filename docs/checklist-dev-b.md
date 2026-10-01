@@ -13,12 +13,12 @@ description: "Danh sách nhiệm vụ phát triển cho DEV B - Phần mềm Ho�
 ## Sprint 1 — Nền tảng Hệ thống (04/08/2026 -> 15/08/2026)
 
 ### 1. QUẢN LÝ CÀI ĐẶT (Địa giới, Bưu cục & Đội xe)
-- [ ] **[UC-WEB-04] Quản lý tỉnh thành**: Quản lý danh mục Tỉnh/Thành phố trên toàn quốc
-- [ ] **[UC-WEB-05] Quản lý quận huyện**: Quản lý danh mục Quận/Huyện liên kết với Tỉnh/Thành
-- [ ] **[UC-WEB-06] Quản lý phường xã**: Quản lý danh mục Phường/Xã/Thị trấn trực thuộc Quận/Huyện
-- [ ] **[UC-WEB-07] Quản lý Trung tâm/ Chi nhánh/ Bưu cục**: Xem danh sách, thêm, sửa, thiết lập bưu cục giao nhận
-- [ ] **[UC-WEB-08] Quản lý khu vực/ tuyến giao nhận**: Cấu hình khu vực hoạt động, tuyến đường vận chuyển của bưu cục *(Gộp vào UC-WEB-07)*
-- [ ] **[UC-WEB-09] Quản lý đội xe**: Đăng ký thông tin xe, phân loại xe tải/xe máy
+- [x] **[UC-WEB-04] Quản lý tỉnh thành**: Quản lý danh mục Tỉnh/Thành phố trên toàn quốc
+- [x] **[UC-WEB-05] Quản lý quận huyện**: Quản lý danh mục Quận/Huyện liên kết với Tỉnh/Thành
+- [x] **[UC-WEB-06] Quản lý phường xã**: Quản lý danh mục Phường/Xã/Thị trấn trực thuộc Quận/Huyện
+- [x] **[UC-WEB-07] Quản lý Trung tâm/ Chi nhánh/ Bưu cục**: Xem danh sách, thêm, sửa, thiết lập bưu cục giao nhận
+- [x] **[UC-WEB-08] Quản lý khu vực/ tuyến giao nhận**: Cấu hình khu vực hoạt động, tuyến đường vận chuyển của bưu cục *(Gộp vào UC-WEB-07)*
+- [x] **[UC-WEB-09] Quản lý đội xe**: Đăng ký thông tin xe, phân loại xe tải/xe máy
 
 ---
 
@@ -26,11 +26,11 @@ description: "Danh sách nhiệm vụ phát triển cho DEV B - Phần mềm Ho�
 
 ### 1. QUẢN LÝ VẬN ĐƠN
 - [ ] **[UC-WEB-18] Quản lý lấy hàng**: Tiếp nhận yêu cầu gửi hàng từ khách hàng, điều phối bưu tá đi lấy hàng
-- [ ] **[UC-WEB-19] Tạo vận đơn**: Nhập thủ công thông tin người gửi, người nhận, hàng hóa, cước phí để tạo 1 vận đơn mới
-- [ ] **[UC-WEB-23] Danh sách vận đơn**: Bộ lọc tra cứu trạng thái, hành trình chi tiết của mọi vận đơn trong hệ thống
+- [x] **[UC-WEB-19] Tạo vận đơn**: Nhập thủ công thông tin người gửi, người nhận, hàng hóa, cước phí để tạo 1 vận đơn mới
+- [x] **[UC-WEB-23] Danh sách vận đơn**: Bộ lọc tra cứu trạng thái, hành trình chi tiết của mọi vận đơn trong hệ thống
 - [ ] **[UC-WEB-24] Hủy giao hàng thành công**: Xử lý nghiệp vụ hủy trạng thái giao hàng thành công khi có khiếu nại hoặc lỗi cập nhật
-- [ ] **[UC-WEB-26] Điều chỉnh COD**: Cập nhật/điều chỉnh số tiền thu hộ (COD) trước khi xuất kho đi giao
-- [ ] **[UC-WEB-27] Lịch sử điều chỉnh đơn hàng**: Truy vết (Audit Log) toàn bộ lịch sử chỉnh sửa thông tin vận đơn
+- [x] **[UC-WEB-26] Điều chỉnh COD**: Cập nhật/điều chỉnh số tiền thu hộ (COD) trước khi xuất kho đi giao
+- [~] **[UC-WEB-27] Lịch sử điều chỉnh đơn hàng**: Truy vết (Audit Log) toàn bộ lịch sử chỉnh sửa thông tin vận đơn
 
 ---
 

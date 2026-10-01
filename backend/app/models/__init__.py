@@ -4,6 +4,7 @@ from .audit_event import AuditEvent
 from .bill import Bill
 from .bill_content_line import BillContentLine
 from .bill_status_event import BillStatusEvent, BillStatusLog
+from .comment import Comment
 from .customer import Customer
 from .depot import Depot
 from .finance import CodHandover, CodHandoverItem, DepotLedger
@@ -22,6 +23,7 @@ __all__ = [
     "BillContentLine",
     "BillStatusEvent",
     "BillStatusLog",
+    "Comment",
     "CodHandover",
     "CodHandoverItem",
     "Customer",

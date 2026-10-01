@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class UploadResultResponse(BaseModel):
     key: str
+    url: str
     mime_type: str
     size_bytes: int
     ext: str

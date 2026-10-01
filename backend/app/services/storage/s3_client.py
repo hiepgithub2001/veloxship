@@ -4,6 +4,7 @@ from __future__ import annotations
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import PurePosixPath
+from urllib.parse import unquote, urlparse
 
 import aioboto3
 import boto3
@@ -37,6 +38,34 @@ def generate_presigned_url(key: str, expires_in: int | None = None) -> str:
         Params={"Bucket": settings.S3_BUCKET_NAME, "Key": key},
         ExpiresIn=expires_in,
     )
+
+
+def extract_key_from_presigned_url(url: str) -> str | None:
+    """Reverse of ``generate_presigned_url``: recover the S3 object key from one of
+    our own presigned URLs, so round-tripped HTML can store keys (not expiring URLs).
+
+    Returns ``None`` when ``url`` is not a presigned URL of this bucket (e.g. an
+    external image URL or a bare object key), leaving the caller to keep it as-is.
+    """
+    if not url or not isinstance(url, str):
+        return None
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return None
+
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    bucket = settings.S3_BUCKET_NAME
+    path = unquote(parsed.path).lstrip("/")
+    if not path or not bucket:
+        return None
+
+    # virtual-hosted style: {bucket}.s3.{region}.amazonaws.com/{key}
+    if host.startswith(f"{bucket.lower()}."):
+        return path
+    # path-style: s3.{region}.amazonaws.com/{bucket}/{key}
+    if host.endswith("amazonaws.com") and path.lower().startswith(f"{bucket.lower()}/"):
+        return path[len(bucket) + 1 :]
+    return None
 
 
 @asynccontextmanager

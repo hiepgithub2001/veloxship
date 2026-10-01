@@ -47,6 +47,7 @@ async def upload_file(file: UploadFile = File(...)) -> UploadResultResponse:
 
     return UploadResultResponse(
         key=key,
+        url=storage_helpers.generate_presigned_url(key),
         mime_type=validated.mime_type,
         size_bytes=size,
         ext=validated.ext,

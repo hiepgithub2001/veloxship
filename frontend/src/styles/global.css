@@ -236,15 +236,130 @@ body {
     grid-template-columns: 1fr;
   }
 }
-.bill-comment-composer {
+.comment-composer {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
 }
-.bill-comment-composer-actions {
+.comment-composer-actions {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+.comment-list {
+  display: grid;
+  gap: 12px;
+}
+.comment-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.comment-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.comment-item-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.comment-item-content {
+  flex: 1;
+  min-width: 0;
+}
+.comment-item-meta {
+  margin-bottom: 2px;
+}
+.comment-body {
+  color: #262626;
+  word-break: break-word;
+}
+.comment-images {
+  margin-top: 8px;
+}
+.comment-item-actions {
+  margin-top: 4px;
+}
+.comment-replies {
+  margin: 12px 0 0 34px;
+  padding-left: 16px;
+  border-left: 2px solid #f0f0f0;
+}
+.comment-replies .comment-item:last-child {
+  padding-bottom: 0;
+}
+.rich-text {
+  line-height: 1.6;
+}
+.rich-text p {
+  margin: 0 0 8px;
+}
+.rich-text p:last-child {
+  margin-bottom: 0;
+}
+.rich-text ul,
+.rich-text ol {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+.rich-text blockquote {
+  margin: 0 0 8px;
+  padding-left: 12px;
+  border-left: 3px solid #d9d9d9;
+  color: #595959;
+}
+.rich-text pre {
+  margin: 0 0 8px;
+  padding: 8px;
+  background: #f6f6f6;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.rich-text code {
+  padding: 1px 4px;
+  background: #f6f6f6;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.rich-text a {
+  color: #1677ff;
+}
+.rich-text img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+.rich-text-editor {
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.rich-text-editor:focus-within {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
+}
+.rich-text-toolbar {
+  padding: 4px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 6px 6px 0 0;
+}
+.rich-text-editor .tiptap {
+  min-height: 72px;
+  padding: 8px 12px;
+  outline: none;
+}
+.rich-text-editor .tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+.rich-text-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #bfbfbf;
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 @container bill (max-width: 600px) {
   .bill-hero-meta,

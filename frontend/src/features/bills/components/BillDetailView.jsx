@@ -10,7 +10,7 @@ import {
   updateBill,
   updateStatus,
 } from '../../../api/bills';
-import { BillCommentSection } from './BillCommentSection';
+import { CommentSection } from '../../../components/common/CommentSection';
 import { BillCommercialEditor } from './BillCommercialEditor';
 import { BillFeeEditor } from './BillFeeEditor';
 import { BillPartyEditor } from './BillPartyEditor';
@@ -192,7 +192,7 @@ export function BillDetailView({ id }) {
               }))}
             />
           </Card>
-          <BillCommentSection />
+          <CommentSection entityType="bill" entityId={id} />
         </div>
       </div>
       <StatusUpdateDrawer

@@ -45,6 +45,13 @@ _MESSAGES: dict[str, str] = {
     "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
     "CONTENT_LINES_REQUIRED": "Phiếu gửi phải có ít nhất một dòng nội dung.",
 
+    # Comments
+    "COMMENT_NOT_FOUND": "Không tìm thấy bình luận.",
+    "COMMENT_ENTITY_NOT_FOUND": "Không tìm thấy đối tượng gắn bình luận.",
+    "COMMENT_ENTITY_INVALID": "Loại đối tượng không hợp lệ.",
+    "COMMENT_PARENT_INVALID": "Bình luận trả lời không hợp lệ.",
+    "COMMENT_FORBIDDEN": "Bạn không có quyền sửa/xoá bình luận này.",
+
     # Storage / Upload
     "FILE_TYPE_NOT_ALLOWED": "Định dạng tập tin không được hỗ trợ.",
     "FILE_SIZE_EXCEEDED": "Tập tin vượt quá dung lượng cho phép.",
