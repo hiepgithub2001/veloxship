@@ -4,12 +4,13 @@
  * (via the shared BackButton) restores the exact previous view.
  */
 import { useEffect, useState } from 'react';
-import { Button, Card, Table, Typography, Space, Tag, message } from 'antd';
+import { Button, Card, Table, Typography, Space, Tag, Checkbox, Divider, Popover, message } from 'antd';
 import {
   PlusOutlined,
   PrinterOutlined,
   EyeOutlined,
   FileExcelOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -45,12 +46,42 @@ const statusText = {
 const formatAddress = (party) =>
   [party?.address_detail, party?.ward_name, party?.province_name].filter(Boolean).join(', ');
 
+// Column keys the user may show/hide from the list. `index` and `actions`
+// are always visible, so they are intentionally left out of this list.
+const TOGGLEABLE_COLUMN_KEYS = [
+  'created_at',
+  'tracking_number',
+  'sender_province',
+  'cod_amount',
+  'status',
+  'receiver_name',
+  'images',
+  'receiver_phone',
+  'receiver_address',
+  'note',
+];
+
+const COLUMN_STORAGE_KEY = 'bill-list-visible-columns';
+
+const loadVisibleColumns = () => {
+  try {
+    const raw = localStorage.getItem(COLUMN_STORAGE_KEY);
+    if (!raw) return TOGGLEABLE_COLUMN_KEYS;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return TOGGLEABLE_COLUMN_KEYS;
+    return parsed.filter((key) => TOGGLEABLE_COLUMN_KEYS.includes(key));
+  } catch {
+    return TOGGLEABLE_COLUMN_KEYS;
+  }
+};
+
 export function BillListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [printBillId, setPrintBillId] = useState(null);
   const [batchPrintIds, setBatchPrintIds] = useState(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [visibleColumnKeys, setVisibleColumnKeys] = useState(loadVisibleColumns);
 
   const status = searchParams.get('status') || null;
   const page = Number(searchParams.get('page')) || 1;
@@ -141,6 +172,15 @@ export function BillListPage() {
   };
 
   const handleSelectChange = (keys) => setSelectedRowKeys(keys);
+
+  const handleVisibleColumnsChange = (keys) => {
+    setVisibleColumnKeys(keys);
+    try {
+      localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(keys));
+    } catch {
+      // Storage may be unavailable; the selection still works for this session.
+    }
+  };
 
   const handleExportExcel = async () => {
     if (selectedRowKeys.length === 0) return;
@@ -267,6 +307,50 @@ export function BillListPage() {
     },
   ];
 
+  // Only drop a column when it is toggleable and the user hid it.
+  const visibleColumns = columns.filter(
+    (col) => !TOGGLEABLE_COLUMN_KEYS.includes(col.key) || visibleColumnKeys.includes(col.key)
+  );
+
+  const toggleableColumns = columns.filter((col) => TOGGLEABLE_COLUMN_KEYS.includes(col.key));
+
+  const columnChooser = (
+    <Popover
+      trigger="click"
+      placement="bottomRight"
+      content={
+        <div className="bill-list-column-chooser">
+          <Checkbox.Group
+            value={visibleColumnKeys}
+            onChange={handleVisibleColumnsChange}
+            className="bill-list-column-choices"
+          >
+            {toggleableColumns.map((col) => (
+              <Checkbox key={col.key} value={col.key}>
+                {col.title}
+              </Checkbox>
+            ))}
+          </Checkbox.Group>
+          <Divider />
+          <Space>
+            <Button
+              size="small"
+              type="text"
+              onClick={() => handleVisibleColumnsChange(TOGGLEABLE_COLUMN_KEYS)}
+            >
+              {t('bills.columnsSelectAll')}
+            </Button>
+            <Button size="small" type="text" onClick={() => handleVisibleColumnsChange([])}>
+              {t('bills.columnsClear')}
+            </Button>
+          </Space>
+        </div>
+      }
+    >
+      <Button icon={<SettingOutlined />}>{t('bills.columns')}</Button>
+    </Popover>
+  );
+
   const tableProps = {
     dataSource: bills,
     rowKey: 'id',
@@ -276,6 +360,7 @@ export function BillListPage() {
     rowSelection: {
       selectedRowKeys,
       onChange: handleSelectChange,
+      fixed: true,
     },
     onRow: (record) => ({
       onClick: () => openDetail(record.id),
@@ -311,20 +396,25 @@ export function BillListPage() {
           onSearch={handleSearchFilters}
           onReset={handleResetFilters}
         />
-        {selectedRowKeys.length > 0 && (
-          <Space size="middle" wrap style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <Typography.Text>
-              {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
-            </Typography.Text>
-            <Button icon={<FileExcelOutlined />} onClick={handleExportExcel}>
-              {t('bills.exportExcel')}
-            </Button>
-            <Button icon={<PrinterOutlined />} onClick={handlePrintSelected}>
-              {t('bills.print')}
-            </Button>
-          </Space>
-        )}
-        <Table {...tableProps} columns={columns} pagination={pagination} />
+        <div className="bill-list-toolbar">
+          {selectedRowKeys.length > 0 ? (
+            <Space size="middle" wrap>
+              <Typography.Text>
+                {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
+              </Typography.Text>
+              <Button icon={<FileExcelOutlined />} onClick={handleExportExcel}>
+                {t('bills.exportExcel')}
+              </Button>
+              <Button icon={<PrinterOutlined />} onClick={handlePrintSelected}>
+                {t('bills.print')}
+              </Button>
+            </Space>
+          ) : (
+            <span />
+          )}
+          {columnChooser}
+        </div>
+        <Table {...tableProps} columns={visibleColumns} pagination={pagination} />
       </Card>
       <BillPdfPreview
         billId={printBillId}
