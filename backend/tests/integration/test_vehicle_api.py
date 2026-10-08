@@ -16,6 +16,26 @@ from app.db.session import get_db
 from app.main import app
 from app.models.depot import Depot
 from app.models.user import User
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _seed_roles(engine):
+    """Seed default roles so the users.role FK is satisfied in integration tests."""
+    from app.models.permission import Role
+
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
+        for code, name in [
+            ("admin", "Quản trị viên"),
+            ("operator", "Nhân viên quầy"),
+            ("shipper", "Bưu tá"),
+            ("depot_manager", "Thủ kho"),
+            ("cashier", "Thủ quỹ"),
+            ("accountant", "Kế toán"),
+        ]:
+            session.add(Role(code=code, name=name))
+        await session.commit()
+    yield
 from app.models.vehicle import Vehicle
 
 # ---------------------------------------------------------------------------
@@ -540,11 +560,12 @@ class TestPagination:
     async def test_invalid_page_size_rejected(
         self, client: AsyncClient, auth_headers: dict
     ):
-        """page_size > 100 returns 422."""
+        """page_size > 100 returns 400 VALIDATION_ERROR (custom handler)."""
         resp = await client.get(
             "/api/v1/vehicles", params={"page_size": 200}, headers=auth_headers
         )
-        assert resp.status_code == 422
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "VALIDATION_ERROR"
 
 
 # ---------------------------------------------------------------------------

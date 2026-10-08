@@ -6,7 +6,7 @@ import { useState, useMemo, useRef, useCallback } from 'react';
 import { Select, Spin } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 
-import { getUsers } from '../../api/users';
+import { getUserOptions } from '../../api/users';
 
 /**
  * @param {object} props
@@ -33,13 +33,13 @@ export default function UserSelect({
 
   const { data, isLoading } = useQuery({
     queryKey: ['users-select', search, role],
-    queryFn: () => getUsers({ search: search || undefined, role }),
+    queryFn: () => getUserOptions({ search: search || undefined, role }),
     staleTime: 30_000,
   });
 
   const options = useMemo(() => {
-    if (!data?.items) return [];
-    return data.items.map((user) => ({
+    if (!data) return [];
+    return data.map((user) => ({
       value: user.id,
       label: `${user.full_name} (${user.username})`,
     }));

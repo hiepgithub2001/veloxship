@@ -6,7 +6,9 @@ from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import get_message
+from app.core.permissions import ADMIN_ROLE
 from app.core.security import decode_token
+from app.crud import permission as permission_crud
 from app.db.session import get_db
 from app.models.user import User
 
@@ -59,6 +61,30 @@ def require_role(*roles: str):
 
     async def _check(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=get_message("FORBIDDEN"),
+            )
+        return current_user
+
+    return _check
+
+
+def require_permission(action: str):
+    """Factory returning a dependency enforcing a single fine-grained action.
+
+    Users with the reserved ``admin`` role bypass the check. Any other user must
+    hold `action` through their own role's `role_permissions`.
+    """
+
+    async def _check(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        if current_user.role == ADMIN_ROLE:
+            return current_user
+        actions = await permission_crud.get_role_permission_actions(db, current_user.role)
+        if action not in actions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=get_message("FORBIDDEN"),

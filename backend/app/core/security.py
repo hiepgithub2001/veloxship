@@ -1,5 +1,7 @@
 """Password hashing and JWT token helpers."""
 
+import secrets
+import string
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
@@ -8,6 +10,13 @@ from passlib.context import CryptContext
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+_TEMP_PASSWORD_ALPHABET = string.ascii_letters + string.digits
+
+
+def generate_password(length: int = 12) -> str:
+    """Generate a random temporary password (letters + digits)."""
+    return "".join(secrets.choice(_TEMP_PASSWORD_ALPHABET) for _ in range(length))
 
 
 def hash_password(password: str) -> str:

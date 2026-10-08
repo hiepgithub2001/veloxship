@@ -1,13 +1,17 @@
 """User (Nhân viên) model."""
 
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.depot import Depot
+    from app.models.permission import Role
 
 
 class User(Base):
@@ -15,20 +19,14 @@ class User(Base):
 
     __tablename__ = "users"
 
-    __table_args__ = (
-        CheckConstraint(
-            "role IN ('shipper', 'depot_manager', 'cashier', 'accountant', 'operator', 'admin')",
-            name="ck_users_role",
-        ),
-    )
-
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     full_name: Mapped[str] = mapped_column(Text, nullable=False)
     phone: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
+    avatar: Mapped[str | None] = mapped_column(Text, nullable=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     role: Mapped[str] = mapped_column(
-        String, nullable=False, default="operator",
+        Text, ForeignKey("roles.code"), nullable=False, default="operator",
     )
     user_metadata: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True,
@@ -45,6 +43,23 @@ class User(Base):
     )
 
     depot: Mapped["Depot | None"] = relationship("Depot", back_populates="users")
+    role_ref: Mapped["Role | None"] = relationship("Role")
+
+    @property
+    def department(self) -> str | None:
+        return (self.user_metadata or {}).get("department")
+
+    @property
+    def position(self) -> str | None:
+        return (self.user_metadata or {}).get("position")
+
+    @property
+    def employee_code(self) -> str | None:
+        return (self.user_metadata or {}).get("employee_code")
+
+    @property
+    def role_name(self) -> str | None:
+        return self.role_ref.name if self.role_ref else None
 
     def __repr__(self) -> str:
         return f"<User id={self.id} username={self.username} role={self.role}>"

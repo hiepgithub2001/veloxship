@@ -64,7 +64,7 @@ body {
 }
 
 .global-bill-search {
-  width: min(360px, 36vw);
+  width: min(520px, 48vw);
 }
 
 .global-bill-search-option {
@@ -86,6 +86,9 @@ body {
     margin: 12px !important;
   }
   .app-user-name {
+    display: none;
+  }
+  .app-create-bill-label {
     display: none;
   }
   .bill-workspace {

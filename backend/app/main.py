@@ -6,9 +6,23 @@ import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, bills, comments, customers, depots, files, locations, service_tiers, vehicles
-from app.core.exceptions import register_exception_handlers
 import app.models  # noqa: F401
+from app.api.v1 import (
+    auth,
+    bills,
+    comments,
+    customers,
+    departments,
+    depots,
+    files,
+    locations,
+    permissions,
+    positions,
+    service_tiers,
+    users,
+    vehicles,
+)
+from app.core.exceptions import register_exception_handlers
 
 structlog.configure(
     processors=[
@@ -60,8 +74,12 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(bills.router, prefix="/api/v1")
 app.include_router(comments.router, prefix="/api/v1")
 app.include_router(customers.router, prefix="/api/v1")
+app.include_router(departments.router, prefix="/api/v1")
 app.include_router(depots.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
+app.include_router(permissions.router, prefix="/api/v1")
+app.include_router(positions.router, prefix="/api/v1")
 app.include_router(service_tiers.router, prefix="/api/v1")
 app.include_router(locations.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")
 app.include_router(vehicles.router, prefix="/api/v1")

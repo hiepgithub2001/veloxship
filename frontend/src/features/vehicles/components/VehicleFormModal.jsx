@@ -237,8 +237,7 @@ export function VehicleFormModal({ open, onClose, vehicle, onSuccess }) {
               <UserSelect
                 value={field.value}
                 onChange={field.onChange}
-                role="shipper"
-                placeholder="Chọn tài xế (tùy chọn)"
+                placeholder="Chọn người phụ trách (tùy chọn)"
                 style={{ width: '100%' }}
               />
             )}

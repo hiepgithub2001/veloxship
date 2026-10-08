@@ -88,6 +88,50 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Error'
+    patch:
+      tags: [auth]
+      summary: Cập nhật hồ sơ của người dùng hiện tại
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+
+  /auth/change-password:
+    post:
+      tags: [auth]
+      summary: Đổi mật khẩu của người dùng hiện tại
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePasswordResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
 
   /service-tiers:
     get:
@@ -441,10 +485,45 @@ components:
         id: { type: integer, format: int64 }
         username: { type: string }
         full_name: { type: string }
+        phone: { type: string, nullable: true }
+        avatar:
+          type: string
+          nullable: true
+          description: URL tạm (presigned) của ảnh đại diện.
         role:
           type: string
-          enum: [staff, supervisor, admin]
+          description: Mã vai trò (động, tham chiếu bảng roles).
         is_active: { type: boolean }
+        department: { type: string, nullable: true }
+        position: { type: string, nullable: true }
+        employee_code: { type: string, nullable: true }
+        depot_id: { type: integer, format: int64, nullable: true }
+        permissions:
+          type: array
+          items: { type: string }
+
+    ProfileUpdate:
+      type: object
+      properties:
+        full_name: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        avatar:
+          type: string
+          nullable: true
+          description: S3 object key; truyền null để xoá ảnh đại diện.
+
+    ChangePasswordRequest:
+      type: object
+      required: [current_password, new_password]
+      properties:
+        current_password: { type: string, format: password }
+        new_password: { type: string, format: password, minLength: 6 }
+
+    ChangePasswordResponse:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
 
     ServiceTier:
       type: object

@@ -8,6 +8,9 @@ _MESSAGES: dict[str, str] = {
     "UNAUTHORIZED": "Bạn chưa đăng nhập.",
     "FORBIDDEN": "Bạn không có quyền thực hiện thao tác này.",
     "USER_INACTIVE": "Tài khoản đã bị vô hiệu hoá.",
+    "CURRENT_PASSWORD_INCORRECT": "Mật khẩu hiện tại không đúng.",
+    "NEW_PASSWORD_SAME_AS_CURRENT": "Mật khẩu mới không được trùng với mật khẩu hiện tại.",
+    "PASSWORD_CHANGED": "Đổi mật khẩu thành công.",
 
     # Bills
     "BILL_NOT_FOUND": "Không tìm thấy phiếu gửi.",
@@ -33,6 +36,23 @@ _MESSAGES: dict[str, str] = {
     "DEPOT_NOT_FOUND": "Không tìm thấy bưu cục.",
     "DEPOT_CODE_EXISTS": "Mã bưu cục đã tồn tại.",
     "WARD_NOT_FOUND": "Mã phường/xã không hợp lệ.",
+
+    # Users / IAM
+    "USER_NOT_FOUND": "Không tìm thấy nhân viên.",
+    "USERNAME_EXISTS": "Tên đăng nhập đã tồn tại.",
+    "PHONE_EXISTS": "Số điện thoại đã được sử dụng.",
+    "CANNOT_LOCK_SELF": "Bạn không thể tự khóa tài khoản của chính mình.",
+    "DEPARTMENT_IN_USE": "Phòng ban đang được nhân viên sử dụng, không thể xóa.",
+    "POSITION_IN_USE": "Chức vụ đang được nhân viên sử dụng, không thể xóa.",
+
+    # Roles & Permissions
+    "ROLE_NOT_FOUND": "Không tìm thấy vai trò.",
+    "ROLE_CODE_EXISTS": "Mã vai trò đã tồn tại.",
+    "ROLE_NAME_EXISTS": "Tên vai trò đã tồn tại.",
+    "ROLE_INACTIVE": "Vai trò đang bị vô hiệu hóa.",
+    "ROLE_IN_USE": "Vai trò đang được nhân viên sử dụng, không thể xóa.",
+    "CANNOT_DELETE_ADMIN_ROLE": "Không thể xóa vai trò quản trị viên.",
+    "PERMISSION_ACTION_INVALID": "Quyền không hợp lệ.",
 
     # Vehicles
     "VEHICLE_NOT_FOUND": "Không tìm thấy phương tiện.",

@@ -65,9 +65,16 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
+  // Re-fetch the current user (e.g. after editing profile/avatar) and update state.
+  const refreshMe = useCallback(async () => {
+    const user = await authApi.me();
+    setCurrentUser(user);
+    return user;
+  }, []);
+
   const value = useMemo(
-    () => ({ currentUser, loading, login, logout, isAuthenticated: !!accessToken }),
-    [currentUser, loading, login, logout, accessToken],
+    () => ({ currentUser, loading, login, logout, refreshMe, isAuthenticated: !!accessToken }),
+    [currentUser, loading, login, logout, refreshMe, accessToken],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

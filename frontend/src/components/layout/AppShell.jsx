@@ -15,6 +15,7 @@ import {
   MenuOutlined,
   BankOutlined,
   CarOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
 import { t } from '../../i18n/vi';
@@ -40,11 +41,6 @@ export function AppShell() {
       label: t('layout.bills'),
     },
     {
-      key: '/phieu-gui/tao-moi',
-      icon: <PlusOutlined />,
-      label: t('layout.createBill'),
-    },
-    {
       key: '/khach-hang',
       icon: <TeamOutlined />,
       label: t('layout.customers'),
@@ -59,9 +55,28 @@ export function AppShell() {
       icon: <CarOutlined />,
       label: t('layout.vehicles'),
     },
+    ...(currentUser?.role === 'admin'
+      ? [
+          {
+            key: '/nhan-vien',
+            icon: <UserOutlined />,
+            label: t('layout.staff'),
+          },
+          {
+            key: '/phan-quyen',
+            icon: <SafetyCertificateOutlined />,
+            label: t('layout.permissions'),
+          },
+        ]
+      : []),
   ];
 
   const userMenuItems = [
+    {
+      key: 'account',
+      icon: <UserOutlined />,
+      label: t('account.title'),
+    },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
@@ -76,7 +91,9 @@ export function AppShell() {
   };
 
   const handleUserMenuClick = ({ key }) => {
-    if (key === 'logout') {
+    if (key === 'account') {
+      navigate('/tai-khoan');
+    } else if (key === 'logout') {
       logout();
       navigate('/dang-nhap');
     }
@@ -85,9 +102,7 @@ export function AppShell() {
   // Determine which menu item is selected
   const selectedKey =
     menuItems.find((item) => location.pathname === item.key)?.key ||
-    menuItems.find(
-      (item) => location.pathname.startsWith(item.key) && item.key !== '/phieu-gui/tao-moi',
-    )?.key ||
+    menuItems.find((item) => location.pathname.startsWith(item.key))?.key ||
     '/phieu-gui';
 
   return (
@@ -164,38 +179,53 @@ export function AppShell() {
           style={{
             background: '#fff',
             padding: isMobile ? '0 12px' : '0 24px',
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 12,
             boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
             position: 'sticky',
             top: 0,
             zIndex: 5,
           }}
         >
-          <Button
-            type="text"
-            icon={
-              isMobile ? (
-                <MenuOutlined />
-              ) : collapsed ? (
-                <MenuUnfoldOutlined />
-              ) : (
-                <MenuFoldOutlined />
-              )
-            }
-            aria-label="Mở điều hướng"
-            onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}
-          />
+          <div style={{ justifySelf: 'start' }}>
+            <Button
+              type="text"
+              icon={
+                isMobile ? (
+                  <MenuOutlined />
+                ) : collapsed ? (
+                  <MenuUnfoldOutlined />
+                ) : (
+                  <MenuFoldOutlined />
+                )
+              }
+              aria-label="Mở điều hướng"
+              onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}
+            />
+          </div>
 
-          <Space size={isMobile ? 'small' : 'large'} className="app-header-actions">
+          <Space size="middle" className="app-header-actions" style={{ justifySelf: 'center' }}>
             <GlobalBillSearch />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              className="app-create-bill-btn"
+              onClick={() => navigate('/phieu-gui/tao-moi')}
+            >
+              <span className="app-create-bill-label">{t('bills.create')}</span>
+            </Button>
+          </Space>
+
+          <div style={{ justifySelf: 'end' }}>
             <Dropdown
               menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
               placement="bottomRight"
             >
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar
+                  src={currentUser?.avatar || undefined}
                   icon={<UserOutlined />}
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 />
@@ -204,7 +234,7 @@ export function AppShell() {
                 </Text>
               </Space>
             </Dropdown>
-          </Space>
+          </div>
         </Header>
 
         <Content className="app-content" style={{ margin: isMobile ? 12 : 24 }}>

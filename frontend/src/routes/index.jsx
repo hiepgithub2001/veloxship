@@ -11,6 +11,9 @@ import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
 import { DepotListPage } from '../features/depots/pages/DepotListPage';
 import { VehicleListPage } from '../features/vehicles/pages/VehicleListPage';
 import { CustomerListPage } from '../features/customers/pages/CustomerListPage';
+import { StaffPage } from '../features/staff/pages/StaffPage';
+import { PermissionPage } from '../features/permissions/pages/PermissionPage';
+import { AccountPage } from '../features/account/pages/AccountPage';
 
 const router = createBrowserRouter([
   {
@@ -52,6 +55,18 @@ const router = createBrowserRouter([
       {
         path: 'doi-xe',
         element: <VehicleListPage />,
+      },
+      {
+        path: 'nhan-vien',
+        element: <StaffPage />,
+      },
+      {
+        path: 'phan-quyen',
+        element: <PermissionPage />,
+      },
+      {
+        path: 'tai-khoan',
+        element: <AccountPage />,
       },
     ],
   },
