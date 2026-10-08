@@ -164,10 +164,10 @@ export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender'
         />
       </Form.Item>
 
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div className="party-province-ward">
         <Form.Item
           label={t('bills.province')}
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 0 }}
           validateStatus={err('province_code') ? 'error' : ''}
           help={err('province_code')?.message}
         >
@@ -195,7 +195,7 @@ export function PartyBlock({ control, errors, setValue, watch, prefix = 'sender'
         </Form.Item>
         <Form.Item
           label={t('bills.ward')}
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 0 }}
           validateStatus={err('ward_code') ? 'error' : ''}
           help={err('ward_code')?.message}
         >

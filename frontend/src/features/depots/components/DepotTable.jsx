@@ -84,6 +84,7 @@ export function DepotTable({
       dataSource={data?.items || []}
       rowKey="id"
       loading={loading}
+      scroll={{ x: 'max-content' }}
       pagination={{
         current: pagination?.current || 1,
         pageSize: pagination?.pageSize || 20,

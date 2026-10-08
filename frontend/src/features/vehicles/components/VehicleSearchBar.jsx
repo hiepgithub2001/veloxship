@@ -30,7 +30,7 @@ export function VehicleSearchBar({ onSearch, defaultValue }) {
       allowClear
       defaultValue={defaultValue}
       onChange={handleSearchInput}
-      style={{ width: 300 }}
+      style={{ width: '100%' }}
     />
   );
 }

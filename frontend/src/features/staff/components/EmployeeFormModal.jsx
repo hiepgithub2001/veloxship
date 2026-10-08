@@ -3,7 +3,7 @@
  * Shows the one-time temporary password after creation.
  */
 import { useEffect, useState } from 'react';
-import { AutoComplete, Form, Input, Modal, Select, Space, Typography, message } from 'antd';
+import { AutoComplete, Col, Form, Input, Modal, Row, Select, Typography, message } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -209,35 +209,38 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
             />
           </Form.Item>
 
-          <Space size="middle" style={{ display: 'flex' }}>
-            <Form.Item label="Phòng ban" style={{ flex: 1 }}>
-              <Controller
-                name="department"
-                control={control}
-                render={({ field }) => (
-                  <AutoComplete
-                    {...field}
-                    placeholder="Nhập hoặc chọn phòng ban"
-                    options={(departments.items || []).map((d) => ({ value: d.name }))}
-                  />
-                )}
-              />
-            </Form.Item>
-
-            <Form.Item label="Chức vụ" style={{ flex: 1 }}>
-              <Controller
-                name="position"
-                control={control}
-                render={({ field }) => (
-                  <AutoComplete
-                    {...field}
-                    placeholder="Nhập hoặc chọn chức vụ"
-                    options={(positions.items || []).map((p) => ({ value: p.name }))}
-                  />
-                )}
-              />
-            </Form.Item>
-          </Space>
+          <Row gutter={12}>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Phòng ban">
+                <Controller
+                  name="department"
+                  control={control}
+                  render={({ field }) => (
+                    <AutoComplete
+                      {...field}
+                      placeholder="Nhập hoặc chọn phòng ban"
+                      options={(departments.items || []).map((d) => ({ value: d.name }))}
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Chức vụ">
+                <Controller
+                  name="position"
+                  control={control}
+                  render={({ field }) => (
+                    <AutoComplete
+                      {...field}
+                      placeholder="Nhập hoặc chọn chức vụ"
+                      options={(positions.items || []).map((p) => ({ value: p.name }))}
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item label="Mã nhân viên">
             <Controller

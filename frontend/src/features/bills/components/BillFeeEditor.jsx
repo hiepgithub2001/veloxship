@@ -94,7 +94,7 @@ export function BillFeeEditor({ bill, saving, onSave }) {
                   formatter={vndFormatter}
                   parser={vndParser}
                   addonAfter="₫"
-                  style={{ width: 200 }}
+                  style={{ width: 200, maxWidth: '100%', minWidth: 120 }}
                 />
               </div>
             ))}

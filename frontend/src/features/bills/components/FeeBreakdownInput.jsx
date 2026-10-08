@@ -73,14 +73,11 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
       </div>
 
       {/* Price rows — right-aligned */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+      <div className="bill-fee-inputs">
         {feeFields.map(({ key, label }) => (
-          <div
-            key={key}
-            style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 12 }}
-          >
-            <Text style={{ width: 160, textAlign: 'right' }}>{label}:</Text>
-            <Space.Compact style={{ width: 200 }}>
+          <div key={key} className="bill-fee-input-row">
+            <Text className="fee-label">{label}:</Text>
+            <Space.Compact className="fee-control">
               <InputNumber
                 min={0}
                 step={1000}
@@ -101,30 +98,11 @@ export function FeeBreakdownInput({ watch, setValue, errors }) {
           </div>
         ))}
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginTop: 12,
-            padding: '8px 0',
-            borderTop: '2px solid var(--color-primary)',
-            gap: 12,
-            width: 372,
-          }}
-        >
-          <Text strong style={{ width: 160, fontSize: 14, textAlign: 'right' }}>
+        <div className="bill-fee-total-row">
+          <Text strong className="fee-label">
             {t('bills.feeTotal')}:
           </Text>
-          <Text
-            strong
-            style={{
-              display: 'block',
-              width: 200,
-              textAlign: 'right',
-              fontSize: 16,
-              color: 'var(--color-primary)',
-            }}
-          >
+          <Text strong className="fee-total">
             {formatVND(total)}
           </Text>
         </div>

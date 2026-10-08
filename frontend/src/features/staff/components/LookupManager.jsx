@@ -77,6 +77,7 @@ export function LookupManager({ singular, items, loading, onRename, onDelete }) 
         loading={loading}
         pagination={false}
         size="middle"
+        scroll={{ x: 'max-content' }}
       />
       <Modal
         title={`Đổi tên ${singular}`}

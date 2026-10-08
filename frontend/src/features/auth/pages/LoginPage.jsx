@@ -38,12 +38,14 @@ export function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 16,
         background: 'linear-gradient(135deg, #1A1A1A 0%, #2D1A1F 50%, #1A1A1A 100%)',
       }}
     >
       <Card
         style={{
-          width: 400,
+          width: '100%',
+          maxWidth: 400,
           borderRadius: 12,
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
         }}

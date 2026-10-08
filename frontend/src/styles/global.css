@@ -385,6 +385,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 16px;
 }
 /* Bill list column chooser */
@@ -392,6 +394,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 8px;
 }
 .bill-list-column-chooser {
@@ -404,4 +408,110 @@ body {
 }
 .bill-list-column-chooser .ant-divider {
   margin: 8px 0;
+}
+
+/* Responsive page chrome — shared helpers (see conventions: antd breakpoints 576/768) */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.page-header h2 {
+  margin: 0;
+}
+
+/* Bill create: sender + receiver cards side by side, stacked on small screens */
+.bill-party-pair {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.bill-party-pair > .ant-card {
+  flex: 1;
+  min-width: 0;
+}
+
+/* PartyBlock: province + ward selects side by side */
+.party-province-ward {
+  display: flex;
+  gap: 12px;
+}
+
+/* FeeBreakdownInput: right-aligned price rows (create page) */
+.bill-fee-inputs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.bill-fee-input-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 12px;
+  width: 372px;
+  max-width: 100%;
+}
+.bill-fee-input-row .fee-label {
+  width: 160px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.bill-fee-input-row .fee-control {
+  flex: 1;
+  min-width: 0;
+}
+.bill-fee-total-row {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 8px 0;
+  border-top: 2px solid var(--color-primary);
+  gap: 12px;
+  width: 372px;
+  max-width: 100%;
+}
+.bill-fee-total-row .fee-label {
+  width: 160px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 14px;
+}
+.bill-fee-total-row .fee-total {
+  flex: 1;
+  text-align: right;
+  font-size: 16px;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .bill-party-pair {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 576px) {
+  .app-content {
+    margin: 8px !important;
+  }
+  .party-province-ward {
+    flex-direction: column;
+    gap: 0;
+  }
+  .bill-fee-inputs {
+    align-items: stretch;
+  }
+  .bill-fee-input-row,
+  .bill-fee-total-row {
+    width: 100%;
+  }
+  .bill-fee-input-row .fee-label,
+  .bill-fee-total-row .fee-label {
+    width: auto;
+    flex: 0 0 auto;
+    text-align: left;
+  }
 }

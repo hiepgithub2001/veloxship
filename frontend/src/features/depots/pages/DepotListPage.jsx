@@ -92,15 +92,8 @@ export function DepotListPage() {
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Quản lý bưu cục</h2>
+      <div className="page-header">
+        <h2>Quản lý bưu cục</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           Thêm mới
         </Button>

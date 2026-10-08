@@ -130,11 +130,11 @@ export function BillCreatePage() {
       </Title>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-          <Card style={{ flex: 1 }}>
+        <div className="bill-party-pair">
+          <Card>
             <SenderBlock control={control} errors={errors} setValue={setValue} watch={watch} />
           </Card>
-          <Card style={{ flex: 1 }}>
+          <Card>
             <ReceiverBlock control={control} errors={errors} setValue={setValue} watch={watch} />
           </Card>
         </div>

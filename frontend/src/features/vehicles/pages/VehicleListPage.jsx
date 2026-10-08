@@ -3,7 +3,7 @@
  * Composes VehicleSearchBar, VehicleFilters, VehicleTable, and VehicleFormModal.
  */
 import { useState, useCallback } from 'react';
-import { Button, message } from 'antd';
+import { Button, Col, Row, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -99,36 +99,26 @@ export function VehicleListPage() {
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Quản lý Đội xe</h2>
+      <div className="page-header">
+        <h2>Quản lý Đội xe</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           Đăng ký xe mới
         </Button>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <VehicleSearchBar onSearch={handleSearch} defaultValue={search} />
-        <VehicleFilters
-          status={status}
-          vehicleType={vehicleType}
-          onStatusChange={handleStatusChange}
-          onVehicleTypeChange={handleVehicleTypeChange}
-        />
-      </div>
+      <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={14}>
+          <VehicleSearchBar onSearch={handleSearch} defaultValue={search} />
+        </Col>
+        <Col xs={24} md={10}>
+          <VehicleFilters
+            status={status}
+            vehicleType={vehicleType}
+            onStatusChange={handleStatusChange}
+            onVehicleTypeChange={handleVehicleTypeChange}
+          />
+        </Col>
+      </Row>
 
       <VehicleTable
         data={data?.items}
