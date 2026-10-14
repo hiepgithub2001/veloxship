@@ -19,6 +19,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
 import { usePermission } from '../../auth/permissions';
+import { LOGIN_PATH } from '../../auth/redirect';
 import { Can } from '../../auth/RequirePermission';
 import { t } from '../../i18n/vi';
 import logo from '../../assets/logo.png';
@@ -106,8 +107,10 @@ export function AppShell() {
     if (key === 'account') {
       navigate('/tai-khoan');
     } else if (key === 'logout') {
+      // Deliberate sign-out: no "session expired" notice, and no `from`, so the
+      // next login lands on the role's home page rather than the old screen.
       logout();
-      navigate('/dang-nhap');
+      navigate(LOGIN_PATH);
     }
   };
 

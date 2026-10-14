@@ -39,6 +39,19 @@ class ForbiddenError(AppError):
         super().__init__(error_code, status_code=403)
 
 
+class UnauthorizedError(AppError):
+    """Missing, invalid, or expired credentials.
+
+    Used by the auth endpoints and the bearer-token dependency so a 401 returns
+    the shared `{error_code, message}` body the API contract declares, instead
+    of FastAPI's bare `{detail}`. The frontend keys its refresh-then-redirect
+    flow off the 401 status alone, so the body stays machine-readable.
+    """
+
+    def __init__(self, error_code: str = "UNAUTHORIZED"):
+        super().__init__(error_code, status_code=401)
+
+
 class InvalidFileTypeError(AppError):
     """Uploaded file type is not in the allowlist."""
 

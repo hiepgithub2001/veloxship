@@ -1,13 +1,12 @@
 """FastAPI dependencies — authentication and authorization."""
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ForbiddenError
-from app.core.i18n import get_message
+from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.permissions import ADMIN_ROLE
 from app.core.security import decode_token
 from app.crud import permission as permission_crud
@@ -30,30 +29,18 @@ async def get_current_user(
     try:
         payload = decode_token(token)
         if payload.get("type") != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=get_message("TOKEN_INVALID"),
-            )
+            raise UnauthorizedError("TOKEN_INVALID")
         user_id = int(payload["sub"])
-    except (JWTError, KeyError, ValueError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=get_message("TOKEN_INVALID"),
-        )
+    except (JWTError, KeyError, ValueError) as exc:
+        raise UnauthorizedError("TOKEN_INVALID") from exc
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=get_message("UNAUTHORIZED"),
-        )
+        raise UnauthorizedError("UNAUTHORIZED")
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=get_message("USER_INACTIVE"),
-        )
+        raise UnauthorizedError("USER_INACTIVE")
     return user
 
 

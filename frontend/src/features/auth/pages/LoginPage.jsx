@@ -1,11 +1,18 @@
 /**
  * Vietnamese login page.
+ *
+ * Also the landing spot for an expired session: when the refresh token is
+ * rejected the provider flags `sessionExpired`, which is surfaced here as a
+ * notice, and `location.state.from` sends the user back to the page they were
+ * on once they sign in again.
  */
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Button, Card, Form, Input, message, Typography } from 'antd';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Alert, Button, Card, Form, Input, message, Typography } from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuth } from '../../../auth/AuthContext';
+import { can, homePathFor } from '../../../auth/permissions';
+import { resolveReturnPath } from '../../../auth/redirect';
 import { t } from '../../../i18n/vi';
 import logo from '../../../assets/logo.png';
 
@@ -13,17 +20,40 @@ const { Title, Text } = Typography;
 
 export function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [showExpiredNotice, setShowExpiredNotice] = useState(false);
+  const {
+    login,
+    currentUser,
+    isAuthenticated,
+    loading: restoring,
+    sessionExpired,
+    clearSessionExpired,
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/phieu-gui';
+  // Surface the "session expired" notice once, then clear the flag so a later
+  // manual visit to this page does not repeat it.
+  useEffect(() => {
+    if (sessionExpired) {
+      setShowExpiredNotice(true);
+      clearSessionExpired();
+    }
+  }, [sessionExpired, clearSessionExpired]);
+
+  // A signed-in user has no business on the login page.
+  if (!restoring && isAuthenticated) {
+    return <Navigate to={homePathFor((action) => can(currentUser, action))} replace />;
+  }
 
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      await login(values.username, values.password);
-      navigate(from, { replace: true });
+      const user = await login(values.username, values.password);
+      // Fall back to the first page this role may actually open, so a user
+      // without `bill:view` is not dropped on a 403.
+      const fallback = homePathFor((action) => can(user, action));
+      navigate(resolveReturnPath(location.state?.from, fallback), { replace: true });
     } catch {
       message.error(t('auth.loginFailed'));
     } finally {
@@ -57,6 +87,18 @@ export function LoginPage() {
           </Title>
           <Text type="secondary">{t('app.tagline')}</Text>
         </div>
+
+        {showExpiredNotice && (
+          <Alert
+            type="warning"
+            showIcon
+            message={t('auth.sessionExpired')}
+            style={{ marginBottom: 16 }}
+            id="login-session-expired"
+            closable
+            onClose={() => setShowExpiredNotice(false)}
+          />
+        )}
 
         <Form layout="vertical" onFinish={handleSubmit} autoComplete="off">
           <Form.Item

@@ -1,9 +1,10 @@
 """Auth API — login, refresh, me, and self-service account management."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.exceptions import UnauthorizedError
 from app.core.i18n import get_message
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.crud import audit as audit_crud
@@ -55,10 +56,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
             action="auth.failed_login",
             details={"username": body.username},
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=get_message("INVALID_CREDENTIALS"),
-        )
+        raise UnauthorizedError("INVALID_CREDENTIALS")
 
     await audit_crud.log_event(
         db,
@@ -86,25 +84,18 @@ async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
     try:
         payload = decode_token(body.refresh_token)
         if payload.get("type") != "refresh":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=get_message("TOKEN_INVALID"),
-            )
+            raise UnauthorizedError("TOKEN_INVALID")
         user_id = int(payload["sub"])
-        username = payload["username"]
-    except (JWTError, KeyError, ValueError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=get_message("TOKEN_INVALID"),
-        )
+    except (JWTError, KeyError, ValueError) as exc:
+        raise UnauthorizedError("TOKEN_INVALID") from exc
 
-    # Verify user still exists and is active
-    user = await user_crud.get_by_username(db, username)
-    if user is None or not user.is_active or user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=get_message("TOKEN_INVALID"),
-        )
+    # Look the user up by id (the stable `sub` claim), not username: a rename
+    # must not invalidate an otherwise valid refresh token. Still require the
+    # account to exist and be active, so deactivation ends the session at the
+    # next refresh.
+    user = await user_crud.get_user(db, user_id)
+    if user is None or not user.is_active:
+        raise UnauthorizedError("TOKEN_INVALID")
 
     access_token = create_access_token(user.id, user.username)
     refresh_token = create_refresh_token(user.id, user.username)
