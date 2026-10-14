@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_user
+from app.api.v1.deps import require_permission
 from app.crud import vehicle as vehicle_crud
 from app.db.session import get_db
 from app.models.user import User
@@ -22,7 +22,7 @@ async def list_vehicles(
     vehicle_type: str | None = Query(None),
     latest_depot_id: int | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("fleet:view")),
 ):
     """List vehicles with pagination, search, and filters."""
     items, total = await vehicle_crud.list_vehicles(
@@ -46,7 +46,7 @@ async def list_vehicles(
 async def create_vehicle(
     body: VehicleCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("fleet:manage")),
 ):
     """Create a new vehicle."""
     vehicle = await vehicle_service.create_vehicle(db, body)
@@ -58,7 +58,7 @@ async def update_vehicle(
     vehicle_id: int,
     body: VehicleUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("fleet:manage")),
 ):
     """Partial update a vehicle."""
     vehicle = await vehicle_service.update_vehicle(db, vehicle_id, body)

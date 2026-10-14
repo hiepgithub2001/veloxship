@@ -19,7 +19,7 @@ const vndFormatter = (value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 const vndParser = (value) => value.replace(/\./g, '');
 
 /** Inline fee editor for the bill detail view (fee edit only while `created`). */
-export function BillFeeEditor({ bill, saving, onSave }) {
+export function BillFeeEditor({ bill, saving, onSave, canEdit = true }) {
   const [editing, setEditing] = useState(false);
   const {
     handleSubmit,
@@ -65,7 +65,7 @@ export function BillFeeEditor({ bill, saving, onSave }) {
           <h3>Cước phí & thanh toán</h3>
           <span>Trình bày theo bố cục phiếu gửi</span>
         </div>
-        {bill.status === 'created' && !editing && (
+        {canEdit && bill.status === 'created' && !editing && (
           <Button onClick={() => setEditing(true)}>Chỉnh sửa</Button>
         )}
       </div>
@@ -94,7 +94,7 @@ export function BillFeeEditor({ bill, saving, onSave }) {
                   formatter={vndFormatter}
                   parser={vndParser}
                   addonAfter="₫"
-                  style={{ width: 200 }}
+                  style={{ width: 200, maxWidth: '100%', minWidth: 120 }}
                 />
               </div>
             ))}

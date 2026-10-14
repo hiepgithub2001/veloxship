@@ -1,8 +1,14 @@
 /**
  * Application routes — Vietnamese URL paths.
+ *
+ * Every business route is wrapped in `<RequirePermission>` so a user without
+ * the matching action sees a 403 result instead of the page. The backend
+ * enforces the same actions, so this is a UX gate only.
  */
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { RequirePermission } from '../auth/RequirePermission';
+import { homePathFor, usePermission } from '../auth/permissions';
 import { AppShell } from '../components/layout/AppShell';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { BillListPage } from '../features/bills/pages/BillListPage';
@@ -11,6 +17,15 @@ import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
 import { DepotListPage } from '../features/depots/pages/DepotListPage';
 import { VehicleListPage } from '../features/vehicles/pages/VehicleListPage';
 import { CustomerListPage } from '../features/customers/pages/CustomerListPage';
+import { StaffPage } from '../features/staff/pages/StaffPage';
+import { PermissionPage } from '../features/permissions/pages/PermissionPage';
+import { AccountPage } from '../features/account/pages/AccountPage';
+
+/** Send the user to the first page their role may open (never a guaranteed 403). */
+function HomeRedirect() {
+  const { can } = usePermission();
+  return <Navigate to={homePathFor(can)} replace />;
+}
 
 const router = createBrowserRouter([
   {
@@ -27,31 +42,75 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/phieu-gui" replace />,
+        element: <HomeRedirect />,
       },
       {
         path: 'phieu-gui',
-        element: <BillListPage />,
+        element: (
+          <RequirePermission permission="bill:view">
+            <BillListPage />
+          </RequirePermission>
+        ),
       },
       {
         path: 'phieu-gui/tao-moi',
-        element: <BillCreatePage />,
+        element: (
+          <RequirePermission permission="bill:create">
+            <BillCreatePage />
+          </RequirePermission>
+        ),
       },
       {
         path: 'phieu-gui/:id',
-        element: <BillDetailPage />,
+        element: (
+          <RequirePermission permission="bill:view">
+            <BillDetailPage />
+          </RequirePermission>
+        ),
       },
       {
         path: 'khach-hang',
-        element: <CustomerListPage />,
+        element: (
+          <RequirePermission permission="customer:view">
+            <CustomerListPage />
+          </RequirePermission>
+        ),
       },
       {
         path: 'buu-cuc',
-        element: <DepotListPage />,
+        element: (
+          <RequirePermission permission="depot:view">
+            <DepotListPage />
+          </RequirePermission>
+        ),
       },
       {
         path: 'doi-xe',
-        element: <VehicleListPage />,
+        element: (
+          <RequirePermission permission="fleet:view">
+            <VehicleListPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'nhan-vien',
+        element: (
+          <RequirePermission permission="iam:view_users">
+            <StaffPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'phan-quyen',
+        element: (
+          <RequirePermission permission="iam:manage_permissions">
+            <PermissionPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'tai-khoan',
+        element: <AccountPage />,
       },
     ],
   },

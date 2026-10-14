@@ -11,7 +11,7 @@ const fields = [
   ['province_name', 'Tỉnh/TP'],
 ];
 
-export function BillPartyEditor({ bill, side, saving, onSave }) {
+export function BillPartyEditor({ bill, side, saving, onSave, canEdit = true }) {
   const party = bill[side];
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(party);
@@ -20,7 +20,8 @@ export function BillPartyEditor({ bill, side, saving, onSave }) {
     setDraft(party);
     setEditing(false);
   }, [party]);
-  const editable = bill.status === 'created' || (side === 'receiver' && postPickup);
+  const editable =
+    canEdit && (bill.status === 'created' || (side === 'receiver' && postPickup));
   const set = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
   const save = () => {
     onSave({

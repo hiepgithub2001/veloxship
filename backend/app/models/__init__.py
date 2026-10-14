@@ -10,7 +10,7 @@ from .depot import Depot
 from .finance import CodHandover, CodHandoverItem, DepotLedger
 from .linehaul import Linehaul
 from .partner import Partner, PartnerTariff
-from .permission import PermissionAction, PermissionGroup, UserPermissionGroup
+from .permission import Role, RolePermission
 from .province import Province
 from .service_tier import ServiceTier
 from .user import User
@@ -32,12 +32,11 @@ __all__ = [
     "Linehaul",
     "Partner",
     "PartnerTariff",
-    "PermissionAction",
-    "PermissionGroup",
     "Province",
+    "Role",
+    "RolePermission",
     "ServiceTier",
     "User",
-    "UserPermissionGroup",
     "Vehicle",
     "Ward",
 ]

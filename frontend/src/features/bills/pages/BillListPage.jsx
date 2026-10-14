@@ -16,6 +16,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { t } from '../../../i18n/vi';
+import { usePermission } from '../../../auth/permissions';
 import { listBills, exportBills } from '../../../api/bills';
 import { formatVND, formatViDate } from '../../../lib/format';
 import { ImagePreviewGroup } from '../../../components/common/ImagePreviewGroup';
@@ -76,6 +77,7 @@ const loadVisibleColumns = () => {
 };
 
 export function BillListPage() {
+  const { can } = usePermission();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [printBillId, setPrintBillId] = useState(null);
@@ -374,14 +376,16 @@ export function BillListPage() {
         <Title level={3} style={{ margin: 0 }}>
           {t('bills.title')}
         </Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => navigate('/phieu-gui/tao-moi')}
-          id="create-bill-btn"
-        >
-          {t('bills.create')}
-        </Button>
+        {can('bill:create') && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => navigate('/phieu-gui/tao-moi')}
+            id="create-bill-btn"
+          >
+            {t('bills.create')}
+          </Button>
+        )}
       </div>
       <Card
       >

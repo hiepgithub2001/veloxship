@@ -15,8 +15,11 @@ import {
   MenuOutlined,
   BankOutlined,
   CarOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
+import { usePermission } from '../../auth/permissions';
+import { Can } from '../../auth/RequirePermission';
 import { t } from '../../i18n/vi';
 import logo from '../../assets/logo.png';
 import { GlobalBillSearch } from './GlobalBillSearch';
@@ -24,44 +27,68 @@ import { GlobalBillSearch } from './GlobalBillSearch';
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
 
+// Sidebar menu — each entry declares the action its page requires.
+const MENU_ITEMS = [
+  {
+    key: '/phieu-gui',
+    icon: <FileTextOutlined />,
+    label: t('layout.bills'),
+    permission: 'bill:view',
+  },
+  {
+    key: '/khach-hang',
+    icon: <TeamOutlined />,
+    label: t('layout.customers'),
+    permission: 'customer:view',
+  },
+  {
+    key: '/buu-cuc',
+    icon: <BankOutlined />,
+    label: t('layout.depots'),
+    permission: 'depot:view',
+  },
+  {
+    key: '/doi-xe',
+    icon: <CarOutlined />,
+    label: t('layout.vehicles'),
+    permission: 'fleet:view',
+  },
+  {
+    key: '/nhan-vien',
+    icon: <UserOutlined />,
+    label: t('layout.staff'),
+    permission: 'iam:view_users',
+  },
+  {
+    key: '/phan-quyen',
+    icon: <SafetyCertificateOutlined />,
+    label: t('layout.permissions'),
+    permission: 'iam:manage_permissions',
+  },
+];
+
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const { currentUser, logout } = useAuth();
+  const { can } = usePermission();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
-    {
-      key: '/phieu-gui',
-      icon: <FileTextOutlined />,
-      label: t('layout.bills'),
-    },
-    {
-      key: '/phieu-gui/tao-moi',
-      icon: <PlusOutlined />,
-      label: t('layout.createBill'),
-    },
-    {
-      key: '/khach-hang',
-      icon: <TeamOutlined />,
-      label: t('layout.customers'),
-    },
-    {
-      key: '/buu-cuc',
-      icon: <BankOutlined />,
-      label: t('layout.depots'),
-    },
-    {
-      key: '/doi-xe',
-      icon: <CarOutlined />,
-      label: t('layout.vehicles'),
-    },
-  ];
+  const menuItems = MENU_ITEMS.filter((item) => can(item.permission)).map((item) => ({
+    key: item.key,
+    icon: item.icon,
+    label: item.label,
+  }));
 
   const userMenuItems = [
+    {
+      key: 'account',
+      icon: <UserOutlined />,
+      label: t('account.title'),
+    },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
@@ -76,7 +103,9 @@ export function AppShell() {
   };
 
   const handleUserMenuClick = ({ key }) => {
-    if (key === 'logout') {
+    if (key === 'account') {
+      navigate('/tai-khoan');
+    } else if (key === 'logout') {
       logout();
       navigate('/dang-nhap');
     }
@@ -85,9 +114,7 @@ export function AppShell() {
   // Determine which menu item is selected
   const selectedKey =
     menuItems.find((item) => location.pathname === item.key)?.key ||
-    menuItems.find(
-      (item) => location.pathname.startsWith(item.key) && item.key !== '/phieu-gui/tao-moi',
-    )?.key ||
+    menuItems.find((item) => location.pathname.startsWith(item.key))?.key ||
     '/phieu-gui';
 
   return (
@@ -164,38 +191,55 @@ export function AppShell() {
           style={{
             background: '#fff',
             padding: isMobile ? '0 12px' : '0 24px',
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 12,
             boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
             position: 'sticky',
             top: 0,
             zIndex: 5,
           }}
         >
-          <Button
-            type="text"
-            icon={
-              isMobile ? (
-                <MenuOutlined />
-              ) : collapsed ? (
-                <MenuUnfoldOutlined />
-              ) : (
-                <MenuFoldOutlined />
-              )
-            }
-            aria-label="Mở điều hướng"
-            onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}
-          />
+          <div style={{ justifySelf: 'start' }}>
+            <Button
+              type="text"
+              icon={
+                isMobile ? (
+                  <MenuOutlined />
+                ) : collapsed ? (
+                  <MenuUnfoldOutlined />
+                ) : (
+                  <MenuFoldOutlined />
+                )
+              }
+              aria-label="Mở điều hướng"
+              onClick={() => (isMobile ? setMobileNavOpen(true) : setCollapsed(!collapsed))}
+            />
+          </div>
 
-          <Space size={isMobile ? 'small' : 'large'} className="app-header-actions">
+          <Space size="middle" className="app-header-actions" style={{ justifySelf: 'center' }}>
             <GlobalBillSearch />
+            <Can permission="bill:create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                className="app-create-bill-btn"
+                onClick={() => navigate('/phieu-gui/tao-moi')}
+              >
+                <span className="app-create-bill-label">{t('bills.create')}</span>
+              </Button>
+            </Can>
+          </Space>
+
+          <div style={{ justifySelf: 'end' }}>
             <Dropdown
               menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
               placement="bottomRight"
             >
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar
+                  src={currentUser?.avatar || undefined}
                   icon={<UserOutlined />}
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 />
@@ -204,7 +248,7 @@ export function AppShell() {
                 </Text>
               </Space>
             </Dropdown>
-          </Space>
+          </div>
         </Header>
 
         <Content className="app-content" style={{ margin: isMobile ? 12 : 24 }}>

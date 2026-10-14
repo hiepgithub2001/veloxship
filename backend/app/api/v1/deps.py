@@ -3,11 +3,16 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ForbiddenError
 from app.core.i18n import get_message
+from app.core.permissions import ADMIN_ROLE
 from app.core.security import decode_token
+from app.crud import permission as permission_crud
 from app.db.session import get_db
+from app.models.permission import Role
 from app.models.user import User
 
 bearer_scheme = HTTPBearer()
@@ -36,8 +41,6 @@ async def get_current_user(
             detail=get_message("TOKEN_INVALID"),
         )
 
-    from sqlalchemy import select
-
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
@@ -54,15 +57,48 @@ async def get_current_user(
     return user
 
 
+async def authorize(db: AsyncSession, user: User, *actions: str) -> None:
+    """Raise 403 unless `user` holds at least one of `actions`.
+
+    The reserved ``admin`` role bypasses every check. A missing or deactivated
+    role grants nothing (fail closed), so an empty `actions` list is denied too.
+    """
+    if user.role == ADMIN_ROLE:
+        return
+
+    role = await db.get(Role, user.role)
+    if role is None or not role.is_active:
+        raise ForbiddenError()
+
+    granted = await permission_crud.get_role_permission_actions(db, user.role)
+    if not set(actions) & granted:
+        raise ForbiddenError()
+
+
 def require_role(*roles: str):
     """Factory that returns a dependency enforcing one of the given roles."""
 
     async def _check(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=get_message("FORBIDDEN"),
-            )
+            raise ForbiddenError()
+        return current_user
+
+    return _check
+
+
+def require_permission(*actions: str):
+    """Factory returning a dependency enforcing at least one of `actions`.
+
+    Users with the reserved ``admin`` role bypass the check. Any other user must
+    hold one of `actions` through their own role's `role_permissions`, and that
+    role must be active.
+    """
+
+    async def _check(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        await authorize(db, current_user, *actions)
         return current_user
 
     return _check

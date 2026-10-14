@@ -5,6 +5,7 @@ import { Button, Table, Space } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import DepotStatusBadge from './DepotStatusBadge';
 import ImagePreviewGroup from '../../../components/common/ImagePreviewGroup';
+import { usePermission } from '../../../auth/permissions';
 
 export function DepotTable({
   data,
@@ -14,6 +15,7 @@ export function DepotTable({
   pagination,
   onPaginationChange,
 }) {
+  const { can } = usePermission();
   const columns = [
     {
       title: 'Hình ảnh',
@@ -58,16 +60,17 @@ export function DepotTable({
     {
       title: 'Thao tác',
       key: 'actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
-          </Button>
-          <Button type="link" danger={record.is_active} onClick={() => onToggleActive(record)}>
-            {record.is_active ? 'Vô hiệu hóa' : 'Kích hoạt'}
-          </Button>
-        </Space>
-      ),
+      render: (_, record) =>
+        can('depot:manage') ? (
+          <Space size="middle">
+            <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
+              Sửa
+            </Button>
+            <Button type="link" danger={record.is_active} onClick={() => onToggleActive(record)}>
+              {record.is_active ? 'Vô hiệu hóa' : 'Kích hoạt'}
+            </Button>
+          </Space>
+        ) : null,
     },
   ];
 
@@ -84,6 +87,7 @@ export function DepotTable({
       dataSource={data?.items || []}
       rowKey="id"
       loading={loading}
+      scroll={{ x: 'max-content' }}
       pagination={{
         current: pagination?.current || 1,
         pageSize: pagination?.pageSize || 20,

@@ -2,7 +2,7 @@
  * Depot search bar — search input with debounce and is_active filter.
  */
 import { useCallback, useRef } from 'react';
-import { Input, Select, Space } from 'antd';
+import { Col, Input, Row, Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 
 const STATUS_OPTIONS = [
@@ -37,22 +37,26 @@ export function DepotSearchBar({ onSearchChange, onFilterChange }) {
   );
 
   return (
-    <Space style={{ marginBottom: 16 }} wrap>
-      <Input
-        placeholder="Tìm kiếm theo tên hoặc mã bưu cục"
-        prefix={<SearchOutlined />}
-        allowClear
-        onChange={handleSearchInput}
-        style={{ width: 300 }}
-      />
-      <Select
-        defaultValue={null}
-        options={STATUS_OPTIONS}
-        onChange={handleFilterChange}
-        style={{ width: 180 }}
-        placeholder="Trạng thái"
-      />
-    </Space>
+    <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+      <Col xs={24} sm={14}>
+        <Input
+          placeholder="Tìm kiếm theo tên hoặc mã bưu cục"
+          prefix={<SearchOutlined />}
+          allowClear
+          onChange={handleSearchInput}
+          style={{ width: '100%' }}
+        />
+      </Col>
+      <Col xs={24} sm={10}>
+        <Select
+          defaultValue={null}
+          options={STATUS_OPTIONS}
+          onChange={handleFilterChange}
+          style={{ width: '100%' }}
+          placeholder="Trạng thái"
+        />
+      </Col>
+    </Row>
   );
 }
 

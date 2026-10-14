@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, Select, Space, Typography } from 'antd';
+import { Col, Input, Row, Select, Typography } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '../../../api/customers';
@@ -40,26 +40,30 @@ export function CustomerListPage() {
         <Text type="secondary">{t('customers.createdFromBillsHint')}</Text>
       </div>
 
-      <Space wrap style={{ width: '100%', marginBottom: 16 }}>
-        <Input.Search
-          allowClear
-          enterButton={<SearchOutlined />}
-          placeholder={t('customers.searchPlaceholder')}
-          style={{ width: 340 }}
-          onSearch={(value) => resetToFirstPage(() => setSearch(value.trim()))}
-        />
-        <Select
-          allowClear
-          placeholder={t('customers.statusFilter')}
-          style={{ width: 180 }}
-          value={isActive}
-          options={[
-            { value: true, label: t('customers.active') },
-            { value: false, label: t('customers.inactive') },
-          ]}
-          onChange={(value) => resetToFirstPage(() => setIsActive(value ?? null))}
-        />
-      </Space>
+      <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={14}>
+          <Input.Search
+            allowClear
+            enterButton={<SearchOutlined />}
+            placeholder={t('customers.searchPlaceholder')}
+            style={{ width: '100%' }}
+            onSearch={(value) => resetToFirstPage(() => setSearch(value.trim()))}
+          />
+        </Col>
+        <Col xs={24} sm={10}>
+          <Select
+            allowClear
+            placeholder={t('customers.statusFilter')}
+            style={{ width: '100%' }}
+            value={isActive}
+            options={[
+              { value: true, label: t('customers.active') },
+              { value: false, label: t('customers.inactive') },
+            ]}
+            onChange={(value) => resetToFirstPage(() => setIsActive(value ?? null))}
+          />
+        </Col>
+      </Row>
 
       <CustomerTable
         data={data}

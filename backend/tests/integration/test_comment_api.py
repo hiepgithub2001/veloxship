@@ -15,6 +15,35 @@ from app.main import app
 from app.models.depot import Depot
 from app.models.user import User
 
+
+@pytest_asyncio.fixture(autouse=True)
+async def _seed_roles(engine):
+    """Seed default roles + their default grants.
+
+    The grants keep the users.role FK satisfied *and* let a non-admin staff user
+    pass the `require_permission` gate on the comment endpoints.
+    """
+    from app.core.permissions import ROLE_DEFAULT_PERMISSIONS
+    from app.models.permission import Role, RolePermission
+
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
+        for code, name in [
+            ("admin", "Quản trị viên"),
+            ("operator", "Nhân viên quầy"),
+            ("shipper", "Bưu tá"),
+            ("depot_manager", "Thủ kho"),
+            ("cashier", "Thủ quỹ"),
+            ("accountant", "Kế toán"),
+        ]:
+            session.add(Role(code=code, name=name))
+        await session.flush()
+        for role_code, actions in ROLE_DEFAULT_PERMISSIONS.items():
+            for action in actions:
+                session.add(RolePermission(role=role_code, action=action))
+        await session.commit()
+    yield
+
 # ---------------------------------------------------------------------------
 # Test database setup (PostgreSQL via testcontainers)
 # ---------------------------------------------------------------------------

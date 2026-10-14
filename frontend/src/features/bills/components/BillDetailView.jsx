@@ -18,6 +18,7 @@ import { BillPdfPreview } from './BillPdfPreview';
 import { StatusUpdateDrawer } from './StatusUpdateDrawer';
 import { formatVND, formatViDateTime } from '../../../lib/format';
 import { t } from '../../../i18n/vi';
+import { usePermission } from '../../../auth/permissions';
 
 const { Title, Text } = Typography;
 const flow = ['created', 'picked_up', 'in_transit', 'delivered'];
@@ -35,6 +36,7 @@ const terminal = new Set(['delivered', 'returned', 'cancelled']);
  * Bill detail workspace — rendered by the dedicated detail route (`/phieu-gui/:id`).
  */
 export function BillDetailView({ id }) {
+  const { can, canAny } = usePermission();
   const qc = useQueryClient();
   const [statusOpen, setStatusOpen] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
@@ -97,11 +99,12 @@ export function BillDetailView({ id }) {
           <Button icon={<FilePdfOutlined />} onClick={() => downloadBillPdf(bill.id)}>
             {t('bills.downloadPdf')}
           </Button>
-          {!terminal.has(bill.status) && (
-            <Button icon={<SwapOutlined />} onClick={() => setStatusOpen(true)}>
-              {t('bills.updateStatus')}
-            </Button>
-          )}
+          {!terminal.has(bill.status) &&
+            canAny(['bill:cancel', 'warehouse:inbound', 'warehouse:outbound']) && (
+              <Button icon={<SwapOutlined />} onClick={() => setStatusOpen(true)}>
+                {t('bills.updateStatus')}
+              </Button>
+            )}
         </Space>
       </div>
       <Card className="bill-hero">
@@ -147,12 +150,14 @@ export function BillDetailView({ id }) {
                 side="sender"
                 saving={amendment.isPending}
                 onSave={amendment.mutate}
+                canEdit={can('bill:update')}
               />
               <BillPartyEditor
                 bill={bill}
                 side="receiver"
                 saving={amendment.isPending}
                 onSave={amendment.mutate}
+                canEdit={can('bill:update')}
               />
             </div>
           </Card>
@@ -161,10 +166,16 @@ export function BillDetailView({ id }) {
               bill={bill}
               saving={amendment.isPending}
               onSave={amendment.mutate}
+              canEdit={can('bill:update')}
             />
           </Card>
           <Card>
-            <BillFeeEditor bill={bill} saving={amendment.isPending} onSave={amendment.mutate} />
+            <BillFeeEditor
+              bill={bill}
+              saving={amendment.isPending}
+              onSave={amendment.mutate}
+              canEdit={can('bill:update')}
+            />
           </Card>
         </div>
         <div className="bill-side-col">

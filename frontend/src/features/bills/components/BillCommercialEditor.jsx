@@ -25,7 +25,7 @@ const formatMetadata = (metadata) =>
     .join(' · ') || '—';
 
 /** Draft-only editor that reuses the content-line form from bill creation. */
-export function BillCommercialEditor({ bill, saving, onSave }) {
+export function BillCommercialEditor({ bill, saving, onSave, canEdit = true }) {
   const [editing, setEditing] = useState(false);
   const {
     control,
@@ -96,7 +96,7 @@ export function BillCommercialEditor({ bill, saving, onSave }) {
           <h3>{t('bills.cargoInfo')}</h3>
           <span>Nội dung hàng hóa và tiền thu hộ</span>
         </div>
-        {bill.status === 'created' && !editing && (
+        {canEdit && bill.status === 'created' && !editing && (
           <Button onClick={() => setEditing(true)}>Chỉnh sửa</Button>
         )}
       </div>

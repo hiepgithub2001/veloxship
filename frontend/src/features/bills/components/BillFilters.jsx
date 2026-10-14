@@ -4,7 +4,7 @@
  * the user presses "Tìm kiếm" (or Enter); status/date apply immediately.
  */
 import { useEffect, useState } from 'react';
-import { Button, Card, DatePicker, Input, Select, Space, Typography } from 'antd';
+import { Button, Card, Col, DatePicker, Input, Row, Select, Typography } from 'antd';
 import { SearchOutlined, UndoOutlined } from '@ant-design/icons';
 import { t } from '../../../i18n/vi';
 import Search from 'antd/es/input/Search';
@@ -59,46 +59,57 @@ export function BillFilters({
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <Space wrap size="middle">
-        <Search
-          value={draft.tracking}
-          onChange={setField('tracking')}
-          onPressEnter={handleSearch}
-          allowClear
-          enterButton={<SearchOutlined />}
-          placeholder={t('bills.trackingFilter')}
-          style={{ width: 180 }}
-        />
-        <Input
-          value={draft.sender}
-          onChange={setField('sender')}
-          onPressEnter={handleSearch}
-          allowClear
-          placeholder={t('bills.senderFilter')}
-          style={{ width: 180 }}
-        />
-        <Input
-          value={draft.receiver}
-          onChange={setField('receiver')}
-          onPressEnter={handleSearch}
-          allowClear
-          placeholder={t('bills.receiverFilter')}
-          style={{ width: 180 }}
-        />
-        <Select
-          value={status}
-          options={STATUS_OPTIONS}
-          onChange={onStatusChange}
-          allowClear
-          placeholder={t('bills.statusFilter')}
-          style={{ width: 180 }}
-        />
-        <RangePicker
-          value={dateRange}
-          onChange={onDateRangeChange}
-          placeholder={t('bills.dateRangePlaceholder')}
-        />
-      </Space>
+      <Row gutter={[12, 12]}>
+        <Col xs={24} sm={12} lg={8}>
+          <Search
+            value={draft.tracking}
+            onChange={setField('tracking')}
+            onPressEnter={handleSearch}
+            allowClear
+            enterButton={<SearchOutlined />}
+            placeholder={t('bills.trackingFilter')}
+            style={{ width: '100%' }}
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={8}>
+          <Input
+            value={draft.sender}
+            onChange={setField('sender')}
+            onPressEnter={handleSearch}
+            allowClear
+            placeholder={t('bills.senderFilter')}
+            style={{ width: '100%' }}
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={8}>
+          <Input
+            value={draft.receiver}
+            onChange={setField('receiver')}
+            onPressEnter={handleSearch}
+            allowClear
+            placeholder={t('bills.receiverFilter')}
+            style={{ width: '100%' }}
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={8}>
+          <Select
+            value={status}
+            options={STATUS_OPTIONS}
+            onChange={onStatusChange}
+            allowClear
+            placeholder={t('bills.statusFilter')}
+            style={{ width: '100%' }}
+          />
+        </Col>
+        <Col xs={24} sm={12} lg={8}>
+          <RangePicker
+            value={dateRange}
+            onChange={onDateRangeChange}
+            placeholder={t('bills.dateRangePlaceholder')}
+            style={{ width: '100%' }}
+          />
+        </Col>
+      </Row>
     </div>
   );
 }

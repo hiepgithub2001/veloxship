@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_user
+from app.api.v1.deps import require_permission
 from app.crud import depot as depot_crud
 from app.db.session import get_db
 from app.models.user import User
@@ -20,7 +20,7 @@ async def list_depots(
     search: str | None = Query(None, min_length=1, max_length=100),
     is_active: bool | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("depot:view")),
 ):
     """List depots with pagination, search, and active filter."""
     items, total = await depot_crud.list_depots(
@@ -38,7 +38,7 @@ async def list_depots(
 async def create_depot(
     body: DepotCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("depot:manage")),
 ):
     """Create a new depot."""
     depot = await depot_service.create_depot(db, body)
@@ -50,7 +50,7 @@ async def update_depot(
     depot_id: int,
     body: DepotUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("depot:manage")),
 ):
     """Partial update a depot."""
     depot = await depot_service.update_depot(db, depot_id, body)
