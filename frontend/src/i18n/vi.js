@@ -45,6 +45,8 @@ const vi = {
     yes: 'Có',
     no: 'Không',
     close: 'Đóng',
+    noPermission: 'Bạn không có quyền truy cập chức năng này.',
+    forbidden: 'Không có quyền truy cập',
     status: 'Trạng thái',
     createdAt: 'Ngày tạo',
     updatedAt: 'Ngày cập nhật',

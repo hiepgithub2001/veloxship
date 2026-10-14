@@ -18,8 +18,13 @@ from app.models.user import User
 
 @pytest_asyncio.fixture(autouse=True)
 async def _seed_roles(engine):
-    """Seed default roles so the users.role FK is satisfied in integration tests."""
-    from app.models.permission import Role
+    """Seed default roles + their default grants.
+
+    The grants keep the users.role FK satisfied *and* let a non-admin staff user
+    pass the `require_permission` gate on the comment endpoints.
+    """
+    from app.core.permissions import ROLE_DEFAULT_PERMISSIONS
+    from app.models.permission import Role, RolePermission
 
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as session:
@@ -32,6 +37,10 @@ async def _seed_roles(engine):
             ("accountant", "Kế toán"),
         ]:
             session.add(Role(code=code, name=name))
+        await session.flush()
+        for role_code, actions in ROLE_DEFAULT_PERMISSIONS.items():
+            for action in actions:
+                session.add(RolePermission(role=role_code, action=action))
         await session.commit()
     yield
 

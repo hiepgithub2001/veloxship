@@ -5,6 +5,7 @@ import { Button, Table, Space, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import VehicleStatusBadge from './VehicleStatusBadge';
 import ImagePreviewGroup from '../../../components/common/ImagePreviewGroup';
+import { usePermission } from '../../../auth/permissions';
 
 const VEHICLE_TYPE_LABELS = {
   motorcycle: 'Xe máy',
@@ -21,6 +22,7 @@ export function VehicleTable({
   onEdit,
   onDelete,
 }) {
+  const { can } = usePermission();
   const columns = [
     {
       title: 'Hình ảnh',
@@ -72,23 +74,24 @@ export function VehicleTable({
     {
       title: 'Thao tác',
       key: 'actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
-          </Button>
-          <Popconfirm
-            title="Xác nhận vô hiệu hóa xe này?"
-            onConfirm={() => onDelete(record)}
-            okText="Đồng ý"
-            cancelText="Hủy"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />}>
-              Xóa
+      render: (_, record) =>
+        can('fleet:manage') ? (
+          <Space size="middle">
+            <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
+              Sửa
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            <Popconfirm
+              title="Xác nhận vô hiệu hóa xe này?"
+              onConfirm={() => onDelete(record)}
+              okText="Đồng ý"
+              cancelText="Hủy"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
+            </Popconfirm>
+          </Space>
+        ) : null,
     },
   ];
 

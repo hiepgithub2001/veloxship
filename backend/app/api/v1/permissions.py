@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import require_role
+from app.api.v1.deps import require_permission
 from app.core.permissions import PERMISSION_CATALOG
 from app.crud import audit as audit_crud
 from app.crud import permission as permission_crud
@@ -20,9 +20,13 @@ from app.services import permission_service
 
 router = APIRouter(tags=["roles"])
 
+MANAGE_PERMISSIONS = "iam:manage_permissions"
+
 
 @router.get("/permissions/catalog", response_model=PermissionCatalogRead)
-async def get_catalog(current_user: User = Depends(require_role("admin"))):
+async def get_catalog(
+    current_user: User = Depends(require_permission(MANAGE_PERMISSIONS)),
+):
     """Return every assignable action grouped by module."""
     return PermissionCatalogRead(modules=PERMISSION_CATALOG)
 
@@ -30,7 +34,7 @@ async def get_catalog(current_user: User = Depends(require_role("admin"))):
 @router.get("/roles", response_model=list[RoleRead])
 async def list_roles(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission(MANAGE_PERMISSIONS)),
 ):
     """List all roles with their granted actions and assigned-user count."""
     roles = await permission_crud.list_roles(db)
@@ -54,7 +58,7 @@ async def list_roles(
 async def create_role(
     body: RoleCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission(MANAGE_PERMISSIONS)),
 ):
     """Create a new role."""
     role = await permission_service.create_role(db, body)
@@ -79,7 +83,7 @@ async def update_role(
     code: str,
     body: RoleUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission(MANAGE_PERMISSIONS)),
 ):
     """Update a role's name/description/active flag."""
     role = await permission_service.update_role(db, code, body)
@@ -103,7 +107,7 @@ async def update_role(
 async def delete_role(
     code: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission(MANAGE_PERMISSIONS)),
 ):
     """Delete a role (guarded against the reserved admin role and roles in use)."""
     await permission_service.delete_role(db, code)
@@ -121,7 +125,7 @@ async def set_role_permissions(
     code: str,
     body: RolePermissionsUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission(MANAGE_PERMISSIONS)),
 ):
     """Replace the full action set granted to a role."""
     role = await permission_service.set_role_actions(db, code, body)

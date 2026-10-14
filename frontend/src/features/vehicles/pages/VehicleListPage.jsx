@@ -8,12 +8,14 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { getVehicles, updateVehicle } from '../../../api/vehicles';
+import { usePermission } from '../../../auth/permissions';
 import VehicleSearchBar from '../components/VehicleSearchBar';
 import VehicleFilters from '../components/VehicleFilters';
 import VehicleTable from '../components/VehicleTable';
 import VehicleFormModal from '../components/VehicleFormModal';
 
 export function VehicleListPage() {
+  const { can } = usePermission();
   const queryClient = useQueryClient();
 
   // Search & filter state
@@ -101,9 +103,11 @@ export function VehicleListPage() {
     <div>
       <div className="page-header">
         <h2>Quản lý Đội xe</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Đăng ký xe mới
-        </Button>
+        {can('fleet:manage') && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            Đăng ký xe mới
+          </Button>
+        )}
       </div>
 
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>

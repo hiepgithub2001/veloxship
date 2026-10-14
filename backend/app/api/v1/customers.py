@@ -7,7 +7,7 @@ intentionally out of scope.
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_user
+from app.api.v1.deps import require_permission
 from app.core.exceptions import NotFoundError
 from app.crud import customer as customer_crud
 from app.db.session import get_db
@@ -24,7 +24,7 @@ async def list_customers(
     search: str | None = Query(None, min_length=1, max_length=100),
     is_active: bool | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer:view")),
 ):
     """List customer profiles created while bills are recorded."""
     items, total = await customer_crud.list_customers(
@@ -46,7 +46,7 @@ async def list_customers(
 async def get_customer(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("customer:view")),
 ):
     """Return one customer profile for directory inspection."""
     customer = await customer_crud.get_customer(db, customer_id)

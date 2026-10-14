@@ -3,6 +3,7 @@
  */
 import { Button, Space, Table, Tag } from 'antd';
 import { EditOutlined, KeyOutlined } from '@ant-design/icons';
+import { usePermission } from '../../../auth/permissions';
 
 export function EmployeeTable({
   data,
@@ -13,6 +14,7 @@ export function EmployeeTable({
   pagination,
   onPaginationChange,
 }) {
+  const { can } = usePermission();
   const columns = [
     {
       title: 'Mã NV',
@@ -38,19 +40,20 @@ export function EmployeeTable({
     {
       title: 'Thao tác',
       key: 'actions',
-      render: (_, record) => (
-        <Space size="small">
-          <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
-          </Button>
-          <Button type="link" danger={record.is_active} onClick={() => onToggleActive(record)}>
-            {record.is_active ? 'Khóa' : 'Mở'}
-          </Button>
-          <Button type="link" icon={<KeyOutlined />} onClick={() => onResetPassword(record)}>
-            Đặt lại MK
-          </Button>
-        </Space>
-      ),
+      render: (_, record) =>
+        can('iam:manage_users') ? (
+          <Space size="small">
+            <Button type="link" icon={<EditOutlined />} onClick={() => onEdit(record)}>
+              Sửa
+            </Button>
+            <Button type="link" danger={record.is_active} onClick={() => onToggleActive(record)}>
+              {record.is_active ? 'Khóa' : 'Mở'}
+            </Button>
+            <Button type="link" icon={<KeyOutlined />} onClick={() => onResetPassword(record)}>
+              Đặt lại MK
+            </Button>
+          </Space>
+        ) : null,
     },
   ];
 

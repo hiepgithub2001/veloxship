@@ -18,6 +18,8 @@ import {
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../../auth/AuthContext';
+import { usePermission } from '../../auth/permissions';
+import { Can } from '../../auth/RequirePermission';
 import { t } from '../../i18n/vi';
 import logo from '../../assets/logo.png';
 import { GlobalBillSearch } from './GlobalBillSearch';
@@ -25,51 +27,61 @@ import { GlobalBillSearch } from './GlobalBillSearch';
 const { Sider, Header, Content } = Layout;
 const { Text } = Typography;
 
+// Sidebar menu — each entry declares the action its page requires.
+const MENU_ITEMS = [
+  {
+    key: '/phieu-gui',
+    icon: <FileTextOutlined />,
+    label: t('layout.bills'),
+    permission: 'bill:view',
+  },
+  {
+    key: '/khach-hang',
+    icon: <TeamOutlined />,
+    label: t('layout.customers'),
+    permission: 'customer:view',
+  },
+  {
+    key: '/buu-cuc',
+    icon: <BankOutlined />,
+    label: t('layout.depots'),
+    permission: 'depot:view',
+  },
+  {
+    key: '/doi-xe',
+    icon: <CarOutlined />,
+    label: t('layout.vehicles'),
+    permission: 'fleet:view',
+  },
+  {
+    key: '/nhan-vien',
+    icon: <UserOutlined />,
+    label: t('layout.staff'),
+    permission: 'iam:view_users',
+  },
+  {
+    key: '/phan-quyen',
+    icon: <SafetyCertificateOutlined />,
+    label: t('layout.permissions'),
+    permission: 'iam:manage_permissions',
+  },
+];
+
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const { currentUser, logout } = useAuth();
+  const { can } = usePermission();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
-    {
-      key: '/phieu-gui',
-      icon: <FileTextOutlined />,
-      label: t('layout.bills'),
-    },
-    {
-      key: '/khach-hang',
-      icon: <TeamOutlined />,
-      label: t('layout.customers'),
-    },
-    {
-      key: '/buu-cuc',
-      icon: <BankOutlined />,
-      label: t('layout.depots'),
-    },
-    {
-      key: '/doi-xe',
-      icon: <CarOutlined />,
-      label: t('layout.vehicles'),
-    },
-    ...(currentUser?.role === 'admin'
-      ? [
-          {
-            key: '/nhan-vien',
-            icon: <UserOutlined />,
-            label: t('layout.staff'),
-          },
-          {
-            key: '/phan-quyen',
-            icon: <SafetyCertificateOutlined />,
-            label: t('layout.permissions'),
-          },
-        ]
-      : []),
-  ];
+  const menuItems = MENU_ITEMS.filter((item) => can(item.permission)).map((item) => ({
+    key: item.key,
+    icon: item.icon,
+    label: item.label,
+  }));
 
   const userMenuItems = [
     {
@@ -208,14 +220,16 @@ export function AppShell() {
 
           <Space size="middle" className="app-header-actions" style={{ justifySelf: 'center' }}>
             <GlobalBillSearch />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              className="app-create-bill-btn"
-              onClick={() => navigate('/phieu-gui/tao-moi')}
-            >
-              <span className="app-create-bill-label">{t('bills.create')}</span>
-            </Button>
+            <Can permission="bill:create">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                className="app-create-bill-btn"
+                onClick={() => navigate('/phieu-gui/tao-moi')}
+              >
+                <span className="app-create-bill-label">{t('bills.create')}</span>
+              </Button>
+            </Can>
           </Space>
 
           <div style={{ justifySelf: 'end' }}>

@@ -5,8 +5,9 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_user, require_role
-from app.core.exceptions import NotFoundError
+from app.api.v1.deps import authorize, get_current_user, require_permission
+from app.core.exceptions import ForbiddenError, NotFoundError
+from app.core.permissions import status_action
 from app.crud import audit as audit_crud
 from app.crud import bill as bill_crud
 from app.db.session import get_db
@@ -37,7 +38,7 @@ def _naive_utc(dt: datetime | None) -> datetime | None:
 async def create_bill(
     body: BillCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("bill:create")),
 ):
     """Create a new delivery bill."""
     bill = await bill_service.create_bill(db, body, current_user.id)
@@ -56,7 +57,7 @@ async def list_bills(
     sender_name: str | None = Query(None, min_length=1, max_length=100),
     receiver_name: str | None = Query(None, min_length=1, max_length=100),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("bill:view")),
 ):
     """List bills with search, status, creation-date range, and party filters."""
     items, total = await bill_crud.list_bills(
@@ -88,7 +89,7 @@ def _parse_ids(ids: str) -> list[int]:
 async def export_bills(
     ids: str = Query(..., description="Comma-separated bill IDs"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("bill:view")),
 ):
     """Export the selected bills to an xlsx workbook."""
     from app.services.export_service import build_bills_xlsx
@@ -106,7 +107,7 @@ async def export_bills(
 async def print_bills_batch(
     ids: str = Query(..., description="Comma-separated bill IDs"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("bill:view")),
 ):
     """Render the selected bills as one printable HTML document."""
     from app.services.print_service import render_bills_html
@@ -132,7 +133,7 @@ async def print_bills_batch(
 async def get_bill(
     bill_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("bill:view")),
 ):
     """Get a single bill by ID."""
     bill = await bill_crud.get_bill(db, bill_id)
@@ -144,7 +145,7 @@ async def get_bill(
 @router.patch("/{bill_id}", response_model=BillRead)
 async def update_bill(
     bill_id: int, body: BillUpdate, db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("cashier", "operator", "depot_manager", "admin")),
+    current_user: User = Depends(require_permission("bill:update")),
 ):
     bill = await bill_service.update_bill(db, bill_id, body, current_user.id)
     return BillRead.from_model(bill)
@@ -153,15 +154,21 @@ async def update_bill(
 @router.post("/{bill_id}/status", response_model=BillRead)
 async def update_status(
     bill_id: int, body: BillStatusUpdate, db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("operator", "depot_manager", "admin")),
+    current_user: User = Depends(get_current_user),
 ):
+    """Transition a bill; the required action depends on the target status."""
+    action = status_action(body.to_status.value)
+    if action is None:
+        raise ForbiddenError()
+    await authorize(db, current_user, action)
     bill = await bill_service.transition_status(db, bill_id, body, current_user.id)
     return BillRead.from_model(bill)
 
 
 @router.get("/{bill_id}/events")
 async def get_bill_events(
-    bill_id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user),
+    bill_id: int, db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("bill:view")),
 ):
     if await bill_crud.get_bill(db, bill_id) is None:
         raise NotFoundError("BILL_NOT_FOUND")
@@ -173,7 +180,7 @@ async def print_bill(
     bill_id: int,
     as_format: str = Query("pdf", alias="as"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("bill:view")),
 ):
     """Render the bill for printing. Increments print_count."""
     bill = await bill_crud.get_bill(db, bill_id)

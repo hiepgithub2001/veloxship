@@ -12,6 +12,7 @@ import { DeleteOutlined, EditOutlined, SendOutlined } from '@ant-design/icons';
 import { createComment, deleteComment, listComments, updateComment } from '../../api/comments';
 import { uploadFile } from '../../api/files';
 import { useAuth } from '../../auth/AuthContext';
+import { usePermission } from '../../auth/permissions';
 import { formatViDateTime } from '../../lib/format';
 import { t } from '../../i18n/vi';
 import { RichText } from './RichText';
@@ -52,14 +53,18 @@ function Composer({ value, onChange, onSubmit, submitting, placeholder }) {
 }
 
 function CommentItem({ comment, entityType, entityId, currentUser, queryKey }) {
+  const { can } = usePermission();
   const qc = useQueryClient();
   const [replying, setReplying] = useState(false);
   const [replyBody, setReplyBody] = useState('');
   const [editing, setEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
 
+  const canWrite = can('bill:update');
   const canModify =
-    currentUser && (currentUser.id === comment.author_id || currentUser.role === 'admin');
+    canWrite &&
+    currentUser &&
+    (currentUser.id === comment.author_id || currentUser.role === 'admin');
 
   const reply = useMutation({
     mutationFn: (payload) => createComment(payload),
@@ -124,9 +129,11 @@ function CommentItem({ comment, entityType, entityId, currentUser, queryKey }) {
               </div>
               <RichText html={comment.body} className="comment-body" />
               <Space size={4} className="comment-item-actions">
-                <Button type="link" size="small" onClick={() => setReplying((v) => !v)}>
-                  {t('comments.reply')}
-                </Button>
+                {canWrite && (
+                  <Button type="link" size="small" onClick={() => setReplying((v) => !v)}>
+                    {t('comments.reply')}
+                  </Button>
+                )}
                 {canModify && (
                   <>
                     <Button
@@ -191,6 +198,7 @@ function CommentItem({ comment, entityType, entityId, currentUser, queryKey }) {
  */
 export function CommentSection({ entityType, entityId }) {
   const { currentUser } = useAuth();
+  const { can } = usePermission();
   const qc = useQueryClient();
   const queryKey = ['comments', entityType, entityId];
 
@@ -224,13 +232,15 @@ export function CommentSection({ entityType, entityId }) {
           <span>{t('comments.subtitle')}</span>
         </div>
       </div>
-      <Composer
-        value={body}
-        onChange={setBody}
-        onSubmit={handleSubmit}
-        submitting={create.isPending}
-        placeholder={t('comments.placeholder')}
-      />
+      {can('bill:update') && (
+        <Composer
+          value={body}
+          onChange={setBody}
+          onSubmit={handleSubmit}
+          submitting={create.isPending}
+          placeholder={t('comments.placeholder')}
+        />
+      )}
       <Spin spinning={isLoading}>
         {comments.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('comments.empty')} />

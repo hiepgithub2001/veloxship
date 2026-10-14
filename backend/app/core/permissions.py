@@ -107,6 +107,22 @@ ROLE_LABELS: dict[str, str] = {
 # Reserved role code that bypasses every permission check.
 ADMIN_ROLE = "admin"
 
+# Target bill status → the action a user must hold to move a bill into it.
+# Used by the status-transition endpoint, whose required action depends on the
+# requested target status rather than on a fixed route-level action.
+STATUS_ACTION_MAP: dict[str, str] = {
+    "picked_up": "warehouse:inbound",
+    "in_transit": "warehouse:outbound",
+    "delivered": "warehouse:outbound",
+    "returned": "warehouse:outbound",
+    "cancelled": "bill:cancel",
+}
+
+
+def status_action(to_status: str) -> str | None:
+    """Return the action gating a transition into `to_status` (None if unknown)."""
+    return STATUS_ACTION_MAP.get(to_status)
+
 # Default action grants per role — used only to seed `role_permissions`.
 ROLE_DEFAULT_PERMISSIONS: dict[str, list[str]] = {
     "admin": sorted(valid_action_codes()),

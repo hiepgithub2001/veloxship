@@ -7,6 +7,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getUsers, updateUser, resetUserPassword } from '../../../api/users';
+import { usePermission } from '../../../auth/permissions';
 import EmployeeSearchBar from '../components/EmployeeSearchBar';
 import EmployeeTable from '../components/EmployeeTable';
 import EmployeeFormModal from '../components/EmployeeFormModal';
@@ -14,6 +15,7 @@ import EmployeeFormModal from '../components/EmployeeFormModal';
 const { Text } = Typography;
 
 export function StaffPage() {
+  const { can } = usePermission();
   const queryClient = useQueryClient();
 
   // Filters
@@ -102,9 +104,11 @@ export function StaffPage() {
     <div>
       <div className="page-header">
         <h2>Quản lý nhân viên</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Thêm nhân viên mới
-        </Button>
+        {can('iam:manage_users') && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            Thêm nhân viên mới
+          </Button>
+        )}
       </div>
 
       <EmployeeSearchBar

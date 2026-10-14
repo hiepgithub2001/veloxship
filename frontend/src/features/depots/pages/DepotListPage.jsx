@@ -8,11 +8,13 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { getDepots, updateDepot } from '../../../api/depots';
+import { usePermission } from '../../../auth/permissions';
 import DepotSearchBar from '../components/DepotSearchBar';
 import DepotTable from '../components/DepotTable';
 import DepotFormModal from '../components/DepotFormModal';
 
 export function DepotListPage() {
+  const { can } = usePermission();
   const queryClient = useQueryClient();
 
   // Search & filter state
@@ -94,9 +96,11 @@ export function DepotListPage() {
     <div>
       <div className="page-header">
         <h2>Quản lý bưu cục</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          Thêm mới
-        </Button>
+        {can('depot:manage') && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            Thêm mới
+          </Button>
+        )}
       </div>
 
       <DepotSearchBar onSearchChange={handleSearchChange} onFilterChange={handleFilterChange} />

@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_current_user, require_role
+from app.api.v1.deps import get_current_user, require_permission
 from app.crud import audit as audit_crud
 from app.db.session import get_db
 from app.models.user import User
@@ -31,7 +31,7 @@ async def list_users(
     depot_id: int | None = Query(None),
     is_active: bool | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("iam:view_users")),
 ):
     """List staff accounts with pagination and filters."""
     from app.crud import user as user_crud
@@ -57,7 +57,7 @@ async def list_users(
 async def create_user(
     body: UserCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("iam:manage_users")),
 ):
     """Create a staff account (auto-generates a password when omitted)."""
     user, temporary_password = await user_service.create_user(db, body)
@@ -93,7 +93,7 @@ async def user_options(
 async def get_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("iam:view_users")),
 ):
     """Get a single staff account."""
     from app.crud import user as user_crud
@@ -111,7 +111,7 @@ async def update_user(
     user_id: int,
     body: UserUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("iam:manage_users")),
 ):
     """Partially update a staff account."""
     user = await user_service.update_user(db, user_id, body, actor_id=current_user.id)
@@ -131,7 +131,7 @@ async def reset_password(
     user_id: int,
     body: UserResetPasswordRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("iam:manage_users")),
 ):
     """Reset a staff account's password."""
     user, temporary_password = await user_service.reset_password(db, user_id, body.password)
@@ -149,7 +149,7 @@ async def reset_password(
 async def soft_delete_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("admin")),
+    current_user: User = Depends(require_permission("iam:manage_users")),
 ):
     """Soft-delete a staff account by deactivating it."""
     from app.schemas.user import UserUpdate as _Update
