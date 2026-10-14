@@ -38,8 +38,6 @@ async def _build_user_me(db: AsyncSession, user: User) -> UserMe:
         avatar=user.avatar,
         role=user.role,
         is_active=user.is_active,
-        department=user.department,
-        position=user.position,
         employee_code=user.employee_code,
         depot_id=user.depot_id,
         permissions=sorted(actions),

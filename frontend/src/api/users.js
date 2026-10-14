@@ -1,5 +1,5 @@
 /**
- * Users (staff) admin API functions + department/position lookup.
+ * Users (staff) admin API functions.
  */
 import client from './client';
 
@@ -20,8 +20,6 @@ export async function getUsers({
   search,
   role,
   depotId,
-  department,
-  position,
   isActive,
 } = {}) {
   const params = {};
@@ -30,8 +28,6 @@ export async function getUsers({
   if (search) params.search = search;
   if (role) params.role = role;
   if (depotId != null) params.depot_id = depotId;
-  if (department) params.department = department;
-  if (position) params.position = position;
   if (isActive != null) params.is_active = isActive;
 
   const { data } = await client.get('/users', { params });
@@ -55,43 +51,5 @@ export async function resetUserPassword(id, payload = {}) {
 
 export async function deleteUser(id) {
   const { data } = await client.delete(`/users/${id}`);
-  return data;
-}
-
-// --- Departments lookup ---
-
-export async function getDepartments() {
-  const { data } = await client.get('/departments');
-  return data;
-}
-
-export async function renameDepartment(name, newName) {
-  const { data } = await client.patch(`/departments/${encodeURIComponent(name)}`, {
-    name: newName,
-  });
-  return data;
-}
-
-export async function deleteDepartment(name) {
-  const { data } = await client.delete(`/departments/${encodeURIComponent(name)}`);
-  return data;
-}
-
-// --- Positions lookup ---
-
-export async function getPositions() {
-  const { data } = await client.get('/positions');
-  return data;
-}
-
-export async function renamePosition(name, newName) {
-  const { data } = await client.patch(`/positions/${encodeURIComponent(name)}`, {
-    name: newName,
-  });
-  return data;
-}
-
-export async function deletePosition(name) {
-  const { data } = await client.delete(`/positions/${encodeURIComponent(name)}`);
   return data;
 }

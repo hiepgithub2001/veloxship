@@ -494,8 +494,6 @@ components:
           type: string
           description: Mã vai trò (động, tham chiếu bảng roles).
         is_active: { type: boolean }
-        department: { type: string, nullable: true }
-        position: { type: string, nullable: true }
         employee_code: { type: string, nullable: true }
         depot_id: { type: integer, format: int64, nullable: true }
         permissions:

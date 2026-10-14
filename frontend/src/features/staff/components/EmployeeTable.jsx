@@ -22,8 +22,6 @@ export function EmployeeTable({
     { title: 'Họ và tên', dataIndex: 'full_name', key: 'full_name' },
     { title: 'Tên đăng nhập', dataIndex: 'username', key: 'username' },
     { title: 'Số điện thoại', dataIndex: 'phone', key: 'phone', render: (v) => v || '—' },
-    { title: 'Phòng ban', dataIndex: 'department', key: 'department', render: (v) => v || '—' },
-    { title: 'Chức vụ', dataIndex: 'position', key: 'position', render: (v) => v || '—' },
     {
       title: 'Vai trò',
       dataIndex: 'role',

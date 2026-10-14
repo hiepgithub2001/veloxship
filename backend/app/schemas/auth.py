@@ -30,8 +30,7 @@ class UserMe(BaseModel):
     """Current-user response — never includes password_hash.
 
     Carries the fields the frontend needs to gate menus/actions: role,
-    department/position (from metadata), the effective permission actions,
-    and the (presigned) avatar URL.
+    the effective permission actions, and the (presigned) avatar URL.
     """
 
     id: int
@@ -41,8 +40,6 @@ class UserMe(BaseModel):
     avatar: str | None = None
     role: str
     is_active: bool
-    department: str | None
-    position: str | None
     employee_code: str | None
     depot_id: int | None
     permissions: list[str]

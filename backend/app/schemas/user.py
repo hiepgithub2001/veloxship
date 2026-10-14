@@ -3,9 +3,10 @@
 import re
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_serializer, field_validator
 
 from app.schemas.common import Page
+from app.services.storage import generate_presigned_url
 
 
 def _validate_phone(v: str | None) -> str | None:
@@ -31,8 +32,6 @@ class UserCreate(BaseModel):
     phone: str | None = None
     password: str | None = None  # omit to auto-generate
     role: str = "operator"
-    department: str | None = None
-    position: str | None = None
     employee_code: str | None = None
     depot_id: int | None = None
 
@@ -76,8 +75,6 @@ class UserUpdate(BaseModel):
     full_name: str | None = None
     phone: str | None = None
     role: str | None = None
-    department: str | None = None
-    position: str | None = None
     employee_code: str | None = None
     depot_id: int | None = None
     is_active: bool | None = None
@@ -117,8 +114,6 @@ class UserRead(BaseModel):
     phone: str | None
     role: str
     role_name: str | None = None
-    department: str | None
-    position: str | None
     employee_code: str | None
     depot_id: int | None
     is_active: bool
@@ -148,8 +143,16 @@ class UserOption(BaseModel):
     username: str
     role: str
     is_active: bool
+    avatar: str | None = None
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("avatar")
+    def serialize_avatar(self, avatar: str | None) -> str | None:
+        """Presign the stored S3 object key into a temporary URL."""
+        if not avatar:
+            return avatar
+        return generate_presigned_url(avatar) or avatar
 
 
 class UserResetPasswordRequest(BaseModel):

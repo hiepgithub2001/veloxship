@@ -3,13 +3,13 @@
  * Shows the one-time temporary password after creation.
  */
 import { useEffect, useState } from 'react';
-import { AutoComplete, Col, Form, Input, Modal, Row, Select, Typography, message } from 'antd';
+import { Form, Input, Modal, Select, Typography, message } from 'antd';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { employeeFormSchema } from '../schema';
-import { createUser, updateUser, getDepartments, getPositions } from '../../../api/users';
+import { createUser, updateUser } from '../../../api/users';
 import { getRoles } from '../../../api/permissions';
 import DepotSelect from '../../../components/common/DepotSelect';
 
@@ -33,21 +33,9 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
       phone: '',
       password: '',
       role: 'operator',
-      department: '',
-      position: '',
       employee_code: '',
       depot_id: null,
     },
-  });
-
-  const { data: departments = { items: [] } } = useQuery({
-    queryKey: ['departments-lookup'],
-    queryFn: getDepartments,
-  });
-
-  const { data: positions = { items: [] } } = useQuery({
-    queryKey: ['positions-lookup'],
-    queryFn: getPositions,
   });
 
   const { data: roles = [] } = useQuery({
@@ -69,8 +57,6 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
           phone: employee.phone || '',
           password: '',
           role: employee.role || 'operator',
-          department: employee.department || '',
-          position: employee.position || '',
           employee_code: employee.employee_code || '',
           depot_id: employee.depot_id ?? null,
         });
@@ -81,8 +67,6 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
           phone: '',
           password: '',
           role: 'operator',
-          department: '',
-          position: '',
           employee_code: '',
           depot_id: null,
         });
@@ -95,8 +79,6 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
     onSuccess: (res) => {
       message.success('Tạo nhân viên thành công');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['departments-lookup'] });
-      queryClient.invalidateQueries({ queryKey: ['positions-lookup'] });
       if (res?.temporary_password) {
         setTempPassword(res.temporary_password);
       } else {
@@ -112,8 +94,6 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
     onSuccess: () => {
       message.success('Cập nhật nhân viên thành công');
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['departments-lookup'] });
-      queryClient.invalidateQueries({ queryKey: ['positions-lookup'] });
       onSuccess?.();
       onClose();
     },
@@ -208,39 +188,6 @@ export function EmployeeFormModal({ open, onClose, employee, onSuccess }) {
               )}
             />
           </Form.Item>
-
-          <Row gutter={12}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Phòng ban">
-                <Controller
-                  name="department"
-                  control={control}
-                  render={({ field }) => (
-                    <AutoComplete
-                      {...field}
-                      placeholder="Nhập hoặc chọn phòng ban"
-                      options={(departments.items || []).map((d) => ({ value: d.name }))}
-                    />
-                  )}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Chức vụ">
-                <Controller
-                  name="position"
-                  control={control}
-                  render={({ field }) => (
-                    <AutoComplete
-                      {...field}
-                      placeholder="Nhập hoặc chọn chức vụ"
-                      options={(positions.items || []).map((p) => ({ value: p.name }))}
-                    />
-                  )}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
 
           <Form.Item label="Mã nhân viên">
             <Controller

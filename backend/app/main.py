@@ -12,12 +12,10 @@ from app.api.v1 import (
     bills,
     comments,
     customers,
-    departments,
     depots,
     files,
     locations,
     permissions,
-    positions,
     service_tiers,
     users,
     vehicles,
@@ -74,11 +72,9 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(bills.router, prefix="/api/v1")
 app.include_router(comments.router, prefix="/api/v1")
 app.include_router(customers.router, prefix="/api/v1")
-app.include_router(departments.router, prefix="/api/v1")
 app.include_router(depots.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
 app.include_router(permissions.router, prefix="/api/v1")
-app.include_router(positions.router, prefix="/api/v1")
 app.include_router(service_tiers.router, prefix="/api/v1")
 app.include_router(locations.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")

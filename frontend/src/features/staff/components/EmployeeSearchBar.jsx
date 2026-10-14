@@ -1,12 +1,11 @@
 /**
  * EmployeeSearchBar — search + filters for the staff list.
  */
-import { useState, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import { Col, Input, Row, Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 
-import { getDepartments, getPositions } from '../../../api/users';
 import { getRoles } from '../../../api/permissions';
 
 const ACTIVE_OPTIONS = [
@@ -19,24 +18,10 @@ export function EmployeeSearchBar({
   onSearchChange,
   role,
   onRoleChange,
-  department,
-  onDepartmentChange,
-  position,
-  onPositionChange,
   isActive,
   onIsActiveChange,
 }) {
   const timerRef = useRef(null);
-
-  const { data: departments = { items: [] } } = useQuery({
-    queryKey: ['departments-lookup'],
-    queryFn: getDepartments,
-  });
-
-  const { data: positions = { items: [] } } = useQuery({
-    queryKey: ['positions-lookup'],
-    queryFn: getPositions,
-  });
 
   const { data: roles = [] } = useQuery({
     queryKey: ['roles'],
@@ -64,7 +49,7 @@ export function EmployeeSearchBar({
           style={{ width: '100%' }}
         />
       </Col>
-      <Col xs={12} sm={12} md={4}>
+      <Col xs={12} sm={12} md={8}>
         <Select
           allowClear
           placeholder="Vai trò"
@@ -74,27 +59,7 @@ export function EmployeeSearchBar({
           options={(roles || []).map((r) => ({ value: r.code, label: r.name }))}
         />
       </Col>
-      <Col xs={12} sm={12} md={4}>
-        <Select
-          allowClear
-          placeholder="Phòng ban"
-          value={department}
-          onChange={(v) => onDepartmentChange(v)}
-          style={{ width: '100%' }}
-          options={(departments.items || []).map((d) => ({ value: d.name, label: d.name }))}
-        />
-      </Col>
-      <Col xs={12} sm={12} md={4}>
-        <Select
-          allowClear
-          placeholder="Chức vụ"
-          value={position}
-          onChange={(v) => onPositionChange(v)}
-          style={{ width: '100%' }}
-          options={(positions.items || []).map((p) => ({ value: p.name, label: p.name }))}
-        />
-      </Col>
-      <Col xs={12} sm={12} md={4}>
+      <Col xs={12} sm={12} md={8}>
         <Select
           allowClear
           placeholder="Trạng thái"

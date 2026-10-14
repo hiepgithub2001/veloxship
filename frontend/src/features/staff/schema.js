@@ -25,8 +25,6 @@ export const employeeFormSchema = z.object({
     .optional()
     .transform((v) => (v ? v : undefined)),
   role: z.string().min(1, 'Vai trò là bắt buộc.'),
-  department: z.string().optional(),
-  position: z.string().optional(),
   employee_code: z.string().optional(),
   depot_id: z.number().nullable().optional(),
 });

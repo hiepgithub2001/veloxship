@@ -3,7 +3,7 @@
  * Fetches users from the API with debounced search.
  */
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Select, Spin } from 'antd';
+import { Avatar, Select, Spin } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 
 import { getUserOptions } from '../../api/users';
@@ -41,7 +41,18 @@ export default function UserSelect({
     if (!data) return [];
     return data.map((user) => ({
       value: user.id,
-      label: `${user.full_name} (${user.username})`,
+      label: (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <Avatar
+            size="small"
+            src={user.avatar || undefined}
+            style={{ flexShrink: 0 }}
+          >
+            {user.full_name?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <span>{user.full_name} ({user.username})</span>
+        </span>
+      ),
     }));
   }, [data]);
 

@@ -29,8 +29,6 @@ async def list_users(
     search: str | None = Query(None, min_length=1, max_length=100),
     role: str | None = Query(None),
     depot_id: int | None = Query(None),
-    department: str | None = Query(None),
-    position: str | None = Query(None),
     is_active: bool | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("admin")),
@@ -45,8 +43,6 @@ async def list_users(
         search=search,
         role=role,
         depot_id=depot_id,
-        department=department,
-        position=position,
         is_active=is_active,
     )
     return UserPage(

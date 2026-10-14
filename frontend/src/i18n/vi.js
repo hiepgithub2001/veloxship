@@ -259,8 +259,6 @@ const vi = {
     passwordTitle: 'Đổi mật khẩu',
     username: 'Tên đăng nhập',
     role: 'Vai trò',
-    department: 'Phòng ban',
-    position: 'Chức vụ',
     employeeCode: 'Mã nhân viên',
     fullName: 'Họ và tên',
     fullNamePlaceholder: 'Nhập họ tên',

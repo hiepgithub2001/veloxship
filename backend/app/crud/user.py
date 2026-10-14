@@ -40,13 +40,9 @@ async def authenticate(db: AsyncSession, username: str, password: str) -> User |
     return user
 
 
-def _build_metadata(department: str | None, position: str | None, employee_code: str | None) -> dict | None:
+def _build_metadata(employee_code: str | None) -> dict | None:
     """Compose the `metadata` JSONB payload for a user record."""
     metadata: dict = {}
-    if department:
-        metadata["department"] = department.strip()
-    if position:
-        metadata["position"] = position.strip()
     if employee_code:
         metadata["employee_code"] = employee_code.strip()
     return metadata or None
@@ -60,8 +56,6 @@ async def create_user(
     password_hash: str,
     role: str = "operator",
     phone: str | None = None,
-    department: str | None = None,
-    position: str | None = None,
     employee_code: str | None = None,
     depot_id: int | None = None,
 ) -> User:
@@ -72,7 +66,7 @@ async def create_user(
         password_hash=password_hash,
         role=role,
         phone=phone,
-        user_metadata=_build_metadata(department, position, employee_code),
+        user_metadata=_build_metadata(employee_code),
         depot_id=depot_id,
     )
     db.add(user)
@@ -83,7 +77,7 @@ async def create_user(
 
 async def update_user(db: AsyncSession, *, user: User, data: dict) -> User:
     """Partial update — only set fields that are explicitly provided."""
-    metadata_fields = ("department", "position", "employee_code")
+    metadata_fields = ("employee_code",)
     for field in list(data):
         if field in metadata_fields:
             continue
@@ -123,8 +117,6 @@ async def list_users(
     search: str | None = None,
     role: str | None = None,
     depot_id: int | None = None,
-    department: str | None = None,
-    position: str | None = None,
     is_active: bool | None = None,
 ) -> tuple[list[User], int]:
     """List users with pagination, unaccent search, and filters."""
@@ -136,12 +128,6 @@ async def list_users(
         base_query = base_query.where(User.role == role)
     if depot_id is not None:
         base_query = base_query.where(User.depot_id == depot_id)
-    if department:
-        base_query = base_query.where(
-            User.user_metadata["department"].astext == department
-        )
-    if position:
-        base_query = base_query.where(User.user_metadata["position"].astext == position)
 
     if search and search.strip():
         term = func.unaccent(func.lower(search.strip()))
@@ -160,42 +146,3 @@ async def list_users(
     result = await db.execute(items_query)
     items = list(result.scalars().unique().all())
     return items, total
-
-
-async def list_distinct_metadata(db: AsyncSession, key: str) -> list[tuple[str, int]]:
-    """Return distinct non-null `metadata[key]` values with usage counts."""
-    expr = User.user_metadata[key].astext
-    stmt = (
-        select(expr.label("name"), func.count(User.id).label("user_count"))
-        .where(expr.isnot(None))
-        .group_by(expr)
-        .order_by(expr)
-    )
-    result = await db.execute(stmt)
-    return [(row.name, row.user_count) for row in result.all()]
-
-
-async def rename_metadata_value(db: AsyncSession, key: str, old: str, new: str) -> int:
-    """Rename a metadata value across users; returns the number of rows updated."""
-    expr = User.user_metadata[key].astext
-    result = await db.execute(select(User).where(expr == old))
-    users = result.scalars().all()
-    for user in users:
-        merged = dict(user.user_metadata or {})
-        merged[key] = new
-        user.user_metadata = merged
-    await db.flush()
-    return len(users)
-
-
-async def delete_metadata_value(db: AsyncSession, key: str, name: str) -> int:
-    """Remove a metadata value across users; returns the number of rows updated."""
-    expr = User.user_metadata[key].astext
-    result = await db.execute(select(User).where(expr == name))
-    users = result.scalars().all()
-    for user in users:
-        merged = dict(user.user_metadata or {})
-        merged.pop(key, None)
-        user.user_metadata = merged or None
-    await db.flush()
-    return len(users)

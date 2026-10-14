@@ -46,14 +46,6 @@ class User(Base):
     role_ref: Mapped["Role | None"] = relationship("Role")
 
     @property
-    def department(self) -> str | None:
-        return (self.user_metadata or {}).get("department")
-
-    @property
-    def position(self) -> str | None:
-        return (self.user_metadata or {}).get("position")
-
-    @property
     def employee_code(self) -> str | None:
         return (self.user_metadata or {}).get("employee_code")
 

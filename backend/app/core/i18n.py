@@ -42,8 +42,6 @@ _MESSAGES: dict[str, str] = {
     "USERNAME_EXISTS": "Tên đăng nhập đã tồn tại.",
     "PHONE_EXISTS": "Số điện thoại đã được sử dụng.",
     "CANNOT_LOCK_SELF": "Bạn không thể tự khóa tài khoản của chính mình.",
-    "DEPARTMENT_IN_USE": "Phòng ban đang được nhân viên sử dụng, không thể xóa.",
-    "POSITION_IN_USE": "Chức vụ đang được nhân viên sử dụng, không thể xóa.",
 
     # Roles & Permissions
     "ROLE_NOT_FOUND": "Không tìm thấy vai trò.",

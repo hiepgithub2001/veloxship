@@ -143,16 +143,6 @@ export function AccountPage() {
               <Descriptions.Item label={t('account.role')}>
                 {ROLE_LABELS[currentUser?.role] || currentUser?.role}
               </Descriptions.Item>
-              {currentUser?.department && (
-                <Descriptions.Item label={t('account.department')}>
-                  {currentUser.department}
-                </Descriptions.Item>
-              )}
-              {currentUser?.position && (
-                <Descriptions.Item label={t('account.position')}>
-                  {currentUser.position}
-                </Descriptions.Item>
-              )}
               {currentUser?.employee_code && (
                 <Descriptions.Item label={t('account.employeeCode')}>
                   {currentUser.employee_code}

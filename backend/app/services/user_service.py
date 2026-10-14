@@ -57,8 +57,6 @@ async def create_user(
         password_hash=hash_password(password),
         role=payload.role,
         phone=payload.phone,
-        department=payload.department,
-        position=payload.position,
         employee_code=payload.employee_code,
         depot_id=payload.depot_id,
     )
