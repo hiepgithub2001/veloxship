@@ -4,6 +4,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
 import { useAuth } from './AuthContext';
+import { LOGIN_PATH } from './redirect';
 
 export function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -20,7 +21,9 @@ export function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/dang-nhap" state={{ from: location }} replace />;
+    // `from` carries the whole location (path + query + hash) so the login page
+    // can send the user back to exactly where the session died.
+    return <Navigate to={LOGIN_PATH} state={{ from: location }} replace />;
   }
 
   return children;

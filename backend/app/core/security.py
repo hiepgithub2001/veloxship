@@ -2,7 +2,7 @@
 
 import secrets
 import string
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -31,8 +31,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def _create_token(data: dict, expires_delta: timedelta) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + expires_delta
-    to_encode.update({"exp": expire})
+    expire = datetime.now(UTC) + expires_delta
+    # `jti` makes every issued token unique. Without it two tokens minted in the
+    # same second carry identical claims and therefore encode to the same
+    # string, so a refresh would hand back the very token it was rotating out.
+    # It is also the hook a future revocation/blacklist would key on.
+    to_encode.update({"exp": expire, "jti": secrets.token_urlsafe(16)})
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
