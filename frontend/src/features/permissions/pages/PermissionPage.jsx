@@ -43,6 +43,7 @@ export function PermissionPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [checkedActions, setCheckedActions] = useState([]);
+  const [editing, setEditing] = useState(false);
 
   const rolesQuery = useQuery({ queryKey: ['roles'], queryFn: getRoles });
   const catalogQuery = useQuery({
@@ -65,9 +66,10 @@ export function PermissionPage() {
     }
   }, [roles, selectedRoleCode]);
 
-  // Sync checkbox state when the selected role changes.
+  // Sync checkbox state when the selected role changes, leaving edit mode.
   useEffect(() => {
     setCheckedActions(selectedRole?.actions || []);
+    setEditing(false);
   }, [selectedRoleCode, selectedRole]);
 
   const deleteMutation = useMutation({
@@ -84,15 +86,28 @@ export function PermissionPage() {
     mutationFn: ({ code, actions }) => updateRolePermissions(code, actions),
     onSuccess: () => {
       message.success('Đã lưu quyền cho vai trò');
+      setEditing(false);
       queryClient.invalidateQueries({ queryKey: ['roles'] });
     },
     onError: (err) => message.error(err.response?.data?.message || 'Lỗi khi lưu quyền'),
   });
 
+  // Permissions are read-only until the user explicitly enters edit mode.
   const toggleAction = (code) => {
+    if (!editing) return;
     setCheckedActions((prev) =>
       prev.includes(code) ? prev.filter((a) => a !== code) : [...prev, code],
     );
+  };
+
+  const startEdit = () => {
+    setCheckedActions(selectedRole?.actions || []);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setCheckedActions(selectedRole?.actions || []);
+    setEditing(false);
   };
 
   const handleCreate = () => {
@@ -162,34 +177,45 @@ export function PermissionPage() {
             extra={
               selectedRole ? (
                 <Space>
-                  <Button icon={<EditOutlined />} onClick={handleEdit}>
-                    Sửa
-                  </Button>
-                  <Popconfirm
-                    title="Xóa vai trò này?"
-                    description="Chỉ xóa được vai trò không còn người dùng nào."
-                    okText="Xóa"
-                    cancelText="Hủy"
-                    okButtonProps={{ danger: true }}
-                    onConfirm={() => deleteMutation.mutate(selectedRole.code)}
-                  >
-                    <Button danger icon={<DeleteOutlined />} disabled={selectedRole.code === 'admin'}>
-                      Xóa
-                    </Button>
-                  </Popconfirm>
-                  <Button
-                    type="primary"
-                    icon={<SaveOutlined />}
-                    loading={savePermissionsMutation.isPending}
-                    onClick={() =>
-                      savePermissionsMutation.mutate({
-                        code: selectedRole.code,
-                        actions: checkedActions,
-                      })
-                    }
-                  >
-                    Lưu quyền
-                  </Button>
+                  {editing ? (
+                    <>
+                      <Button onClick={cancelEdit}>Hủy</Button>
+                      <Button
+                        type="primary"
+                        icon={<SaveOutlined />}
+                        loading={savePermissionsMutation.isPending}
+                        onClick={() =>
+                          savePermissionsMutation.mutate({
+                            code: selectedRole.code,
+                            actions: checkedActions,
+                          })
+                        }
+                      >
+                        Lưu quyền
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button icon={<EditOutlined />} onClick={handleEdit}>
+                        Sửa vai trò
+                      </Button>
+                      <Button type="primary" ghost icon={<EditOutlined />} onClick={startEdit}>
+                        Sửa quyền
+                      </Button>
+                      <Popconfirm
+                        title="Xóa vai trò này?"
+                        description="Chỉ xóa được vai trò không còn người dùng nào."
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => deleteMutation.mutate(selectedRole.code)}
+                      >
+                        <Button danger icon={<DeleteOutlined />} disabled={selectedRole.code === 'admin'}>
+                          Xóa
+                        </Button>
+                      </Popconfirm>
+                    </>
+                  )}
                 </Space>
               ) : null
             }
@@ -208,6 +234,14 @@ export function PermissionPage() {
                   <Text type="secondary">{selectedRole.description}</Text>
                 )}
 
+                {!editing && (
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary">
+                      Quyền đang ở chế độ chỉ xem. Bấm <strong>Sửa quyền</strong> để thay đổi.
+                    </Text>
+                  </div>
+                )}
+
                 <Divider style={{ margin: '16px 0' }} />
 
                 <div style={{ maxHeight: 420, overflowY: 'auto' }}>
@@ -220,6 +254,7 @@ export function PermissionPage() {
                             key={action.code}
                             checked={checkedActions.includes(action.code)}
                             onChange={() => toggleAction(action.code)}
+                            disabled={!editing}
                             style={{ marginRight: 16, marginBottom: 4 }}
                           >
                             {action.label}
