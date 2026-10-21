@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models.customer import Customer
-from app.schemas.customer import CustomerCreate
+from app.schemas.customer import ADDRESS_FIELDS, CustomerCreate, CustomerUpdate
 
 
 async def _next_customer_code(db: AsyncSession) -> str:
@@ -97,4 +97,56 @@ async def create_customer(db: AsyncSession, payload: CustomerCreate) -> Customer
     )
     db.add(customer)
     await db.flush()
+    return customer
+
+
+async def phone_exists(
+    db: AsyncSession,
+    phone: str | None,
+    *,
+    exclude_id: int | None = None,
+) -> bool:
+    """Return True when another customer already uses this phone number.
+
+    Used to flag duplicates in the audit trail only — the flow deliberately
+    does not block, because `bill_service` resolves customers by phone.
+    """
+    if not phone:
+        return False
+    query = select(Customer.id).where(Customer.phone == phone)
+    if exclude_id is not None:
+        query = query.where(Customer.id != exclude_id)
+    return (await db.execute(query.limit(1))).first() is not None
+
+
+async def update_customer(
+    db: AsyncSession,
+    customer: Customer,
+    payload: CustomerUpdate,
+) -> Customer:
+    """Apply a partial update, merging address fields into `metadata`.
+
+    Metadata keys the caller did not mention are preserved, so updating a name
+    never drops the stored address.
+    """
+    data = payload.model_dump(exclude_unset=True)
+
+    touched_address = False
+    metadata = dict(customer.customer_metadata or {})
+    for field in ADDRESS_FIELDS:
+        if field in data:
+            touched_address = True
+            value = data.pop(field)
+            if value is None or value == "":
+                metadata.pop(field, None)
+            else:
+                metadata[field] = value
+    if touched_address:
+        customer.customer_metadata = metadata or None
+
+    for field, value in data.items():
+        setattr(customer, field, value)
+
+    await db.flush()
+    await db.refresh(customer)
     return customer

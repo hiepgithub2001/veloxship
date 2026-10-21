@@ -29,7 +29,7 @@ description: "Danh sách nhiệm vụ phát triển cho DEV A - Phần mềm Ho�
 - [ ] **[UC-WEB-12] Quản lý loại hàng hóa**: Phân loại nhóm hàng hóa (hàng cồng kềnh, dễ vỡ, tài liệu, chất lỏng) phục vụ tính phí *(Gộp vào UC-WEB-11)*
 
 ### 2. QUẢN LÝ KHÁCH HÀNG
-- [ ] **[UC-WEB-13] Quản lý thông tin khách hàng**: Quản lý danh sách khách hàng gửi, phân loại nhóm khách hàng *(Lưu ý: Xác nhận thông tin chi tiết với khách hàng)*
+- [x] **[UC-WEB-13] Quản lý thông tin khách hàng**: Quản lý danh sách khách hàng gửi, phân loại nhóm khách hàng *(Đã xong: xem/tạo/sửa hồ sơ, lịch sử phiếu, chỉ số; địa chỉ lưu trong `metadata`, không đổi cấu trúc bảng)*
 - [ ] **[UC-WEB-14] Quản lý bảng giá**: Thiết lập bảng giá cước chi tiết áp dụng cho từng khách hàng hoặc nhóm khách hàng *(Lưu ý: Xác nhận công thức/bảng giá chi tiết với khách hàng)*
 - [ ] **[UC-WEB-15] Quản lý công nợ**: Kiểm soát công nợ khách hàng gửi theo định kỳ, lập bảng đối soát, ghi nhận thanh toán
 

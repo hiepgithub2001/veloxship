@@ -212,10 +212,10 @@ da_tao ──► da_lay_hang ──► dang_van_chuyen ──► da_giao (termin
 | **US2 — In lại / Xuất PDF** | ✅ | `GET /bills/{id}/print?as=pdf\|html` tăng `print_count` + ghi kiểm toán; nút tải PDF ở chi tiết. |
 | **US2 — Tra cứu không phân biệt dấu** | 🚧 | `list_bills` **chưa** có tham số tìm/lọc; **thiếu** `search_service.py`; ô tìm kiếm ở `BillListPage` chưa có. |
 | **US2 — Cập nhật trạng thái vòng đời** | 🚧 | **Thiếu** `POST /bills/{id}/status`, `transition_status` trong `bill_service`, endpoint `by-tracking`, `events`, và `StatusUpdateDrawer` frontend. `api/bills.js` đã có hàm gọi nhưng backend chưa có endpoint (sẽ 404). |
-| **US3 — Hồ sơ khách hàng** (P3) | ⬜ | Chỉ có model `customers` + migration. **Thiếu** `crud/customer.py`, `customer_service.py`, router `customers.py` (chưa wire `main.py`), toàn bộ frontend khách hàng (đang là trang placeholder), `api/customers.js`, `CustomerPicker`, tự điền người gửi. |
+| **US3 — Hồ sơ khách hàng** (P3) | ✅ | Đầy đủ: danh sách + tìm không dấu/lọc trạng thái, chi tiết, **tạo thủ công** (`POST /customers`), **sửa hồ sơ** (`PATCH /customers/{id}`, `code` bất biến), **lịch sử phiếu** (lọc gửi/nhận), **chỉ số hoạt động**; tự điền người gửi khi lập phiếu có sẵn. Địa chỉ lưu trong `metadata` JSONB ⇒ **không cần migration cho dữ liệu**; migration `0020` chỉ thêm index `bills(sender_id)`/`bills(receiver_id)` (index-only, không đổi dữ liệu). |
 | **Kiểm thử & tôi luyện** (Phase 6) | ⬜ | Thư mục test chỉ có `__init__.py`; chưa có test đồng thời (SC-006), tìm không dấu (SC-005), CHECK cước, drift OpenAPI, hiệu năng (SC-004), audit chuỗi tiếng Việt. |
 
-**Kết luận MVP**: Nghiệp vụ cốt lõi (đăng nhập → tạo → in phiếu tiếng Việt có mã vận đơn/barcode/QR) **đã chạy được**. Hai hạng mục cần hoàn thiện tiếp theo để "đủ vận hành": **(1)** tra cứu không phân biệt dấu + cập nhật trạng thái (US2 phần còn lại), **(2)** hồ sơ khách hàng tự điền (US3).
+**Kết luận MVP**: Nghiệp vụ cốt lõi (đăng nhập → tạo → in phiếu tiếng Việt có mã vận đơn/barcode/QR), phần **tra cứu + cập nhật trạng thái** và **quản lý khách hàng (US3)** **đã chạy được**. Việc còn lại để "đủ vận hành": **Phase 6** (test hiệu năng/đồng thời, chống drift OpenAPI, rà chuỗi tiếng Việt) và **đối soát bản in** với mẫu giấy của hãng.
 
 ---
 
@@ -260,8 +260,8 @@ da_tao ──► da_lay_hang ──► dang_van_chuyen ──► da_giao (termin
 
 ## 13. Bước tiếp theo được khuyến nghị (Recommended Next Steps)
 
-1. **Hoàn thiện US2** — thêm `search_service` + tham số tìm/lọc cho `GET /bills` (unaccent + trigram); thêm `POST /bills/{id}/status`, `by-tracking`, `events` và `transition_status`; ô tìm kiếm + `StatusUpdateDrawer` ở frontend.
-2. **Triển khai US3** — `crud/customer` + `customer_service` + router `customers` (wire `main.py`); frontend `api/customers.js`, `CustomerListPage`, `CustomerFormDrawer`, `CustomerPicker` + tự điền người gửi + snapshot server-side.
+1. ~~**Hoàn thiện US2**~~ — **đã xong**: `GET /bills` có tìm/lọc (unaccent + trigram), `POST /bills/{id}/status`, `GET /bills/{id}/events`, in lại/xuất PDF; frontend có ô tìm kiếm và `StatusUpdateDrawer`.
+2. ~~**Triển khai US3**~~ — **đã xong**: hồ sơ khách hàng đầy đủ (xem / tạo / sửa / lịch sử phiếu / chỉ số) + tự điền người gửi khi lập phiếu.
 3. **Phase 6** — bổ sung test cho SC-004/005/006, CHECK cước, drift OpenAPI, và script rà chuỗi tiếng Việt (SC-002).
 4. **Đối soát bản in** — nhân viên hãng chấm độ khớp so với `bill_format.jpg` (mục tiêu ≥ 9/10, SC-003).
 
