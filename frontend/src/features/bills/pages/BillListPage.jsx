@@ -4,11 +4,10 @@
  * (via the shared BackButton) restores the exact previous view.
  */
 import { useEffect, useState } from 'react';
-import { Button, Card, Table, Typography, Space, Tag, Checkbox, Divider, Popover, message } from 'antd';
+import { Button, Card, Table, Typography, Space, Checkbox, Divider, Popover, message } from 'antd';
 import {
   PlusOutlined,
   PrinterOutlined,
-  EyeOutlined,
   FileExcelOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
@@ -18,61 +17,24 @@ import dayjs from 'dayjs';
 import { t } from '../../../i18n/vi';
 import { usePermission } from '../../../auth/permissions';
 import { listBills, exportBills } from '../../../api/bills';
-import { formatVND, formatViDate } from '../../../lib/format';
-import { ImagePreviewGroup } from '../../../components/common/ImagePreviewGroup';
+import { buildBillColumns, TOGGLEABLE_BILL_COLUMN_KEYS } from '../components/billColumns';
 import { BillFilters } from '../components/BillFilters';
 import { BillPdfPreview } from '../components/BillPdfPreview';
 import { BillBatchPrintModal } from '../components/BillBatchPrintModal';
 
 const { Title } = Typography;
 
-const statusColors = {
-  created: 'blue',
-  picked_up: 'cyan',
-  in_transit: 'orange',
-  delivered: 'green',
-  returned: 'purple',
-  cancelled: 'red',
-};
-
-const statusText = {
-  created: 'Đã tạo',
-  picked_up: 'Đã lấy hàng',
-  in_transit: 'Đang vận chuyển',
-  delivered: 'Đã giao',
-  returned: 'Hoàn trả',
-  cancelled: 'Đã hủy',
-};
-
-const formatAddress = (party) =>
-  [party?.address_detail, party?.ward_name, party?.province_name].filter(Boolean).join(', ');
-
-// Column keys the user may show/hide from the list. `index` and `actions`
-// are always visible, so they are intentionally left out of this list.
-const TOGGLEABLE_COLUMN_KEYS = [
-  'created_at',
-  'tracking_number',
-  'sender_province',
-  'cod_amount',
-  'status',
-  'receiver_name',
-  'images',
-  'receiver_phone',
-  'receiver_address',
-  'note',
-];
-
 const COLUMN_STORAGE_KEY = 'bill-list-visible-columns';
 
 const loadVisibleColumns = () => {
   try {
     const raw = localStorage.getItem(COLUMN_STORAGE_KEY);
-    if (!raw) return TOGGLEABLE_COLUMN_KEYS;
+    if (!raw) return TOGGLEABLE_BILL_COLUMN_KEYS;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return TOGGLEABLE_COLUMN_KEYS;
-    return parsed.filter((key) => TOGGLEABLE_COLUMN_KEYS.includes(key));
+    if (!Array.isArray(parsed)) return TOGGLEABLE_BILL_COLUMN_KEYS;
+    return parsed.filter((key) => TOGGLEABLE_BILL_COLUMN_KEYS.includes(key));
   } catch {
-    return TOGGLEABLE_COLUMN_KEYS;
+    return TOGGLEABLE_BILL_COLUMN_KEYS;
   }
 };
 
@@ -209,112 +171,18 @@ export function BillListPage() {
     setBatchPrintIds(selectedRowKeys);
   };
 
-  const columns = [
-    {
-      title: 'STT',
-      key: 'index',
-      width: 60,
-      render: (_, __, index) => (page - 1) * pageSize + index + 1,
-    },
-    {
-      title: 'Ngày',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 110,
-      render: (date) => formatViDate(date),
-    },
-    {
-      title: 'Mã vận đơn',
-      dataIndex: 'tracking_number',
-      key: 'tracking_number',
-      width: 170,
-      render: (text) => <Typography.Text strong>{text}</Typography.Text>,
-    },
-    {
-      title: 'Tỉnh phát',
-      dataIndex: ['sender', 'province_name'],
-      key: 'sender_province',
-      width: 130,
-    },
-    {
-      title: 'COD',
-      dataIndex: 'cod_amount',
-      key: 'cod_amount',
-      width: 120,
-      render: (val) => (val ? formatVND(val) : '—'),
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      width: 150,
-      render: (status) => (
-        <Tag color={statusColors[status] || 'default'}>{statusText[status] || status}</Tag>
-      ),
-    },
-    {
-      title: 'Người nhận',
-      dataIndex: ['receiver', 'name'],
-      key: 'receiver_name',
-      width: 160,
-    },
-    {
-      title: 'Hình ảnh',
-      key: 'images',
-      width: 90,
-      render: (_, record) => {
-        const images = (record.contents || []).flatMap((c) => c.images || []).filter(Boolean);
-        return <ImagePreviewGroup images={images} />;
-      },
-    },
-    {
-      title: 'SĐT người nhận',
-      dataIndex: ['receiver', 'phone'],
-      key: 'receiver_phone',
-      width: 140,
-    },
-    {
-      title: 'Địa chỉ người nhận',
-      key: 'receiver_address',
-      width: 220,
-      ellipsis: true,
-      render: (_, record) => formatAddress(record.receiver),
-    },
-    {
-      title: 'Ghi chú',
-      dataIndex: 'note',
-      key: 'note',
-      width: 160,
-      ellipsis: true,
-      render: (text) => text || '—',
-    },
-    {
-      title: 'Thao tác',
-      key: 'actions',
-      fixed: 'right',
-      width: 100,
-      render: (_, record) => (
-        <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} onClick={() => openDetail(record.id)} />
-          <Button
-            type="text"
-            icon={<PrinterOutlined />}
-            onClick={(event) => {
-              event.stopPropagation();
-              handlePrint(record.id);
-            }}
-          />
-        </Space>
-      ),
-    },
-  ];
+  const columns = buildBillColumns({
+    offset: (page - 1) * pageSize,
+    onView: openDetail,
+    onPrint: handlePrint,
+  });
 
   // Only drop a column when it is toggleable and the user hid it.
   const visibleColumns = columns.filter(
-    (col) => !TOGGLEABLE_COLUMN_KEYS.includes(col.key) || visibleColumnKeys.includes(col.key)
+    (col) => !TOGGLEABLE_BILL_COLUMN_KEYS.includes(col.key) || visibleColumnKeys.includes(col.key)
   );
 
-  const toggleableColumns = columns.filter((col) => TOGGLEABLE_COLUMN_KEYS.includes(col.key));
+  const toggleableColumns = columns.filter((col) => TOGGLEABLE_BILL_COLUMN_KEYS.includes(col.key));
 
   const columnChooser = (
     <Popover
@@ -338,7 +206,7 @@ export function BillListPage() {
             <Button
               size="small"
               type="text"
-              onClick={() => handleVisibleColumnsChange(TOGGLEABLE_COLUMN_KEYS)}
+              onClick={() => handleVisibleColumnsChange(TOGGLEABLE_BILL_COLUMN_KEYS)}
             >
               {t('bills.columnsSelectAll')}
             </Button>

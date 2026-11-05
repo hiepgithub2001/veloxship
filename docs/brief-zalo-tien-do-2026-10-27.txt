@@ -1,0 +1,36 @@
+Kính gửi anh/chị,
+
+Báo cáo nhanh tiến độ dự án Phần mềm quản lý vận chuyển Hoàng Nam Express - Giai đoạn 1 (cập nhật 27/10/2026).
+
+I. TIẾN ĐỘ THEO NHÓM CHỨC NĂNG
+
+1. Nền tảng: đăng nhập, phân quyền theo vai trò, quản lý nhân viên, bưu cục, đội xe, danh mục tỉnh/thành - phường/xã. Đã hoàn thành.
+
+2. Phiếu gửi: tạo phiếu, mã vận đơn kèm barcode/QR, in A5 3 liên và PDF, in lại, tra cứu không dấu, lọc, xuất Excel, in hàng loạt, cập nhật trạng thái, chỉnh cước và COD, bình luận. Đã hoàn thành phần lõi; đang bổ sung chọn hạng dịch vụ, bảo hiểm, hủy giao hàng thành công và xem lịch sử chỉnh sửa.
+
+3. Khách hàng: hồ sơ gửi/nhận, lịch sử phiếu, chỉ số doanh thu và số đơn. Đã hoàn thành.
+
+4. Đối tác 3PL, công nợ, lấy hàng: đang triển khai trong 2 tuần tới.
+
+5. Kho, COD, chuyến xe: dự kiến 11-21/11.
+
+6. Báo cáo tài chính và vận hành: dự kiến 24/11-05/12.
+
+II. KẾ HOẠCH 2 TUẦN TỚI (27/10 - 10/11)
+
+- Hoàn thiện phiếu gửi: chọn hạng dịch vụ, COD, bảo hiểm ngay khi tạo; hủy giao hàng thành công; xem lịch sử chỉnh sửa.
+- Đối tác 3PL: hồ sơ đối tác và bảng giá cước mua.
+- Công nợ: xem công nợ theo khách, ghi nhận thanh toán.
+- Lấy hàng: tiếp nhận yêu cầu, gán bưu tá, cập nhật trạng thái lấy hàng.
+Mốc bàn giao đợt 2: 10/11/2026 (02 ngày 09-10/11 dành kiểm thử hồi quy và bàn giao).
+
+III. CẦN XÁC NHẬN ĐỂ ĐÚNG TIẾN ĐỘ
+
+- Quy tắc bảng giá cước (theo khách/nhóm, tuyến, công thức) - trước 31/10.
+- Quy tắc công nợ (kỳ đối soát, thanh toán từng phần, phiếu hủy có tính không) - trước 31/10.
+- Chính sách hủy giao hàng thành công (quay về trạng thái nào, ai được phép, giới hạn thời gian) - trước 28/10.
+- Danh sách báo cáo ưu tiên trong 20 báo cáo - trước 07/11.
+
+Lưu ý: so với mốc gốc 10/10, tiến độ chậm hơn kế hoạch; mốc 10/11 là mốc điều chỉnh đề xuất.
+
+Trân trọng.

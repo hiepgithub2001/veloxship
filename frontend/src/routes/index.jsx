@@ -17,6 +17,7 @@ import { BillDetailPage } from '../features/bills/pages/BillDetailPage';
 import { DepotListPage } from '../features/depots/pages/DepotListPage';
 import { VehicleListPage } from '../features/vehicles/pages/VehicleListPage';
 import { CustomerListPage } from '../features/customers/pages/CustomerListPage';
+import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPage';
 import { StaffPage } from '../features/staff/pages/StaffPage';
 import { PermissionPage } from '../features/permissions/pages/PermissionPage';
 import { AccountPage } from '../features/account/pages/AccountPage';
@@ -73,6 +74,14 @@ const router = createBrowserRouter([
         element: (
           <RequirePermission permission="customer:view">
             <CustomerListPage />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: 'khach-hang/:id',
+        element: (
+          <RequirePermission permission="customer:view">
+            <CustomerDetailPage />
           </RequirePermission>
         ),
       },

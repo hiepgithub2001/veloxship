@@ -12,7 +12,8 @@
   --color-warning: #faad14;
   --color-error: #ff4d4f;
   --color-text-base: #1a1a1a;
-  --color-bg-base: #fafafa;
+  --color-bg-base: #ffffff;
+  --color-bg-layout: #f7f8fa;
 }
 
 /* Form section title & brand utility classes */
@@ -55,7 +56,7 @@ html {
 
 body {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--color-bg-layout);
   color: #1a1a1a;
 }
 
@@ -513,5 +514,139 @@ body {
     width: auto;
     flex: 0 0 auto;
     text-align: left;
+  }
+}
+
+/* Customer detail — flat Ant Design "Basic Detail" layout. */
+.customer-detail {
+  display: grid;
+  gap: 16px;
+}
+/* Grid children default to min-width:auto, so a wide table would blow the page
+   out horizontally instead of scrolling inside its card. */
+.customer-detail > * {
+  min-width: 0;
+}
+.customer-detail-loading {
+  display: block;
+  margin: 48px auto;
+}
+.customer-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.customer-detail-edit {
+  margin-left: auto;
+}
+.customer-hero {
+  border-top: 4px solid var(--color-primary);
+}
+.customer-hero .ant-card-body {
+  display: grid;
+  gap: 16px;
+}
+.customer-hero-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.customer-hero-avatar {
+  flex: none;
+  background: var(--color-primary);
+  font-size: 24px;
+  font-weight: 600;
+}
+.customer-hero-identity-text {
+  min-width: 0;
+}
+.customer-hero-name {
+  margin: 0 0 6px !important;
+  font-size: 22px;
+}
+.customer-hero-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  color: #595959;
+}
+.customer-hero-contact-item {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.customer-hero-contact-item .anticon {
+  margin-top: 4px;
+  color: #8c8c8c;
+}
+.customer-hero-divider {
+  margin: 0;
+}
+.customer-flat-descriptions .ant-descriptions-item-label {
+  color: #8c8c8c;
+}
+.customer-flat-descriptions .ant-descriptions-item-content {
+  color: #1a1a1a;
+}
+.customer-metric-card {
+  height: 100%;
+}
+.customer-metric-card .ant-statistic-title {
+  font-size: 13px;
+  color: #8c8c8c;
+}
+.customer-metric-card .ant-statistic-content-prefix {
+  margin-inline-end: 6px;
+  color: #bfbfbf;
+  font-size: 16px;
+}
+.customer-metric-delivered .ant-statistic-content-prefix {
+  color: var(--color-success);
+}
+.customer-metric-cancelled .ant-statistic-content-prefix {
+  color: var(--color-error);
+}
+.customer-metric-revenue .ant-statistic-content-prefix {
+  color: var(--color-primary);
+}
+.customer-bills-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.customer-bills-date-range {
+  width: 280px;
+}
+.customer-bills-reset {
+  padding-inline: 0;
+}
+.customer-bills-card .ant-card-head-wrapper {
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.customer-bills-card .ant-card-head-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.customer-bills-card .ant-card-extra {
+  margin-left: 0;
+}
+.customer-bills-summary {
+  font-size: 13px;
+}
+
+@media (max-width: 576px) {
+  .customer-hero-identity {
+    align-items: flex-start;
+  }
+  .customer-hero-name {
+    font-size: 20px;
+  }
+  .customer-bills-date-range {
+    width: 100%;
   }
 }

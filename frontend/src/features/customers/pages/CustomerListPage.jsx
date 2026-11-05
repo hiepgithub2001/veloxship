@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { Col, Input, Row, Select, Typography } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { Button, Col, Input, Row, Select, Typography } from 'antd';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { getCustomers } from '../../../api/customers';
+import { Can } from '../../../auth/RequirePermission';
 import { t } from '../../../i18n/vi';
-import CustomerDetailDrawer from '../components/CustomerDetailDrawer';
+import CustomerFormModal from '../components/CustomerFormModal';
 import CustomerTable from '../components/CustomerTable';
 
 const { Title, Text } = Typography;
 
 export function CustomerListPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [isActive, setIsActive] = useState(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20 });
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', { search, isActive, ...pagination }],
@@ -33,11 +36,28 @@ export function CustomerListPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 20 }}>
-        <Title level={3} style={{ marginBottom: 4 }}>
-          {t('customers.title')}
-        </Title>
-        <Text type="secondary">{t('customers.createdFromBillsHint')}</Text>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 16,
+          flexWrap: 'wrap',
+          marginBottom: 20,
+        }}
+      >
+        <div>
+          <Title level={3} style={{ marginBottom: 4 }}>
+            {t('customers.title')}
+          </Title>
+          <Text type="secondary">{t('customers.createdFromBillsHint')}</Text>
+        </div>
+
+        <Can permission="customer:create">
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+            {t('customers.create')}
+          </Button>
+        </Can>
       </div>
 
       <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
@@ -72,13 +92,15 @@ export function CustomerListPage() {
         onPaginationChange={(next) =>
           setPagination({ current: next.current, pageSize: next.pageSize })
         }
-        onView={setSelectedCustomer}
+        onView={(customer) => navigate(`/khach-hang/${customer.id}`)}
       />
 
-      <CustomerDetailDrawer
-        customer={selectedCustomer}
-        open={selectedCustomer !== null}
-        onClose={() => setSelectedCustomer(null)}
+      <CustomerFormModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={(created) => {
+          if (created?.id) navigate(`/khach-hang/${created.id}`);
+        }}
       />
     </div>
   );

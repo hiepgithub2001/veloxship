@@ -69,8 +69,9 @@ async def seed() -> None:
 
         await db.commit()
 
-    # Seed administrative divisions (provinces & wards)
+    # Seed administrative divisions (provinces & wards) after the core data is committed.
     from app.scripts.seed_divisions import seed_divisions
+
     await seed_divisions()
 
 

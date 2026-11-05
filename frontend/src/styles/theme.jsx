@@ -14,7 +14,8 @@ const brandColors = {
   warning: '#FAAD14',
   error: '#FF4D4F',
   textBase: '#1A1A1A',
-  bgBase: '#FAFAFA',
+  bgBase: '#FFFFFF',
+  bgLayout: '#F7F8FA',
 };
 
 const theme = {
@@ -25,7 +26,12 @@ const theme = {
     colorWarning: brandColors.warning,
     colorError: brandColors.error,
     colorTextBase: brandColors.textBase,
+    // Pure-white containers (cards, tables, modals) on a light canvas; the
+    // previous #FAFAFA base made every card read one shade too dark.
     colorBgBase: brandColors.bgBase,
+    colorBgContainer: '#FFFFFF',
+    colorBgElevated: '#FFFFFF',
+    colorBgLayout: brandColors.bgLayout,
     borderRadius: 6,
     fontFamily:
       "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -39,7 +45,10 @@ const theme = {
     Layout: {
       siderBg: '#1A1A1A',
       headerBg: '#FFFFFF',
-      bodyBg: '#F5F5F5',
+      bodyBg: brandColors.bgLayout,
+    },
+    Table: {
+      headerBg: '#FAFAFA',
     },
     Menu: {
       darkItemBg: '#1A1A1A',
