@@ -276,6 +276,8 @@ async def list_bills_by_customer(
     *,
     customer_id: int,
     role: str = "all",
+    created_from: datetime | None = None,
+    created_to: datetime | None = None,
     page: int = 1,
     page_size: int = 10,
 ) -> tuple[list[Bill], int]:
@@ -298,6 +300,11 @@ async def list_bills_by_customer(
         base_query = base_query.where(
             or_(Bill.sender_id == customer_id, Bill.receiver_id == customer_id)
         )
+
+    if created_from is not None:
+        base_query = base_query.where(Bill.created_at >= created_from)
+    if created_to is not None:
+        base_query = base_query.where(Bill.created_at <= created_to)
 
     count_result = await db.execute(
         select(func.count()).select_from(base_query.subquery()),

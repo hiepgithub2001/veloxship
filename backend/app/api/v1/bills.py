@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.deps import authorize, get_current_user, require_permission
 from app.core.exceptions import ForbiddenError, NotFoundError
 from app.core.permissions import status_action
+from app.core.timeutils import naive_utc
 from app.crud import audit as audit_crud
 from app.crud import bill as bill_crud
 from app.db.session import get_db
@@ -23,15 +24,6 @@ from app.schemas.bill import (
 from app.services import bill_service
 
 router = APIRouter(prefix="/bills", tags=["bills"])
-
-
-def _naive_utc(dt: datetime | None) -> datetime | None:
-    """Normalize a filter timestamp to naive UTC, matching `bills.created_at` storage."""
-    if dt is None:
-        return None
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    return dt.astimezone(UTC).replace(tzinfo=None)
 
 
 @router.post("", response_model=BillRead, status_code=201)
@@ -66,8 +58,8 @@ async def list_bills(
         page_size=page_size,
         search=search,
         status=status.value if status else None,
-        created_from=_naive_utc(created_from),
-        created_to=_naive_utc(created_to),
+        created_from=naive_utc(created_from),
+        created_to=naive_utc(created_to),
         tracking_number=tracking_number,
         sender_name=sender_name,
         receiver_name=receiver_name,

@@ -32,11 +32,13 @@ export async function updateCustomer(id, payload) {
   return data;
 }
 
-export async function getCustomerBills(id, { page, pageSize, role } = {}) {
+export async function getCustomerBills(id, { page, pageSize, role, createdFrom, createdTo } = {}) {
   const params = {};
   if (page != null) params.page = page;
   if (pageSize != null) params.page_size = pageSize;
   if (role) params.role = role;
+  if (createdFrom) params.created_from = createdFrom;
+  if (createdTo) params.created_to = createdTo;
 
   const { data } = await client.get(`/customers/${id}/bills`, { params });
   return data;

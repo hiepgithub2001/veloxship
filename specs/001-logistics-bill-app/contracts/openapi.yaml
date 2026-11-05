@@ -247,6 +247,16 @@ paths:
             enum: [all, sender, receiver]
             default: all
           description: Lọc theo vai trò của khách hàng trên phiếu.
+        - in: query
+          name: created_from
+          required: false
+          schema: { type: string, format: date-time }
+          description: Chỉ lấy phiếu tạo từ thời điểm này (ISO-8601).
+        - in: query
+          name: created_to
+          required: false
+          schema: { type: string, format: date-time }
+          description: Chỉ lấy phiếu tạo đến thời điểm này (ISO-8601).
       responses:
         '200':
           description: OK

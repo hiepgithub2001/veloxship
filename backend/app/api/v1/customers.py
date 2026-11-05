@@ -7,12 +7,14 @@ Deleting is intentionally NOT exposed: customers are referenced by bills, so
 deactivation via `is_active` is the soft-delete path.
 """
 
+from datetime import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.deps import require_permission
+from app.core.timeutils import naive_utc
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.bill import BillPage, BillRead
@@ -98,6 +100,8 @@ async def list_customer_bills(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     role: Literal["all", "sender", "receiver"] = Query("all"),
+    created_from: datetime | None = Query(None),
+    created_to: datetime | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission("customer:view")),
 ):
@@ -106,6 +110,8 @@ async def list_customer_bills(
         db,
         customer_id,
         role=role,
+        created_from=naive_utc(created_from),
+        created_to=naive_utc(created_to),
         page=page,
         page_size=page_size,
     )

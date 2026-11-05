@@ -4,6 +4,8 @@ The API layer stays thin: every rule (not-found handling, audit trail,
 duplicate-phone flagging, revenue attribution) lives here.
 """
 
+from datetime import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError
@@ -99,15 +101,19 @@ async def list_customer_bills(
     customer_id: int,
     *,
     role: str = "all",
+    created_from: datetime | None = None,
+    created_to: datetime | None = None,
     page: int = 1,
     page_size: int = 10,
 ) -> tuple[list[Bill], int]:
-    """Return the customer's bill history, optionally filtered by side."""
+    """Return the customer's bill history, optionally filtered by side and date range."""
     await get_customer(db, customer_id)
     return await bill_crud.list_bills_by_customer(
         db,
         customer_id=customer_id,
         role=role,
+        created_from=created_from,
+        created_to=created_to,
         page=page,
         page_size=page_size,
     )
