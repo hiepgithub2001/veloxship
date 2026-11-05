@@ -14,6 +14,7 @@ from app.api.v1 import (
     customers,
     depots,
     files,
+    imports,
     locations,
     permissions,
     service_tiers,
@@ -74,6 +75,7 @@ app.include_router(comments.router, prefix="/api/v1")
 app.include_router(customers.router, prefix="/api/v1")
 app.include_router(depots.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
+app.include_router(imports.router, prefix="/api/v1")
 app.include_router(permissions.router, prefix="/api/v1")
 app.include_router(service_tiers.router, prefix="/api/v1")
 app.include_router(locations.router, prefix="/api/v1")

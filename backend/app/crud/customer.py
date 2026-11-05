@@ -31,6 +31,10 @@ def _build_metadata(payload: CustomerCreate) -> dict | None:
         meta["ward_code"] = payload.ward_code
     if payload.ward_name is not None:
         meta["ward_name"] = payload.ward_name
+    if getattr(payload, "contact_name", None) is not None:
+        meta["contact_name"] = payload.contact_name
+    if getattr(payload, "contact_raw", None) is not None:
+        meta["contact_raw"] = payload.contact_raw
     return meta or None
 
 

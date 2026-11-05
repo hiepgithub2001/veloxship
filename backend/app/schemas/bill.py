@@ -33,6 +33,12 @@ class BillParty(BaseModel):
     province_name: str | None = None
     ward_code: str | None = None
     ward_name: str | None = None
+    # Import-only extras (left empty by the manual bill form):
+    # `province_raw` keeps the destination text exactly as it appeared in the
+    # source file, and the contact fields keep the person behind the phone.
+    province_raw: str | None = None
+    contact_name: str | None = None
+    contact_raw: str | None = None
 
 
 class CustomerRef(BaseModel):
@@ -48,6 +54,7 @@ class CustomerRef(BaseModel):
     province_name: str | None = None
     ward_code: str | None = None
     ward_name: str | None = None
+    province_raw: str | None = None
 
 
 class BillContentLineSchema(BaseModel):
@@ -208,7 +215,7 @@ class BillRead(BaseModel):
                     customer_type=customer.customer_type if customer else "retail",
                     address_detail=snapshot.get("address_detail"), province_code=snapshot.get("province_code"),
                     province_name=snapshot.get("province_name"), ward_code=snapshot.get("ward_code"),
-                    ward_name=snapshot.get("ward_name"),
+                    ward_name=snapshot.get("ward_name"), province_raw=snapshot.get("province_raw"),
                 )
             meta = customer.customer_metadata if customer else None
             return CustomerRef(
@@ -222,6 +229,7 @@ class BillRead(BaseModel):
                 province_name=(meta or {}).get("province_name"),
                 ward_code=(meta or {}).get("ward_code"),
                 ward_name=(meta or {}).get("ward_name"),
+                province_raw=(meta or {}).get("province_raw"),
             )
 
         return cls(

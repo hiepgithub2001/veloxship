@@ -34,6 +34,10 @@ class CustomerCreate(BaseModel):
     province_name: str | None = None
     ward_code: str | None = None
     ward_name: str | None = None
+    # Contact person behind `phone` — populated by the Excel importer, which
+    # splits a two-person "Liên hệ" cell; empty for manually created profiles.
+    contact_name: str | None = None
+    contact_raw: str | None = None
 
 
 class CustomerUpdate(BaseModel):

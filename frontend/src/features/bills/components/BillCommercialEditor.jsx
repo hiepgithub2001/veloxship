@@ -17,7 +17,17 @@ const commercialSchema = z.object({
 
 const toEditableLine = ({ line_no, ...line }) => line;
 
-const formatMetadataLabel = (key) => key.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
+/**
+ * Vietnamese label for a content-line metadata key (e.g. `catalogue_quantity`
+ * → "Số lượng catalogue"), declared in `i18n/vi.js`. Unknown keys keep the
+ * legacy display: `_` → space with a capital first letter.
+ */
+const formatMetadataLabel = (key) => {
+  const i18nKey = `bills.metadataLabels.${key}`;
+  const translated = t(i18nKey);
+  if (translated !== i18nKey) return translated;
+  return key.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
+};
 const formatMetadata = (metadata) =>
   Object.entries(metadata || {})
     .filter(([, value]) => value != null && value !== '')

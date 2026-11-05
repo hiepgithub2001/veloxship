@@ -47,6 +47,10 @@ def party_snapshot(party, customer_id: int) -> dict:
         "address_detail": party.address_detail, "province_code": party.province_code,
         "province_name": party.province_name, "ward_code": party.ward_code,
         "ward_name": party.ward_name,
+        # Import-only extras — getattr keeps `BillParty` subclasses/older payloads safe.
+        "province_raw": getattr(party, "province_raw", None),
+        "contact_name": getattr(party, "contact_name", None),
+        "contact_raw": getattr(party, "contact_raw", None),
     }
 
 
@@ -58,9 +62,15 @@ async def create_bill(
     sender_id: int,
     receiver_id: int,
     chargeable_weight_kg: Decimal,
+    tracking_number: str | None = None,
 ) -> Bill:
-    """Create a bill with content lines and initial status log in one transaction."""
-    tracking = await next_tracking_number(db)
+    """Create a bill with content lines and initial status log in one transaction.
+
+    ``tracking_number`` lets the Excel importer keep the customer's own order
+    code as the tracking number; every other caller leaves it ``None`` so the
+    sequence keeps generating ``NL0000001``-style numbers.
+    """
+    tracking = tracking_number or await next_tracking_number(db)
 
     bill = Bill(
         tracking_number=tracking,

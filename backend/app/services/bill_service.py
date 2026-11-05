@@ -59,6 +59,8 @@ async def _resolve_customer(db: AsyncSession, party: BillParty) -> int:
             province_name=party.province_name,
             ward_code=party.ward_code,
             ward_name=party.ward_name,
+            contact_name=getattr(party, "contact_name", None),
+            contact_raw=getattr(party, "contact_raw", None),
         ),
     )
     return customer.id
@@ -68,8 +70,13 @@ async def create_bill(
     db: AsyncSession,
     payload: BillCreate,
     actor_id: int,
+    tracking_number: str | None = None,
 ) -> Bill:
-    """Create a bill with full validation (UC-WAYBILL-01 / FR-WAY-02)."""
+    """Create a bill with full validation (UC-WAYBILL-01 / FR-WAY-02).
+
+    ``tracking_number`` is only supplied by the Excel importer, which keeps the
+    customer's order code as the tracking number (see plan decision C2).
+    """
     # Validate service tier exists and is active (optional field)
     if payload.service_tier_code is not None:
         result = await db.execute(
@@ -96,6 +103,7 @@ async def create_bill(
         sender_id=sender_id,
         receiver_id=receiver_id,
         chargeable_weight_kg=chargeable_weight_kg,
+        tracking_number=tracking_number,
     )
 
 

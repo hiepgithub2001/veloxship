@@ -22,6 +22,7 @@ PERMISSION_CATALOG: list[dict] = [
             {"code": "bill:cancel", "label": "Hủy vận đơn"},
             {"code": "bill:rollback", "label": "Hủy giao hàng thành công"},
             {"code": "bill:adjust_cod", "label": "Điều chỉnh COD"},
+            {"code": "bill:import", "label": "Nhập vận đơn từ Excel"},
         ],
     },
     {

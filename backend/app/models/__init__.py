@@ -8,6 +8,7 @@ from .comment import Comment
 from .customer import Customer
 from .depot import Depot
 from .finance import CodHandover, CodHandoverItem, DepotLedger
+from .import_batch import ImportBatch, ImportRow
 from .linehaul import Linehaul
 from .partner import Partner, PartnerTariff
 from .permission import Role, RolePermission
@@ -29,6 +30,8 @@ __all__ = [
     "Customer",
     "Depot",
     "DepotLedger",
+    "ImportBatch",
+    "ImportRow",
     "Linehaul",
     "Partner",
     "PartnerTariff",

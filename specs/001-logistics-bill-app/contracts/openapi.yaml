@@ -439,6 +439,155 @@ paths:
         '404':
           $ref: '#/components/responses/Error'
 
+  /imports:
+    post:
+      tags: [imports]
+      summary: Tải file Excel và kiểm tra dữ liệu (chưa ghi vào phiếu/khách)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File .xlsx (≤ 5 MB, ≤ 5.000 dòng).
+                options:
+                  type: string
+                  description: JSON tuỳ chọn (catalogue_description, default_packages, normalize_names).
+      responses:
+        '201':
+          description: Đã kiểm tra xong, trả về bản xem trước
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportBatch' }
+        '400':
+          description: Không nhận diện được cột / không có dòng dữ liệu
+        '403':
+          description: Thiếu quyền bill:import
+        '413':
+          description: File vượt quá dung lượng
+        '415':
+          description: Sai định dạng file
+    get:
+      tags: [imports]
+      summary: Lịch sử nhập Excel
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Danh sách lần nhập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImportBatch' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+
+  /imports/{batch_id}:
+    get:
+      tags: [imports]
+      summary: Chi tiết một lần nhập (thống kê + tối đa 200 dòng xem trước)
+      parameters:
+        - in: path
+          name: batch_id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: Chi tiết lần nhập
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportBatch' }
+        '404':
+          description: Không tìm thấy lần nhập dữ liệu
+
+  /imports/{batch_id}/rows:
+    get:
+      tags: [imports]
+      summary: Danh sách dòng của một lần nhập
+      parameters:
+        - in: path
+          name: batch_id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [ok, warning, error, imported, skipped]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Danh sách dòng
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImportRow' }
+                  page: { type: integer }
+                  page_size: { type: integer }
+                  total: { type: integer }
+        '404':
+          description: Không tìm thấy lần nhập dữ liệu
+
+  /imports/{batch_id}/commit:
+    post:
+      tags: [imports]
+      summary: Xác nhận ghi các dòng hợp lệ thành phiếu gửi
+      parameters:
+        - in: path
+          name: batch_id
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ImportCommitRequest' }
+      responses:
+        '200':
+          description: Đã ghi xong
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportBatch' }
+        '404':
+          description: Không tìm thấy lần nhập dữ liệu
+        '409':
+          description: Lần nhập này đã được xác nhận trước đó
+
+  /imports/{batch_id}/result:
+    get:
+      tags: [imports]
+      summary: Tải file kết quả (.xlsx) kèm cột trạng thái/lỗi
+      parameters:
+        - in: path
+          name: batch_id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: File Excel kết quả
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+        '404':
+          description: Không tìm thấy lần nhập dữ liệu
+
 components:
 
   securitySchemes:
@@ -873,3 +1022,58 @@ components:
           additionalProperties: true
           nullable: true
         created_at: { type: string, format: date-time }
+
+    ImportBatch:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        entity_type: { type: string, enum: [bill] }
+        status:
+          type: string
+          enum: [validating, validated, committing, completed, partially_completed, failed]
+        source_layout: { type: string }
+        file_name: { type: string }
+        warnings:
+          type: array
+          items: { type: string }
+        error_message: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        committed_at: { type: string, format: date-time, nullable: true }
+        summary: { $ref: '#/components/schemas/ImportSummary' }
+        preview:
+          type: array
+          items: { $ref: '#/components/schemas/ImportRow' }
+
+    ImportSummary:
+      type: object
+      properties:
+        total_rows: { type: integer }
+        ok_rows: { type: integer }
+        warning_rows: { type: integer }
+        error_rows: { type: integer }
+        imported_rows: { type: integer }
+        customers_created: { type: integer }
+
+    ImportRow:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        row_number:
+          type: integer
+          description: Số dòng THẬT trong file Excel.
+        status:
+          type: string
+          enum: [ok, warning, error, imported, skipped]
+        raw_data: { type: object, additionalProperties: true }
+        normalized_data: { type: object, additionalProperties: true }
+        error_code: { type: string, nullable: true }
+        error_message: { type: string, nullable: true }
+        warnings:
+          type: array
+          items: { type: string }
+        target_id: { type: integer, format: int64, nullable: true }
+
+    ImportCommitRequest:
+      type: object
+      properties:
+        skip_error_rows: { type: boolean, default: true }

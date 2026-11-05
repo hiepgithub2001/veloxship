@@ -75,6 +75,26 @@ _MESSAGES: dict[str, str] = {
     "FILE_SIZE_EXCEEDED": "Tập tin vượt quá dung lượng cho phép.",
     "UPLOAD_FAILED": "Tải tập tin lên thất bại. Vui lòng thử lại.",
 
+    # Excel import
+    "IMPORT_FILE_REQUIRED": "Vui lòng chọn file Excel.",
+    "IMPORT_ROW_LIMIT_EXCEEDED": "File vượt quá số dòng dữ liệu cho phép.",
+    "IMPORT_COLUMNS_NOT_FOUND": "Không nhận diện được cột dữ liệu trong file.",
+    "IMPORT_PROVINCES_NOT_SEEDED": "Danh mục tỉnh/thành chưa được nạp.",
+    "IMPORT_PROVINCES_NOT_SEEDED_HINT": "Chạy `make db-seed` trước khi import.",
+    "IMPORT_BATCH_NOT_FOUND": "Không tìm thấy lần nhập dữ liệu.",
+    "IMPORT_BATCH_ALREADY_COMMITTED": "Lần nhập này đã được xác nhận trước đó.",
+    "IMPORT_NOTHING_TO_IMPORT": "Không có dòng hợp lệ để nhập.",
+    "IMPORT_ROW_REQUIRED_EMPTY": "Cột bắt buộc đang trống.",
+    "IMPORT_TRACKING_INVALID": "Mã vận đơn không hợp lệ.",
+    "IMPORT_DUPLICATE_TRACKING": "Mã vận đơn đã tồn tại.",
+    "IMPORT_PROVINCE_NOT_FOUND": "Không khớp tỉnh/thành nào.",
+    "IMPORT_PHONE_INVALID": "Số điện thoại không hợp lệ.",
+    "IMPORT_NUMBER_INVALID": "Giá trị số không hợp lệ.",
+    "IMPORT_WEIGHT_INVALID": "Trọng lượng không hợp lệ.",
+    "IMPORT_QUANTITY_INVALID": "Số kiện không hợp lệ.",
+    "IMPORT_DUPLICATE_FILE": "File này đã được nhập trước đó.",
+    "IMPORT_ROW_FAILED": "Ghi dữ liệu thất bại.",
+
     # Generic
     "INTERNAL_ERROR": "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
 }

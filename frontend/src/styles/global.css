@@ -650,3 +650,76 @@ body {
     width: 100%;
   }
 }
+
+/* Excel import wizard — layout helpers only, all surfaces/colours come from antd */
+.import-wizard-steps {
+  margin-bottom: 20px;
+}
+.import-wizard-body {
+  min-height: 300px;
+}
+.import-upload-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.import-upload-layout-hint {
+  margin-bottom: 12px !important;
+}
+.import-upload-layout-note {
+  margin-top: 12px;
+}
+.import-preview-summary {
+  margin-bottom: 12px;
+}
+.import-preview-summary-list {
+  margin: 0;
+  padding-left: 18px;
+}
+.import-preview-toolbar {
+  margin-bottom: 12px;
+}
+.import-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.import-result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 576px) {
+  .import-wizard-steps .ant-steps-item-title,
+  .import-wizard-steps .ant-steps-item-description {
+    font-size: 11px;
+  }
+  .import-wizard-steps .ant-steps-item-description {
+    display: none;
+  }
+}
+
+/* Excel import — optional sender block (layout only, colours come from antd). */
+.import-upload-sender-hint {
+  margin-bottom: 12px;
+}
+.import-upload-sender {
+  row-gap: 12px;
+}
+.import-upload-sender-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 240px;
+}
+.import-upload-sender-label {
+  font-size: 12px;
+}
+
+/* Excel import — sender cell in the preview table (two stacked lines). */
+.import-preview-sender {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}

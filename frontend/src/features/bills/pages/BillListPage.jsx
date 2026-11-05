@@ -9,10 +9,11 @@ import {
   PlusOutlined,
   PrinterOutlined,
   FileExcelOutlined,
+  ImportOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { t } from '../../../i18n/vi';
 import { usePermission } from '../../../auth/permissions';
@@ -21,6 +22,7 @@ import { buildBillColumns, TOGGLEABLE_BILL_COLUMN_KEYS } from '../components/bil
 import { BillFilters } from '../components/BillFilters';
 import { BillPdfPreview } from '../components/BillPdfPreview';
 import { BillBatchPrintModal } from '../components/BillBatchPrintModal';
+import { ImportWizard } from '../../imports/components/ImportWizard';
 
 const { Title } = Typography;
 
@@ -41,9 +43,11 @@ const loadVisibleColumns = () => {
 export function BillListPage() {
   const { can } = usePermission();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [printBillId, setPrintBillId] = useState(null);
   const [batchPrintIds, setBatchPrintIds] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [visibleColumnKeys, setVisibleColumnKeys] = useState(loadVisibleColumns);
 
@@ -269,21 +273,30 @@ export function BillListPage() {
           onReset={handleResetFilters}
         />
         <div className="bill-list-toolbar">
-          {selectedRowKeys.length > 0 ? (
-            <Space size="middle" wrap>
-              <Typography.Text>
-                {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
-              </Typography.Text>
-              <Button icon={<FileExcelOutlined />} onClick={handleExportExcel}>
-                {t('bills.exportExcel')}
+          <Space size="middle" wrap>
+            {selectedRowKeys.length > 0 && (
+              <>
+                <Typography.Text>
+                  {t('bills.selectedCount').replace('{count}', selectedRowKeys.length)}
+                </Typography.Text>
+                <Button icon={<FileExcelOutlined />} onClick={handleExportExcel}>
+                  {t('bills.exportExcel')}
+                </Button>
+                <Button icon={<PrinterOutlined />} onClick={handlePrintSelected}>
+                  {t('bills.print')}
+                </Button>
+              </>
+            )}
+            {can('bill:import') && (
+              <Button
+                id="import-bill-btn"
+                icon={<ImportOutlined />}
+                onClick={() => setImportOpen(true)}
+              >
+                {t('imports.action')}
               </Button>
-              <Button icon={<PrinterOutlined />} onClick={handlePrintSelected}>
-                {t('bills.print')}
-              </Button>
-            </Space>
-          ) : (
-            <span />
-          )}
+            )}
+          </Space>
           {columnChooser}
         </div>
         <Table {...tableProps} columns={visibleColumns} pagination={pagination} />
@@ -297,6 +310,11 @@ export function BillListPage() {
         billIds={batchPrintIds}
         open={batchPrintIds != null && batchPrintIds.length > 0}
         onClose={() => setBatchPrintIds(null)}
+      />
+      <ImportWizard
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onCompleted={() => queryClient.invalidateQueries({ queryKey: ['bills'] })}
       />
     </div>
   );
