@@ -119,6 +119,8 @@ venv/
 env/
 .env
 .pytest_cache/
+.hypothesis/
+.ruff_cache/
 .coverage
 
 # Build output

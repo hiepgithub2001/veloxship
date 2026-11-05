@@ -1,4 +1,9 @@
-"""Seed administrative divisions (Provinces and Wards) from Vietnam Provinces online API (2025 v2).
+"""Seed administrative divisions (provinces and wards) from the Vietnam Provinces API.
+
+The public API (`/api/v2/?depth=2`) returns the post-2025 two-level layout: each
+province carries its wards directly (there is no district level any more). Provinces
+and wards are upserted by `code`, so re-running this script is safe and refreshes
+names when the API changes them.
 
 Run: python -m app.scripts.seed_divisions
 """
@@ -15,85 +20,87 @@ from app.models.province import Province
 from app.models.ward import Ward
 
 API_URL = "https://provinces.open-api.vn/api/v2/?depth=2"
+REQUEST_TIMEOUT_SECONDS = 30
+WARD_BATCH_SIZE = 1000
 
 
-def fetch_divisions_from_api() -> list[dict[str, Any]]:
-    """Fetch provinces and wards data from external API (v2, depth=2)."""
-    req = urllib.request.Request(
-        API_URL,
-        headers={"User-Agent": "VeloxshipSeed/1.0"},
+def fetch_divisions() -> list[dict[str, Any]]:
+    """Download provinces (with their wards) from the external API."""
+    request = urllib.request.Request(
+        API_URL, headers={"User-Agent": "VeloxshipSeed/1.0"}
     )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        if response.status == 200:
-            content = response.read().decode("utf-8")
-            return json.loads(content)
-        raise RuntimeError(f"API request failed with status: {response.status}")
+    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
+        if response.status != 200:
+            raise RuntimeError(f"API request failed with status: {response.status}")
+        payload = json.loads(response.read().decode("utf-8"))
+
+    if not isinstance(payload, list) or not payload:
+        raise RuntimeError(
+            "API returned an unexpected payload (expected a non-empty list)"
+        )
+    return payload
 
 
 async def seed_divisions() -> tuple[int, int]:
-    """Fetch divisions from API as source of truth and upsert into database."""
+    """Fetch administrative divisions and upsert them into the database."""
     print(f"Fetching administrative divisions from {API_URL}...")
-    
-    # Run synchronous HTTP request in thread pool
-    divisions_data = await asyncio.to_thread(fetch_divisions_from_api)
-    
-    provinces_to_insert = []
-    wards_to_insert = []
+    divisions_data = await asyncio.to_thread(fetch_divisions)
 
-    for prov in divisions_data:
-        prov_code = str(prov["code"])
-        prov_name = prov["name"]
-        provinces_to_insert.append({
-            "code": prov_code,
-            "name": prov_name,
-            "name_en": prov.get("codename"),
-        })
+    provinces: list[dict[str, Any]] = []
+    wards: list[dict[str, Any]] = []
 
-        for ward in prov.get("wards", []):
-            ward_code = str(ward["code"])
-            ward_name = ward["name"]
-            wards_to_insert.append({
-                "code": ward_code,
-                "name": ward_name,
-                "name_en": ward.get("codename"),
-                "province_code": prov_code,
-            })
+    for province in divisions_data:
+        province_code = str(province["code"])
+        provinces.append(
+            {
+                "code": province_code,
+                "name": province["name"],
+                "name_en": province.get("codename"),
+            }
+        )
+        for ward in province.get("wards", []):
+            wards.append(
+                {
+                    "code": str(ward["code"]),
+                    "name": ward["name"],
+                    "name_en": ward.get("codename"),
+                    "province_code": province_code,
+                }
+            )
 
     async with async_session_factory() as db:
-        # 1. Upsert Provinces
-        if provinces_to_insert:
-            p_stmt = pg_insert(Province).values(provinces_to_insert)
-            p_stmt = p_stmt.on_conflict_do_update(
-                index_elements=["code"],
-                set_={
-                    "name": p_stmt.excluded.name,
-                    "name_en": p_stmt.excluded.name_en,
-                },
-            )
-            await db.execute(p_stmt)
-            print(f"✓ Upserted {len(provinces_to_insert)} provinces into database.")
+        province_stmt = pg_insert(Province).values(provinces)
+        province_stmt = province_stmt.on_conflict_do_update(
+            index_elements=["code"],
+            set_={
+                "name": province_stmt.excluded.name,
+                "name_en": province_stmt.excluded.name_en,
+            },
+        )
+        await db.execute(province_stmt)
 
-        # 2. Upsert Wards in batches
-        batch_size = 1000
-        total_wards = len(wards_to_insert)
-        for i in range(0, total_wards, batch_size):
-            batch = wards_to_insert[i : i + batch_size]
-            w_stmt = pg_insert(Ward).values(batch)
-            w_stmt = w_stmt.on_conflict_do_update(
+        for start in range(0, len(wards), WARD_BATCH_SIZE):
+            batch = wards[start : start + WARD_BATCH_SIZE]
+            ward_stmt = pg_insert(Ward).values(batch)
+            ward_stmt = ward_stmt.on_conflict_do_update(
                 index_elements=["code"],
                 set_={
-                    "name": w_stmt.excluded.name,
-                    "name_en": w_stmt.excluded.name_en,
-                    "province_code": w_stmt.excluded.province_code,
+                    "name": ward_stmt.excluded.name,
+                    "name_en": ward_stmt.excluded.name_en,
+                    "province_code": ward_stmt.excluded.province_code,
                 },
             )
-            await db.execute(w_stmt)
+            await db.execute(ward_stmt)
 
         await db.commit()
-        print(f"✓ Upserted {total_wards} wards into database.")
 
-    return len(provinces_to_insert), len(wards_to_insert)
+    print(f"✓ Upserted {len(provinces)} provinces and {len(wards)} wards.")
+    return len(provinces), len(wards)
+
+
+def main() -> None:
+    asyncio.run(seed_divisions())
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_divisions())
+    main()
