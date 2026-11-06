@@ -4,7 +4,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
-from app.services.print_service import _prepare_context, render_bill_html
+from app.services.print_service import (
+    MAX_COPY_COUNT,
+    _prepare_context,
+    render_bill_html,
+    render_bills_html,
+)
 
 
 def _bill_fixture():
@@ -86,6 +91,36 @@ def test_html_renders_three_a5_copies_from_one_context():
     assert html.count("NL00001") >= 3
     assert "Phụ phí xăng dầu" in html
     assert "QRCode" not in html
+
+
+def test_print_context_uses_requested_copy_count():
+    context = _prepare_context(_bill_fixture(), copies=2)
+
+    assert [copy["label"] for copy in context["copies"]] == [
+        "Liên 1 — Người gửi",
+        "Liên 2 — Vận chuyển",
+    ]
+
+
+def test_print_context_clamps_requested_copy_count_to_template_labels():
+    assert len(_prepare_context(_bill_fixture(), copies=0)["copies"]) == 1
+    assert len(_prepare_context(_bill_fixture(), copies=99)["copies"]) == MAX_COPY_COUNT
+
+
+def test_html_renders_only_the_requested_number_of_copies():
+    html = render_bill_html(_bill_fixture(), copies=1)
+
+    assert html.count('class="bill-copy"') == 1
+    assert "Liên 1 — Người gửi" in html
+    assert "Liên 2 — Vận chuyển" not in html
+
+
+def test_batch_html_applies_requested_copies_to_every_bill():
+    html = render_bills_html([_bill_fixture(), _bill_fixture()], copies=2)
+
+    assert html.count('class="bill-copy"') == 4
+    assert html.count('class="print-document"') == 2
+    assert "break-before: page" in html
 
 
 def test_print_context_does_not_truncate_more_than_five_content_lines():

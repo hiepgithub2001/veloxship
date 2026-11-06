@@ -462,10 +462,56 @@ class TestBillBulkActions:
         assert resp.headers["content-type"].startswith("text/html")
         assert bill1["tracking_number"] in resp.text
         assert bill2["tracking_number"] in resp.text
+        # The default render keeps every configured liên (3) for each bill.
+        assert resp.text.count('class="bill-copy"') == 6
 
         for bill_id in (bill1["id"], bill2["id"]):
             got = await client.get(f"/api/v1/bills/{bill_id}", headers=auth_headers)
             assert got.json()["print_count"] == 1
+
+    async def test_print_batch_honours_requested_copy_count(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        b1 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        b2 = await client.post("/api/v1/bills", json=bill_payload(), headers=auth_headers)
+        ids = f"{b1.json()['id']},{b2.json()['id']}"
+
+        resp = await client.get(
+            "/api/v1/bills/print-batch",
+            params={"ids": ids, "copies": 2},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.text.count('class="bill-copy"') == 4
+        assert "Liên 3 — Người nhận" not in resp.text
+
+        # Re-rendering a preview must not count as another print.
+        preview = await client.get(
+            "/api/v1/bills/print-batch",
+            params={"ids": ids, "copies": 1, "record": "false"},
+            headers=auth_headers,
+        )
+        assert preview.status_code == 200
+        for bill_id in (b1.json()["id"], b2.json()["id"]):
+            got = await client.get(f"/api/v1/bills/{bill_id}", headers=auth_headers)
+            assert got.json()["print_count"] == 1
+
+    async def test_print_batch_rejects_out_of_range_copy_count(
+        self, client: AsyncClient, auth_headers: dict, service_tier: ServiceTier
+    ):
+        created = await client.post(
+            "/api/v1/bills", json=bill_payload(), headers=auth_headers
+        )
+        ids = str(created.json()["id"])
+
+        for copies in ("0", "4"):
+            resp = await client.get(
+                "/api/v1/bills/print-batch",
+                params={"ids": ids, "copies": copies},
+                headers=auth_headers,
+            )
+            assert resp.status_code == 400
+            assert resp.json()["error_code"] == "VALIDATION_ERROR"
 
 
 @pytest.mark.asyncio

@@ -79,10 +79,13 @@ export async function exportBills(ids) {
   return response;
 }
 
-export async function getBillsPrintHtml(ids) {
-  const { data } = await client.get('/bills/print-batch', {
-    params: { ids: ids.join(',') },
-  });
+export async function getBillsPrintHtml(ids, { copies, record } = {}) {
+  const params = { ids: ids.join(',') };
+  if (copies != null) params.copies = copies;
+  // The server records a print event by default; preview refreshes pass false
+  // so changing the copy count does not inflate print_count.
+  if (record === false) params.record = false;
+  const { data } = await client.get('/bills/print-batch', { params });
   return data;
 }
 

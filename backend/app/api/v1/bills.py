@@ -21,7 +21,7 @@ from app.schemas.bill import (
     BillStatusUpdate,
     BillUpdate,
 )
-from app.services import bill_service
+from app.services import bill_service, print_service
 
 router = APIRouter(prefix="/bills", tags=["bills"])
 
@@ -98,27 +98,48 @@ async def export_bills(
 @router.get("/print-batch")
 async def print_bills_batch(
     ids: str = Query(..., description="Comma-separated bill IDs"),
+    copies: int | None = Query(
+        None,
+        ge=1,
+        le=print_service.MAX_COPY_COUNT,
+        description=(
+            "Number of copies (liên) printed for each bill. Omit to use "
+            "BILL_PDF_COPY_COUNT."
+        ),
+    ),
+    record: bool = Query(
+        True,
+        description=(
+            "Increment print_count and write bill.printed audit events. Set to "
+            "false when only re-rendering a preview."
+        ),
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_permission("bill:view")),
 ):
     """Render the selected bills as one printable HTML document."""
-    from app.services.print_service import render_bills_html
-
     bills = await bill_crud.get_bills_by_ids(db, _parse_ids(ids))
-    for bill in bills:
-        bill.print_count += 1
-        bill.last_printed_at = datetime.now(UTC).replace(tzinfo=None)
-        bill.last_printed_by = current_user.id
-        await audit_crud.log_event(
-            db,
-            actor_id=current_user.id,
-            action="bill.printed",
-            entity_type="bill",
-            entity_id=bill.id,
-            details={"print_count": bill.print_count},
-        )
-    await db.flush()
-    return Response(content=render_bills_html(bills), media_type="text/html")
+    if record:
+        for bill in bills:
+            bill.print_count += 1
+            bill.last_printed_at = datetime.now(UTC).replace(tzinfo=None)
+            bill.last_printed_by = current_user.id
+            await audit_crud.log_event(
+                db,
+                actor_id=current_user.id,
+                action="bill.printed",
+                entity_type="bill",
+                entity_id=bill.id,
+                details={
+                    "print_count": bill.print_count,
+                    "copies": print_service.resolve_copy_count(copies),
+                },
+            )
+        await db.flush()
+    return Response(
+        content=print_service.render_bills_html(bills, copies=copies),
+        media_type="text/html",
+    )
 
 
 @router.get("/{bill_id}", response_model=BillRead)

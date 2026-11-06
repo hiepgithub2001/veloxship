@@ -38,6 +38,20 @@ _COPY_LABELS = (
     "Liên 3 — Người nhận",
 )
 
+# The template only knows how to label the copies above, so a request can never
+# render more copies than there are labels.
+MAX_COPY_COUNT = len(_COPY_LABELS)
+
+
+def resolve_copy_count(copies: int | None = None) -> int:
+    """Return the requested copy count, falling back to the configured default.
+
+    Explicit requests are clamped to `[1, MAX_COPY_COUNT]` so a bad caller can
+    never render an unlabelled or empty document.
+    """
+    requested = settings.BILL_PDF_COPY_COUNT if copies is None else copies
+    return max(1, min(int(requested), MAX_COPY_COUNT))
+
 
 def _asset_data_uri(filename: str, mime_type: str) -> str:
     encoded = base64.b64encode((_TEMPLATE_DIR / filename).read_bytes()).decode("ascii")
@@ -125,8 +139,11 @@ def _local_bill_date(value: datetime | None) -> datetime:
     return bill_date.astimezone(ZoneInfo("Asia/Ho_Chi_Minh"))
 
 
-def _prepare_context(bill) -> dict:
-    """Build a renderer-only context from a fully loaded bill model."""
+def _prepare_context(bill, copies: int | None = None) -> dict:
+    """Build a renderer-only context from a fully loaded bill model.
+
+    `copies` overrides the configured `BILL_PDF_COPY_COUNT` for this render only.
+    """
     content_lines = []
     for line in bill.content_lines:
         content_lines.append(
@@ -160,7 +177,7 @@ def _prepare_context(bill) -> dict:
             "international" if service_code.startswith("INTL_") else "domestic"
         )
 
-    copy_count = max(1, min(int(settings.BILL_PDF_COPY_COUNT), len(_COPY_LABELS)))
+    copy_count = resolve_copy_count(copies)
     bill_date = _local_bill_date(bill.created_at)
 
     return {
@@ -199,10 +216,10 @@ def _prepare_context(bill) -> dict:
     }
 
 
-def render_bill_html(bill) -> str:
-    """Render the bill to standalone HTML."""
+def render_bill_html(bill, copies: int | None = None) -> str:
+    """Render the bill to standalone HTML with `copies` liên (defaults to config)."""
     template = _env.get_template("bill_template.html")
-    return template.render(**_prepare_context(bill))
+    return template.render(**_prepare_context(bill, copies=copies))
 
 
 def render_bill_pdf(bill) -> bytes:
@@ -217,17 +234,17 @@ def render_bill_pdf(bill) -> bytes:
         return html_str.encode("utf-8")
 
 
-def render_bills_html(bills) -> str:
+def render_bills_html(bills, copies: int | None = None) -> str:
     """Render multiple bills into a single HTML document, one bill per page.
 
     Each bill is rendered to its standalone document and its <main> block is
     extracted; the shared print stylesheet is kept once and a page break is
-    forced between consecutive bills.
+    forced between consecutive bills. `copies` liên are printed for every bill.
     """
     parts: list[str] = []
     css = ""
     for bill in bills:
-        html = render_bill_html(bill)
+        html = render_bill_html(bill, copies=copies)
         if not css:
             style_match = re.search(r"<style>(.*?)</style>", html, re.S)
             if style_match:

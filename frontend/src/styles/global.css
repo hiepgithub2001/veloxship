@@ -411,6 +411,19 @@ body {
   margin: 8px 0;
 }
 
+/* Batch print modal — copy-count (số liên) option above the print preview */
+.bill-batch-print-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.bill-batch-print-copies {
+  min-width: 96px;
+}
+
 /* Responsive page chrome — shared helpers (see conventions: antd breakpoints 576/768) */
 .page-header {
   display: flex;
