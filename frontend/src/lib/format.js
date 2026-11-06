@@ -18,6 +18,23 @@ export function formatVND(n) {
 }
 
 /**
+ * Format a number as a compact VND label for chart axes/tooltips.
+ * @param {number} n
+ * @returns {string} e.g. "1,5 tr", "2,3 tỷ"
+ */
+export function formatVNDCompact(n) {
+  const value = Number(n);
+  if (!Number.isFinite(value)) return '';
+  const abs = Math.abs(value);
+  const fmt = (v, digits) =>
+    v.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: digits });
+  if (abs >= 1_000_000_000) return `${fmt(value / 1_000_000_000, 1)} tỷ`;
+  if (abs >= 1_000_000) return `${fmt(value / 1_000_000, 1)} tr`;
+  if (abs >= 1_000) return `${fmt(value / 1_000, 0)} ng`;
+  return `${value.toLocaleString('vi-VN')} ₫`;
+}
+
+/**
  * Format weight in kg with Vietnamese comma decimal.
  * @param {number} n
  * @returns {string} e.g. "200,00 kg"

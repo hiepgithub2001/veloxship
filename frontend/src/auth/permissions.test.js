@@ -10,7 +10,7 @@ import { HOME_ROUTES, PermissionManager, can, homePathFor } from './permissions'
 
 const operator = {
   role: 'operator',
-  permissions: ['bill:view', 'bill:create', 'customer:view'],
+  permissions: ['dashboard:view', 'bill:view', 'bill:create', 'customer:view'],
 };
 
 const admin = { role: 'admin', permissions: [] };
@@ -80,7 +80,15 @@ describe('homePathFor()', () => {
   it('prefers the most-used route when several are allowed', () => {
     const manager = new PermissionManager({
       role: 'operator',
-      permissions: ['bill:view', 'customer:view'],
+      permissions: ['dashboard:view', 'bill:view', 'customer:view'],
+    });
+    expect(homePathFor((action) => manager.has(action))).toBe('/tong-quan');
+  });
+
+  it('lands on the bill list when the user lacks dashboard:view', () => {
+    const manager = new PermissionManager({
+      role: 'shipper',
+      permissions: ['bill:view', 'warehouse:outbound'],
     });
     expect(homePathFor((action) => manager.has(action))).toBe('/phieu-gui');
   });
@@ -89,6 +97,7 @@ describe('homePathFor()', () => {
     expect(homePathFor((action) => new PermissionManager(admin).has(action))).toBe(
       HOME_ROUTES[0].path,
     );
+    expect(HOME_ROUTES[0].path).toBe('/tong-quan');
   });
 
   it('falls back to the self-service account page when nothing else is allowed', () => {

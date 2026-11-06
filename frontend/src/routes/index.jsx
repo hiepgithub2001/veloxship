@@ -5,7 +5,9 @@
  * the matching action sees a 403 result instead of the page. The backend
  * enforces the same actions, so this is a UX gate only.
  */
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { Spin } from 'antd';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { RequirePermission } from '../auth/RequirePermission';
 import { homePathFor, usePermission } from '../auth/permissions';
@@ -21,6 +23,12 @@ import { CustomerDetailPage } from '../features/customers/pages/CustomerDetailPa
 import { StaffPage } from '../features/staff/pages/StaffPage';
 import { PermissionPage } from '../features/permissions/pages/PermissionPage';
 import { AccountPage } from '../features/account/pages/AccountPage';
+
+// The dashboard pulls in `@ant-design/plots` + `react-simple-maps`, so it is
+// lazy-loaded into its own chunk instead of bloating the main bundle.
+const DashboardPage = lazy(() =>
+  import('../features/dashboard/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
+);
 
 /** Send the user to the first page their role may open (never a guaranteed 403). */
 function HomeRedirect() {
@@ -44,6 +52,16 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomeRedirect />,
+      },
+      {
+        path: 'tong-quan',
+        element: (
+          <RequirePermission permission="dashboard:view">
+            <Suspense fallback={<div className="page-loading"><Spin size="large" /></div>}>
+              <DashboardPage />
+            </Suspense>
+          </RequirePermission>
+        ),
       },
       {
         path: 'phieu-gui',

@@ -1,6 +1,11 @@
 """Unit tests for the permission action catalogue."""
 
-from app.core.permissions import PERMISSION_CATALOG, is_valid_action, valid_action_codes
+from app.core.permissions import (
+    PERMISSION_CATALOG,
+    ROLE_DEFAULT_PERMISSIONS,
+    is_valid_action,
+    valid_action_codes,
+)
 
 
 class TestPermissionCatalog:
@@ -24,3 +29,13 @@ class TestPermissionCatalog:
         assert is_valid_action("bill:create") is True
         assert is_valid_action("iam:manage_users") is True
         assert is_valid_action("nonexistent:action") is False
+
+    def test_dashboard_view_is_registered_and_granted(self):
+        assert is_valid_action("dashboard:view") is True
+        # Admin bypasses checks (auto-holds every action via sorted set).
+        assert "dashboard:view" in ROLE_DEFAULT_PERMISSIONS["admin"]
+        # Desk roles hold it; the field courier does not.
+        for role in ("operator", "depot_manager", "cashier", "accountant"):
+            assert "dashboard:view" in ROLE_DEFAULT_PERMISSIONS[role]
+        assert "dashboard:view" not in ROLE_DEFAULT_PERMISSIONS["shipper"]
+

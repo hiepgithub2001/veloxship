@@ -27,6 +27,8 @@ tags:
     description: Khách hàng / Customer profiles
   - name: service-tiers
     description: Dịch vụ / Service tier catalogue
+  - name: dashboard
+    description: Tổng quan / Dashboard summary
 
 security:
   - bearerAuth: []
@@ -588,6 +590,29 @@ paths:
         '404':
           description: Không tìm thấy lần nhập dữ liệu
 
+  /dashboard/summary:
+    get:
+      tags: [dashboard]
+      summary: Tổng quan vận chuyển
+      parameters:
+        - in: query
+          name: days
+          required: false
+          schema: { type: integer, minimum: 7, maximum: 90, default: 30 }
+          description: Số ngày (7/30/90) tính từ hôm nay, theo múi giờ Việt Nam.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DashboardSummary' }
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+
 components:
 
   securitySchemes:
@@ -642,6 +667,78 @@ components:
         details:
           type: object
           additionalProperties: true
+
+    DashboardRange:
+      type: object
+      required: [days, date_from, date_to]
+      properties:
+        days: { type: integer }
+        date_from: { type: string, format: date }
+        date_to: { type: string, format: date }
+
+    DashboardKpis:
+      type: object
+      required:
+        [total_bills, bills_today, in_progress_bills, delivered_bills,
+         cancelled_bills, returned_bills, delivery_rate, revenue_total,
+         revenue_today, cod_total]
+      properties:
+        total_bills: { type: integer }
+        bills_today: { type: integer }
+        in_progress_bills: { type: integer }
+        delivered_bills: { type: integer }
+        cancelled_bills: { type: integer }
+        returned_bills: { type: integer }
+        delivery_rate: { type: number, description: Phần trăm đã giao, 0–100. }
+        revenue_total:
+          type: string
+          description: Decimal dạng chuỗi (VND), chỉ gồm phiếu không huỷ.
+        revenue_today:
+          type: string
+          description: Decimal dạng chuỗi (VND), chỉ gồm phiếu không huỷ.
+        cod_total:
+          type: string
+          description: Decimal dạng chuỗi (VND), chỉ gồm phiếu không huỷ.
+
+    DashboardDailyPoint:
+      type: object
+      required: [date, bills, revenue]
+      properties:
+        date: { type: string, format: date }
+        bills: { type: integer }
+        revenue: { type: string, description: Decimal dạng chuỗi (VND). }
+
+    DashboardStatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status: { type: string, enum: [created, picked_up, in_transit, delivered, returned, cancelled] }
+        count: { type: integer }
+
+    DashboardDestination:
+      type: object
+      required: [province_code, province_name, count]
+      properties:
+        province_code: { type: string }
+        province_name: { type: string }
+        count: { type: integer }
+
+    DashboardSummary:
+      type: object
+      required: [generated_at, range, kpis, daily, status_counts, destinations]
+      properties:
+        generated_at: { type: string, format: date-time }
+        range: { $ref: '#/components/schemas/DashboardRange' }
+        kpis: { $ref: '#/components/schemas/DashboardKpis' }
+        daily:
+          type: array
+          items: { $ref: '#/components/schemas/DashboardDailyPoint' }
+        status_counts:
+          type: array
+          items: { $ref: '#/components/schemas/DashboardStatusCount' }
+        destinations:
+          type: array
+          items: { $ref: '#/components/schemas/DashboardDestination' }
 
     LoginRequest:
       type: object

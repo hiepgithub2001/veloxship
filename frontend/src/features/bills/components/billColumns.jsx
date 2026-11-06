@@ -7,17 +7,11 @@ import { Button, Space, Tag, Typography } from 'antd';
 import { EyeOutlined, PrinterOutlined } from '@ant-design/icons';
 
 import { ImagePreviewGroup } from '../../../components/common/ImagePreviewGroup';
+import { BILL_STATUS_COLORS } from '../../../lib/billStatus';
 import { formatVND, formatViDate } from '../../../lib/format';
 import { t } from '../../../i18n/vi';
 
-export const BILL_STATUS_COLORS = {
-  created: 'blue',
-  picked_up: 'cyan',
-  in_transit: 'orange',
-  delivered: 'green',
-  returned: 'purple',
-  cancelled: 'red',
-};
+export { BILL_STATUS_COLORS };
 
 /** Column keys the user may show/hide from the list. `index` and `actions` stay fixed. */
 export const TOGGLEABLE_BILL_COLUMN_KEYS = [

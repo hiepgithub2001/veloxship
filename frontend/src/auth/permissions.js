@@ -20,6 +20,7 @@ export const ADMIN_ROLE = 'admin';
  * page their role can actually open instead of a guaranteed 403.
  */
 export const HOME_ROUTES = [
+  { permission: 'dashboard:view', path: '/tong-quan' },
   { permission: 'bill:view', path: '/phieu-gui' },
   { permission: 'customer:view', path: '/khach-hang' },
   { permission: 'depot:view', path: '/buu-cuc' },

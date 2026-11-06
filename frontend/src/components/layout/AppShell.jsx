@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Button, Typography, Avatar, Dropdown, Drawer, Grid, Space } from 'antd';
 import {
+  DashboardOutlined,
   FileTextOutlined,
   TeamOutlined,
   PlusOutlined,
@@ -30,6 +31,12 @@ const { Text } = Typography;
 
 // Sidebar menu — each entry declares the action its page requires.
 const MENU_ITEMS = [
+  {
+    key: '/tong-quan',
+    icon: <DashboardOutlined />,
+    label: t('layout.dashboard'),
+    permission: 'dashboard:view',
+  },
   {
     key: '/phieu-gui',
     icon: <FileTextOutlined />,

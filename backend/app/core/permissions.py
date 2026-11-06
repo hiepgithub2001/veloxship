@@ -13,6 +13,13 @@ from __future__ import annotations
 # `require_permission`.
 PERMISSION_CATALOG: list[dict] = [
     {
+        "code": "dashboard",
+        "label": "Dashboard / Tổng quan",
+        "actions": [
+            {"code": "dashboard:view", "label": "Xem dashboard tổng quan"},
+        ],
+    },
+    {
         "code": "bill",
         "label": "Phân hệ Vận đơn",
         "actions": [
@@ -128,21 +135,25 @@ def status_action(to_status: str) -> str | None:
 ROLE_DEFAULT_PERMISSIONS: dict[str, list[str]] = {
     "admin": sorted(valid_action_codes()),
     "operator": [
+        "dashboard:view",
         "bill:view", "bill:create", "bill:update",
         "customer:view", "customer:create", "customer:update",
         "warehouse:inbound", "warehouse:outbound",
     ],
     "depot_manager": [
+        "dashboard:view",
         "bill:view",
         "customer:view",
         "warehouse:inbound", "warehouse:outbound",
         "warehouse:bagging", "warehouse:audit",
     ],
     "cashier": [
+        "dashboard:view",
         "bill:view",
         "finance:cod_handover", "finance:cashier_confirm", "finance:ledger",
     ],
     "accountant": [
+        "dashboard:view",
         "bill:view", "customer:view",
         "finance:cod_handover", "finance:cashier_confirm", "finance:ledger",
     ],

@@ -12,6 +12,7 @@ from app.api.v1 import (
     bills,
     comments,
     customers,
+    dashboard,
     depots,
     files,
     imports,
@@ -73,6 +74,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(bills.router, prefix="/api/v1")
 app.include_router(comments.router, prefix="/api/v1")
 app.include_router(customers.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(depots.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
 app.include_router(imports.router, prefix="/api/v1")
