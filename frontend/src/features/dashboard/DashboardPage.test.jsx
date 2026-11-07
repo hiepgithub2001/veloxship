@@ -39,7 +39,7 @@ if (!window.matchMedia) {
 
 const summary = {
   generated_at: '2026-11-06T08:05:00Z',
-  range: { days: 30, date_from: '2026-10-08', date_to: '2026-11-06' },
+  range: { date_from: '2026-10-08', date_to: '2026-11-06' },
   kpis: {
     total_bills: 128,
     bills_today: 6,
@@ -57,13 +57,13 @@ const summary = {
   destinations: [{ province_code: '1', province_name: 'Hà Nội', count: 42 }],
 };
 
-function renderPage() {
+function renderPage(initialEntry = '/') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <DashboardPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -88,6 +88,12 @@ describe('DashboardPage', () => {
     expect(screen.getByTestId('column-chart')).toBeTruthy();
     expect(screen.getByTestId('pie-chart')).toBeTruthy();
     expect(screen.getByTestId('bar-chart')).toBeTruthy();
+
+    await waitFor(() => expect(getDashboardSummary).toHaveBeenCalled());
+    expect(getDashboardSummary).toHaveBeenCalledWith({
+      date_from: expect.any(String),
+      date_to: expect.any(String),
+    });
   });
 
   it('shows an error alert with a retry action', async () => {
@@ -101,16 +107,16 @@ describe('DashboardPage', () => {
     await waitFor(() => expect(getDashboardSummary).toHaveBeenCalledTimes(2));
   });
 
-  it('refetches when the range changes', async () => {
+  it('uses the date range from the URL', async () => {
     getDashboardSummary.mockResolvedValue(summary);
 
-    renderPage();
+    renderPage('/?from=2026-11-01&to=2026-11-06');
     await screen.findByText('Tổng vận đơn');
 
-    const seven = screen.getByText('7 ngày');
-    fireEvent.click(seven.closest('.ant-segmented-item') || seven);
-
-    await waitFor(() => expect(getDashboardSummary).toHaveBeenLastCalledWith({ days: 7 }));
+    expect(getDashboardSummary).toHaveBeenCalledWith({
+      date_from: '2026-11-01',
+      date_to: '2026-11-06',
+    });
   });
 
   it('shows the empty state when there is no data', async () => {

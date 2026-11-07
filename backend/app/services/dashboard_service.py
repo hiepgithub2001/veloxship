@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import AppError
 from app.crud import dashboard as dashboard_crud
 from app.crud import location as location_crud
 from app.schemas.bill import BillStatus
@@ -36,6 +37,9 @@ _PREFIX_RE = re.compile(r"^(Thành phố|Tỉnh)\s+", re.IGNORECASE)
 #: the post-2025 34-province layout. Shown in the bar list but never on the map.
 OTHER_PROVINCE_CODE = "__other__"
 
+#: Upper bound (inclusive) on a date-range span, to keep aggregates bounded.
+MAX_RANGE_DAYS = 366
+
 
 def vn_day_bounds(
     days: int, now: datetime | None = None
@@ -51,6 +55,39 @@ def vn_day_bounds(
     start_utc = datetime.combine(start_date, time.min, tzinfo=VN_TZ).astimezone(UTC)
     end_utc = datetime.combine(today + timedelta(days=1), time.min, tzinfo=VN_TZ).astimezone(UTC)
     return start_date, today, start_utc.replace(tzinfo=None), end_utc.replace(tzinfo=None)
+
+
+def date_range_bounds(start_date: date, end_date: date) -> tuple[datetime, datetime]:
+    """Return naive-UTC ``(start_utc, end_utc)`` covering ``[start_date, end_date]`` (VN)."""
+    start_utc = datetime.combine(start_date, time.min, tzinfo=VN_TZ).astimezone(UTC)
+    end_utc = datetime.combine(end_date + timedelta(days=1), time.min, tzinfo=VN_TZ).astimezone(UTC)
+    return start_utc.replace(tzinfo=None), end_utc.replace(tzinfo=None)
+
+
+def resolve_date_range(
+    date_from: date | None, date_to: date | None, *, now: datetime | None = None
+) -> tuple[date, date]:
+    """Resolve an optional date filter into a validated ``(start_date, end_date)``.
+
+    Missing input defaults to the last 30 VN days. Raises ``AppError`` (400) when
+    only one bound is given, when the range is inverted, or when it is too long.
+    """
+    if (date_from is None) != (date_to is None):
+        raise AppError("DATE_RANGE_INCOMPLETE", status_code=400)
+
+    current = (now or datetime.now(VN_TZ)).astimezone(VN_TZ)
+    today = current.date()
+
+    if date_from is None:
+        date_from = today - timedelta(days=29)
+        date_to = today
+
+    if date_from > date_to:
+        raise AppError("DATE_RANGE_INVALID", status_code=400)
+    if (date_to - date_from).days + 1 > MAX_RANGE_DAYS:
+        raise AppError("DATE_RANGE_TOO_LARGE", status_code=400)
+
+    return date_from, date_to
 
 
 def delivery_rate(delivered: int, total: int) -> float:
@@ -122,36 +159,46 @@ async def _load_provinces(db: AsyncSession) -> list[tuple[str, str]]:
     return list(PROVINCES)
 
 
-async def get_summary(db: AsyncSession, days: int) -> DashboardSummary:
-    """Build the complete dashboard summary for the given period."""
-    start_date, today, start_utc, end_utc = vn_day_bounds(days)
+async def get_summary(
+    db: AsyncSession,
+    *,
+    date_from: date | None = None,
+    date_to: date | None = None,
+) -> DashboardSummary:
+    """Build the complete dashboard summary for the given date range."""
+    start_date, end_date = resolve_date_range(date_from, date_to)
+    start_utc, end_utc = date_range_bounds(start_date, end_date)
 
     totals = await dashboard_crud.fetch_totals(db, start_utc, end_utc)
     daily_rows = await dashboard_crud.fetch_daily(db, start_utc, end_utc)
     status_raw = await dashboard_crud.fetch_status_counts(db, start_utc, end_utc)
     destination_raw = await dashboard_crud.fetch_destinations(db, start_utc, end_utc)
 
-    daily = build_daily_series(daily_rows, start_date, today)
-    today_point = daily[-1]
+    daily = build_daily_series(daily_rows, start_date, end_date)
+
+    # "Today" is always the actual VN today, independent of the selected range.
+    today_vn = datetime.now(VN_TZ).date()
+    today_start, today_end = date_range_bounds(today_vn, today_vn)
+    today_totals = await dashboard_crud.fetch_totals(db, today_start, today_end)
 
     provinces = await _load_provinces(db)
 
     kpis = DashboardKpis(
         total_bills=totals["total_bills"],
-        bills_today=today_point["bills"],
+        bills_today=today_totals["total_bills"],
         in_progress_bills=totals["in_progress_bills"],
         delivered_bills=totals["delivered_bills"],
         cancelled_bills=totals["cancelled_bills"],
         returned_bills=totals["returned_bills"],
         delivery_rate=delivery_rate(totals["delivered_bills"], totals["total_bills"]),
         revenue_total=_money(totals["revenue_total"]),
-        revenue_today=_money(today_point["revenue"]),
+        revenue_today=_money(today_totals["revenue_total"]),
         cod_total=_money(totals["cod_total"]),
     )
 
     return DashboardSummary(
         generated_at=datetime.now(UTC),
-        range=DashboardRange(days=days, date_from=start_date, date_to=today),
+        range=DashboardRange(date_from=start_date, date_to=end_date),
         kpis=kpis,
         daily=[DashboardDailyPoint(**point) for point in daily],
         status_counts=[

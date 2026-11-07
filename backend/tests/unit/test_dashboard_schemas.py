@@ -35,14 +35,14 @@ def test_dates_serialize_as_iso_strings():
     point = DashboardDailyPoint(date=date(2026, 11, 6), bills=2, revenue=Decimal("0.00"))
     assert point.model_dump(mode="json")["date"] == "2026-11-06"
 
-    window = DashboardRange(days=30, date_from=date(2026, 10, 8), date_to=date(2026, 11, 6))
+    window = DashboardRange(date_from=date(2026, 10, 8), date_to=date(2026, 11, 6))
     assert window.model_dump(mode="json")["date_from"] == "2026-10-08"
 
 
 def test_summary_round_trips_zero_filled_lists():
     summary = DashboardSummary(
         generated_at=datetime(2026, 11, 6, 8, 5, 0, tzinfo=UTC),
-        range=DashboardRange(days=7, date_from=date(2026, 10, 31), date_to=date(2026, 11, 6)),
+        range=DashboardRange(date_from=date(2026, 10, 31), date_to=date(2026, 11, 6)),
         kpis=DashboardKpis(
             total_bills=0,
             bills_today=0,

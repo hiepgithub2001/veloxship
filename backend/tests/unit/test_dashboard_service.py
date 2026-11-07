@@ -4,11 +4,16 @@ from datetime import date, datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+import pytest
+
+from app.core.exceptions import AppError
 from app.services.dashboard_service import (
     OTHER_PROVINCE_CODE,
     build_daily_series,
     build_destinations,
+    date_range_bounds,
     delivery_rate,
+    resolve_date_range,
     vn_day_bounds,
 )
 
@@ -36,6 +41,42 @@ def test_vn_day_bounds_multi_day():
 def test_delivery_rate_rounds_to_one_decimal():
     assert delivery_rate(2, 3) == 66.7
     assert delivery_rate(80, 128) == 62.5
+
+
+def test_resolve_date_range_defaults_to_last_30_days():
+    now = datetime(2026, 11, 6, 10, 0, 0, tzinfo=VN_TZ)
+    start, end = resolve_date_range(None, None, now=now)
+    assert start == date(2026, 10, 8)
+    assert end == date(2026, 11, 6)
+
+
+def test_resolve_date_range_accepts_explicit_dates():
+    start, end = resolve_date_range(date(2026, 10, 1), date(2026, 10, 31))
+    assert (start, end) == (date(2026, 10, 1), date(2026, 10, 31))
+
+
+def test_resolve_date_range_rejects_incomplete_bounds():
+    with pytest.raises(AppError) as exc:
+        resolve_date_range(date(2026, 10, 1), None)
+    assert exc.value.error_code == "DATE_RANGE_INCOMPLETE"
+
+
+def test_resolve_date_range_rejects_inverted_range():
+    with pytest.raises(AppError) as exc:
+        resolve_date_range(date(2026, 11, 6), date(2026, 11, 1))
+    assert exc.value.error_code == "DATE_RANGE_INVALID"
+
+
+def test_resolve_date_range_rejects_too_large_range():
+    with pytest.raises(AppError) as exc:
+        resolve_date_range(date(2025, 1, 1), date(2026, 11, 6))
+    assert exc.value.error_code == "DATE_RANGE_TOO_LARGE"
+
+
+def test_date_range_bounds_covers_inclusive_vn_days():
+    start_utc, end_utc = date_range_bounds(date(2026, 11, 6), date(2026, 11, 6))
+    assert start_utc == datetime(2026, 11, 5, 17, 0, 0)
+    assert end_utc == datetime(2026, 11, 6, 17, 0, 0)
 
 
 def test_delivery_rate_zero_total_is_zero():

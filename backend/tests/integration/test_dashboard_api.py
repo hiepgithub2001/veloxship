@@ -22,7 +22,7 @@ from app.models.bill import Bill
 from app.models.customer import Customer
 from app.models.permission import Role, RolePermission
 from app.models.user import User
-from app.services.dashboard_service import VN_TZ, vn_day_bounds
+from app.services.dashboard_service import VN_TZ
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -177,8 +177,8 @@ def _at_vn(today, day_offset: int, hour: int = 9) -> datetime:
 @pytest.mark.asyncio
 class TestDashboardSummary:
     async def test_summary_counts_and_buckets(self, client, db_session):
-        days = 7
-        start_date, today, _, _ = vn_day_bounds(days)
+        today = datetime.now(VN_TZ).date()
+        date_from = today - timedelta(days=6)
 
         token = await _user_token(db_session, "admin_dash", "admin")
 
@@ -211,12 +211,15 @@ class TestDashboardSummary:
         )
         await db_session.commit()
 
-        resp = await client.get(f"/api/v1/dashboard/summary?days={days}", headers=token)
+        resp = await client.get(
+            "/api/v1/dashboard/summary",
+            params={"date_from": date_from.isoformat(), "date_to": today.isoformat()},
+            headers=token,
+        )
         assert resp.status_code == 200
         data = resp.json()
 
-        assert data["range"]["days"] == days
-        assert data["range"]["date_from"] == start_date.isoformat()
+        assert data["range"]["date_from"] == date_from.isoformat()
         assert data["range"]["date_to"] == today.isoformat()
 
         kpis = data["kpis"]
@@ -229,7 +232,7 @@ class TestDashboardSummary:
         assert kpis["revenue_total"] == "2000.00"
         assert kpis["bills_today"] == 4
 
-        assert len(data["daily"]) == days
+        assert len(data["daily"]) == 7
         assert data["daily"][-1]["date"] == today.isoformat()
         assert data["daily"][-1]["bills"] == 4
         assert data["daily"][-1]["revenue"] == "2000.00"
@@ -247,16 +250,37 @@ class TestDashboardSummary:
         operator = await _user_token(db_session, "op_dash", "operator")
         shipper = await _user_token(db_session, "ship_dash", "shipper")
 
-        ok = await client.get("/api/v1/dashboard/summary?days=7", headers=operator)
+        ok = await client.get("/api/v1/dashboard/summary", headers=operator)
         assert ok.status_code == 200
 
-        forbidden = await client.get("/api/v1/dashboard/summary?days=7", headers=shipper)
+        forbidden = await client.get("/api/v1/dashboard/summary", headers=shipper)
         assert forbidden.status_code == 403
         assert forbidden.json()["error_code"] == "FORBIDDEN"
 
-    async def test_summary_rejects_invalid_days(self, client, db_session):
-        token = await _user_token(db_session, "admin_days", "admin")
-        for bad in (0, 6, 91, 100):
-            resp = await client.get(f"/api/v1/dashboard/summary?days={bad}", headers=token)
-            # Query validation failures surface as the app's 400 VALIDATION_ERROR.
-            assert resp.status_code == 400, f"days={bad} should be rejected"
+    async def test_summary_rejects_invalid_date_range(self, client, db_session):
+        token = await _user_token(db_session, "admin_range", "admin")
+
+        # Only one bound supplied.
+        resp = await client.get(
+            "/api/v1/dashboard/summary", params={"date_from": "2026-11-01"}, headers=token
+        )
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "DATE_RANGE_INCOMPLETE"
+
+        # Inverted range.
+        resp = await client.get(
+            "/api/v1/dashboard/summary",
+            params={"date_from": "2026-11-06", "date_to": "2026-11-01"},
+            headers=token,
+        )
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "DATE_RANGE_INVALID"
+
+        # Too large range.
+        resp = await client.get(
+            "/api/v1/dashboard/summary",
+            params={"date_from": "2020-01-01", "date_to": "2026-11-06"},
+            headers=token,
+        )
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "DATE_RANGE_TOO_LARGE"

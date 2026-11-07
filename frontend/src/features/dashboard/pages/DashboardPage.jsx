@@ -1,6 +1,7 @@
 import { ReloadOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Alert, Button, Col, Row, Segmented, Space, Typography } from 'antd';
+import { Alert, Button, Col, DatePicker, Row, Space, Typography } from 'antd';
+import dayjs from 'dayjs';
 import { useSearchParams } from 'react-router-dom';
 
 import { getDashboardSummary } from '../../../api/dashboard';
@@ -13,20 +14,38 @@ import { RevenueTrendChart } from '../components/RevenueTrendChart';
 import { StatusPieChart } from '../components/StatusPieChart';
 import { TopDestinationsPanel } from '../components/TopDestinationsPanel';
 
-const ALLOWED_RANGES = [7, 30, 90];
+const { RangePicker } = DatePicker;
+const DEFAULT_RANGE_DAYS = 30;
 
-function resolveDays(raw) {
-  const value = Number(raw);
-  return ALLOWED_RANGES.includes(value) ? value : 30;
+/** Resolve the date filter from the URL, defaulting to the last 30 VN days. */
+function resolveRange(searchParams) {
+  const fromDay = dayjs(searchParams.get('from'));
+  const toDay = dayjs(searchParams.get('to'));
+  if (fromDay.isValid() && toDay.isValid() && !fromDay.isAfter(toDay)) {
+    return { from: fromDay.format('YYYY-MM-DD'), to: toDay.format('YYYY-MM-DD') };
+  }
+  const today = dayjs();
+  return {
+    from: today.subtract(DEFAULT_RANGE_DAYS - 1, 'day').format('YYYY-MM-DD'),
+    to: today.format('YYYY-MM-DD'),
+  };
 }
 
 export function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const days = resolveDays(searchParams.get('days'));
+  const range = resolveRange(searchParams);
+
+  const now = dayjs();
+  const rangePresets = [
+    { label: t('dashboard.today'), value: [now, now] },
+    { label: t('dashboard.preset7'), value: [now.subtract(6, 'day'), now] },
+    { label: t('dashboard.preset30'), value: [now.subtract(29, 'day'), now] },
+    { label: t('dashboard.preset90'), value: [now.subtract(89, 'day'), now] },
+  ];
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ['dashboard', 'summary', days],
-    queryFn: () => getDashboardSummary({ days }),
+    queryKey: ['dashboard', 'summary', range.from, range.to],
+    queryFn: () => getDashboardSummary({ date_from: range.from, date_to: range.to }),
     refetchInterval: 60_000,
   });
 
@@ -37,8 +56,19 @@ export function DashboardPage() {
   const dailyEmpty = daily.every((d) => d.bills === 0 && Number(d.revenue) === 0);
   const statusEmpty = statusCounts.every((s) => s.count === 0);
 
-  const handleRangeChange = (value) => {
-    setSearchParams({ days: String(value) }, { replace: true });
+  const handleRangeChange = (dates) => {
+    if (!dates || dates.length !== 2) {
+      // Cleared → fall back to the default 30-day window.
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    setSearchParams(
+      {
+        from: dates[0].format('YYYY-MM-DD'),
+        to: dates[1].format('YYYY-MM-DD'),
+      },
+      { replace: true },
+    );
   };
 
   return (
@@ -53,14 +83,12 @@ export function DashboardPage() {
           </Typography.Text>
         </div>
         <Space wrap>
-          <Segmented
-            options={[
-              { label: t('dashboard.range7'), value: 7 },
-              { label: t('dashboard.range30'), value: 30 },
-              { label: t('dashboard.range90'), value: 90 },
-            ]}
-            value={days}
+          <RangePicker
+            value={[dayjs(range.from), dayjs(range.to)]}
             onChange={handleRangeChange}
+            presets={rangePresets}
+            placeholder={[t('dashboard.dateFrom'), t('dashboard.dateTo')]}
+            style={{ width: 260 }}
           />
           <Button
             icon={<ReloadOutlined />}

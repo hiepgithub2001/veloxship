@@ -15,7 +15,6 @@ from pydantic import BaseModel
 class DashboardRange(BaseModel):
     """The inclusive VN date window the summary covers."""
 
-    days: int
     date_from: date
     date_to: date
 

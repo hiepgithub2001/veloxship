@@ -596,10 +596,15 @@ paths:
       summary: Tổng quan vận chuyển
       parameters:
         - in: query
-          name: days
+          name: date_from
           required: false
-          schema: { type: integer, minimum: 7, maximum: 90, default: 30 }
-          description: Số ngày (7/30/90) tính từ hôm nay, theo múi giờ Việt Nam.
+          schema: { type: string, format: date }
+          description: Ngày bắt đầu (YYYY-MM-DD). Bỏ trống để dùng 30 ngày gần nhất.
+        - in: query
+          name: date_to
+          required: false
+          schema: { type: string, format: date }
+          description: Ngày kết thúc (YYYY-MM-DD). Bỏ trống để dùng 30 ngày gần nhất.
       responses:
         '200':
           description: OK
@@ -670,9 +675,8 @@ components:
 
     DashboardRange:
       type: object
-      required: [days, date_from, date_to]
+      required: [date_from, date_to]
       properties:
-        days: { type: integer }
         date_from: { type: string, format: date }
         date_to: { type: string, format: date }
 

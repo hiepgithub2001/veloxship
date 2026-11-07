@@ -248,19 +248,29 @@ export function BillListPage() {
         <Title level={3} style={{ margin: 0 }}>
           {t('bills.title')}
         </Title>
-        {can('bill:create') && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate('/phieu-gui/tao-moi')}
-            id="create-bill-btn"
-          >
-            {t('bills.create')}
-          </Button>
-        )}
+        <div style={{ display: 'flex', gap: 10 }}>
+          {can('bill:import') && (
+            <Button
+              id="import-bill-btn"
+              icon={<ImportOutlined />}
+              onClick={() => setImportOpen(true)}
+            >
+              {t('imports.action')}
+            </Button>
+          )}
+          {can('bill:create') && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/phieu-gui/tao-moi')}
+              id="create-bill-btn"
+            >
+              {t('bills.create')}
+            </Button>
+          )}
+        </div>
       </div>
-      <Card
-      >
+      <Card style={{ marginBottom: 10 }}>
         <BillFilters
           status={status}
           dateRange={dateRange}
@@ -272,6 +282,8 @@ export function BillListPage() {
           onSearch={handleSearchFilters}
           onReset={handleResetFilters}
         />
+      </Card>
+      <Card>
         <div className="bill-list-toolbar">
           <Space size="middle" wrap>
             {selectedRowKeys.length > 0 && (
@@ -286,15 +298,6 @@ export function BillListPage() {
                   {t('bills.print')}
                 </Button>
               </>
-            )}
-            {can('bill:import') && (
-              <Button
-                id="import-bill-btn"
-                icon={<ImportOutlined />}
-                onClick={() => setImportOpen(true)}
-              >
-                {t('imports.action')}
-              </Button>
             )}
           </Space>
           {columnChooser}

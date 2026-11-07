@@ -63,6 +63,11 @@ _MESSAGES: dict[str, str] = {
     "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
     "CONTENT_LINES_REQUIRED": "Phiếu gửi phải có ít nhất một dòng nội dung.",
 
+    # Dashboard
+    "DATE_RANGE_INCOMPLETE": "Cần chọn đủ ngày bắt đầu và ngày kết thúc.",
+    "DATE_RANGE_INVALID": "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.",
+    "DATE_RANGE_TOO_LARGE": "Khoảng thời gian quá lớn (tối đa 366 ngày).",
+
     # Comments
     "COMMENT_NOT_FOUND": "Không tìm thấy bình luận.",
     "COMMENT_ENTITY_NOT_FOUND": "Không tìm thấy đối tượng gắn bình luận.",
